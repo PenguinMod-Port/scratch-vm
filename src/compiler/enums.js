@@ -180,7 +180,8 @@ const StackOpcode = {
     SENSING_TIMER_RESET: 'timer.reset',
 
     PROCEDURE_RETURN: 'procedures.return',
-    PROCEDURE_CALL: 'procedures.call'
+    PROCEDURE_CALL: 'procedures.call',
+    PROCEDURE_COMMANDARG: 'procedures.commandarg'
 };
 
 /**

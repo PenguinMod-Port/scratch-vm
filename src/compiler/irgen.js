@@ -224,6 +224,8 @@ class ScriptTreeGenerator {
             return this.createConstantInput(block.fields.NUM.value, preserveStrings);
         case 'text':
             return this.createConstantInput(block.fields.TEXT.value, preserveStrings);
+        case 'checkbox':
+            return this.createConstantInput(block.fields.CHECKBOX.value === 'TRUE', preserveStrings);
         case 'argument_reporter_string_number': {
             const name = block.fields.VALUE.value;
             // lastIndexOf because multiple parameters with the same name will use the value of the last definition
@@ -615,6 +617,13 @@ class ScriptTreeGenerator {
         }
 
         switch (block.opcode) {
+        case 'argument_reporter_command': {
+            const name = block.fields.VALUE.value;
+            const index = this.script.arguments.lastIndexOf(name);
+            this.script.yields = true;
+            return new IntermediateStackBlock(InputOpcode.PROCEDURE_COMMANDARG, {index});
+        }
+
         case 'control_all_at_once':
             // In Scratch 3, this block behaves like "if 1 = 1"
             return new IntermediateStackBlock(StackOpcode.CONTROL_IF_ELSE, {
@@ -1042,7 +1051,11 @@ class ScriptTreeGenerator {
             for (let i = 0; i < paramIds.length; i++) {
                 let value;
                 if (block.inputs[paramIds[i]] && block.inputs[paramIds[i]].block) {
-                    value = this.descendInputOfBlock(block, paramIds[i], true);
+                    if (paramIds[i].startsWith("SUBSTACK")) {
+                        value = this.descendSubstack(block, paramIds[i]);
+                    } else {
+                        value = this.descendInputOfBlock(block, paramIds[i], true);
+                    }
                 } else {
                     value = this.createConstantInput(paramDefaults[i], true);
                 }

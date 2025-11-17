@@ -408,7 +408,20 @@ class JSGenerator {
             const procedureReference = `thread.procedures["${sanitize(procedureVariant)}"]`;
             const args = [];
             for (const input of node.arguments) {
-                args.push(this.descendInput(input));
+                if (input instanceof IntermediateStack) {
+                    //is a stack input
+                    const temp = this.source;
+                    this.source = "function*(thread, target, runtime, stage) {"
+                    const temp2 = this.isWarp;
+                    this.isWarp = procedureData.isWarp;
+                    this.descendStack(input, new Frame(false));
+                    this.isWarp = temp2;
+                    this.source += "}";
+                    args.push(this.source);
+                    this.source = temp;
+                } else {
+                    args.push(this.descendInput(input));
+                }
             }
             const joinedArgs = args.join(',');
 
@@ -548,6 +561,10 @@ class JSGenerator {
 
         case InputOpcode.OLD_COMPILER_COMPATIBILITY_LAYER:
             return this.oldCompilerStub.descendStackedBlockFromNewCompiler(block);
+
+        case StackOpcode.PROCEDURE_COMMANDARG:
+            if (node.index !== -1) this.source += `yield* (p${node.index} || function*(){})(thread, target, runtime, stage);\n`;
+            break;
 
         case StackOpcode.HAT_EDGE:
             this.isInHat = true;
@@ -876,7 +893,20 @@ class JSGenerator {
             this.source += `thread.procedures["${sanitize(procedureVariant)}"](`;
             const args = [];
             for (const input of node.arguments) {
-                args.push(this.descendInput(input));
+                if (input instanceof IntermediateStack) {
+                    //is a stack input
+                    const temp = this.source;
+                    this.source = "function*(thread, target, runtime, stage) {"
+                    const temp2 = this.isWarp;
+                    this.isWarp = procedureData.isWarp;
+                    this.descendStack(input, new Frame(false));
+                    this.isWarp = temp2;
+                    this.source += "}";
+                    args.push(this.source);
+                    this.source = temp;
+                } else {
+                    args.push(this.descendInput(input));
+                }
             }
             this.source += args.join(',');
             this.source += `);\n`;
