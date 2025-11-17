@@ -621,7 +621,7 @@ class ScriptTreeGenerator {
             const name = block.fields.VALUE.value;
             const index = this.script.arguments.lastIndexOf(name);
             this.script.yields = true;
-            return new IntermediateStackBlock(InputOpcode.PROCEDURE_COMMANDARG, {index});
+            return new IntermediateStackBlock(StackOpcode.PROCEDURE_COMMANDARG, {index});
         }
 
         case 'control_all_at_once':
