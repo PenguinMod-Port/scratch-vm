@@ -103,6 +103,7 @@ class JSGenerator {
 
         this.isWarp = script.isWarp;
         this.isProcedure = script.isProcedure;
+        this.allowReturns = false;
         this.warpTimer = script.warpTimer;
 
         /**
@@ -414,7 +415,10 @@ class JSGenerator {
                     this.source = "function*(thread, target, runtime, stage) {"
                     const temp2 = this.isWarp;
                     this.isWarp = procedureData.isWarp;
+                    const temp3 = this.allowReturns;
+                    this.allowReturns = true;
                     this.descendStack(input, new Frame(false));
+                    this.allowReturns = temp3;
                     this.isWarp = temp2;
                     this.source += "}";
                     args.push(this.source);
@@ -905,7 +909,10 @@ class JSGenerator {
                     this.source = "function*(thread, target, runtime, stage) {"
                     const temp2 = this.isWarp;
                     this.isWarp = procedureData.isWarp;
+                    const temp3 = this.allowReturns;
+                    this.allowReturns = true;
                     this.descendStack(input, new Frame(false));
+                    this.allowReturns = temp3;
                     this.isWarp = temp2;
                     this.source += "}";
                     args.push(this.source);
@@ -1154,7 +1161,7 @@ class JSGenerator {
      * @param {string} valueJS JS code of value to return.
      */
     stopScriptAndReturn (valueJS) {
-        if (this.isProcedure) {
+        if (this.isProcedure || this.allowReturns) {
             this.source += `return ${valueJS};\n`;
         } else {
             this.retire();
