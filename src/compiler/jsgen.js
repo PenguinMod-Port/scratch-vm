@@ -227,7 +227,7 @@ class JSGenerator {
             } throw new Error(`JS: Unknown constant input type '${block.type}'.`);
 
         case InputOpcode.PM_CONTROL_INLINE_BLOCK:
-            let stack = this.descendStackInsideInput(node.stack, new Frame(false));
+            let stack = this.descendStackInsideInput(node.code, new Frame(false));
             return `(yield* (function*() {\n${stack}return "";\n})())`;
 
         case InputOpcode.SENSING_KEY_DOWN:
