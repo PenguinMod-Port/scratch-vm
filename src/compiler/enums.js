@@ -257,7 +257,7 @@ const InputOpcode = {
     OP_SUBTRACT: 'op.subtract',
 
     PM_OP_SIGN: 'op.sign',
-    PM_OP_XOR: 'op.xor'
+    PM_OP_XOR: 'op.xor',
 
     SENSING_ANSWER: 'sensing.answer',
     SENSING_COLOR_TOUCHING_COLOR: 'sensing.colorTouchingColor',
