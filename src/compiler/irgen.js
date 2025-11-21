@@ -366,6 +366,7 @@ class ScriptTreeGenerator {
             case 'abs': return new IntermediateInput(InputOpcode.OP_ABS, InputType.NUMBER_POS | InputType.NUMBER_ZERO, {value});
             case 'floor': return new IntermediateInput(InputOpcode.OP_FLOOR, InputType.NUMBER_INT | InputType.NUMBER_INF, {value});
             case 'ceiling': return new IntermediateInput(InputOpcode.OP_CEILING, InputType.NUMBER_INT | InputType.NUMBER_INF, {value});
+            case 'sign': return new IntermediateInput(InputOpcode.PM_OP_SIGN, InputType.NUMBER, {value});
             case 'sqrt': return new IntermediateInput(InputOpcode.OP_SQRT, InputType.NUMBER_OR_NAN, {value});
             case 'sin': return new IntermediateInput(InputOpcode.OP_SIN, InputType.NUMBER_OR_NAN, {value});
             case 'cos': return new IntermediateInput(InputOpcode.OP_COS, InputType.NUMBER_OR_NAN, {value});
@@ -467,6 +468,33 @@ class ScriptTreeGenerator {
             return new IntermediateInput(InputOpcode.OP_SUBTRACT, InputType.NUMBER_OR_NAN, {
                 left: this.descendInputOfBlock(block, 'NUM1').toType(InputType.NUMBER),
                 right: this.descendInputOfBlock(block, 'NUM2').toType(InputType.NUMBER)
+            });
+
+        case 'operator_xor':
+            return new IntermediateInput(InputOpcode.PM_OP_XOR, InputType.BOOLEAN, {
+                left: this.descendInputOfBlock(block, 'OPERAND1').toType(InputType.BOOLEAN),
+                right: this.descendInputOfBlock(block, 'OPERAND2').toType(InputType.BOOLEAN)
+            });
+        case 'operator_xnor':
+            return new IntermediateInput(InputOpcode.OP_NOT, InputType.BOOLEAN, {
+                operand: new IntermediateInput(InputOpcode.PM_OP_XOR, InputType.BOOLEAN, {
+                    left: this.descendInputOfBlock(block, 'OPERAND1').toType(InputType.BOOLEAN),
+                    right: this.descendInputOfBlock(block, 'OPERAND2').toType(InputType.BOOLEAN)
+                })
+            });
+        case 'operator_nand':
+            return new IntermediateInput(InputOpcode.OP_NOT, InputType.BOOLEAN, {
+                operand: new IntermediateInput(InputOpcode.OP_AND, InputType.BOOLEAN, {
+                    left: this.descendInputOfBlock(block, 'OPERAND1').toType(InputType.BOOLEAN),
+                    right: this.descendInputOfBlock(block, 'OPERAND2').toType(InputType.BOOLEAN)
+                })
+            });
+        case 'operator_nor':
+            return new IntermediateInput(InputOpcode.OP_NOT, InputType.BOOLEAN, {
+                operand: new IntermediateInput(InputOpcode.OP_OR, InputType.BOOLEAN, {
+                    left: this.descendInputOfBlock(block, 'OPERAND1').toType(InputType.BOOLEAN),
+                    right: this.descendInputOfBlock(block, 'OPERAND2').toType(InputType.BOOLEAN)
+                })
             });
 
         case 'procedures_call': {
@@ -621,7 +649,7 @@ class ScriptTreeGenerator {
             const name = block.fields.VALUE.value;
             const index = this.script.arguments.lastIndexOf(name);
             this.script.yields = true;
-            return new IntermediateStackBlock(StackOpcode.PROCEDURE_COMMANDARG, {index});
+            return new IntermediateStackBlock(StackOpcode.PM_PROCEDURE_COMMANDARG, {index});
         }
 
         case 'control_all_at_once':

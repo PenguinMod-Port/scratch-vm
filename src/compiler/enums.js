@@ -181,7 +181,8 @@ const StackOpcode = {
 
     PROCEDURE_RETURN: 'procedures.return',
     PROCEDURE_CALL: 'procedures.call',
-    PROCEDURE_COMMANDARG: 'procedures.commandarg'
+
+    PM_PROCEDURE_COMMANDARG: 'procedures.commandarg'
 };
 
 /**
@@ -254,6 +255,9 @@ const InputOpcode = {
     OP_RANDOM: 'op.random',
     OP_ROUND: 'op.round',
     OP_SUBTRACT: 'op.subtract',
+
+    PM_OP_SIGN: 'op.sign',
+    PM_OP_XOR: 'op.xor'
 
     SENSING_ANSWER: 'sensing.answer',
     SENSING_COLOR_TOUCHING_COLOR: 'sensing.colorTouchingColor',

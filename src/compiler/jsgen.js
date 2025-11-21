@@ -393,6 +393,11 @@ class JSGenerator {
         case InputOpcode.OP_POW_10:
             return `(10 ** ${this.descendInput(node.value)})`;
 
+        case InputOpcode.PM_OP_SIGN:
+            return `Math.sign(${this.descendInput(node.value)})`;
+        case InputOpcode.PM_OP_XOR:
+            return `(${this.descendInput(node.left)} !== ${this.descendInput(node.right)})`;
+
         case InputOpcode.PROCEDURE_CALL: {
             const procedureCode = node.code;
             const procedureVariant = node.variant;
@@ -566,7 +571,7 @@ class JSGenerator {
         case InputOpcode.OLD_COMPILER_COMPATIBILITY_LAYER:
             return this.oldCompilerStub.descendStackedBlockFromNewCompiler(block);
 
-        case StackOpcode.PROCEDURE_COMMANDARG:
+        case StackOpcode.PM_PROCEDURE_COMMANDARG:
             if (node.index !== -1) {
                 let outputVariable = this.localVariables.next();
                 this.source += `let ${outputVariable} = yield* (p${node.index} || function*(){})(thread, target, runtime, stage);\n`;
