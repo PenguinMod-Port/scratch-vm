@@ -226,6 +226,10 @@ class JSGenerator {
                 return `"${sanitize(node.value.toString())}"`;
             } throw new Error(`JS: Unknown constant input type '${block.type}'.`);
 
+        case InputOpcode.PM_CONTROL_INLINE_BLOCK:
+            let stack = this.descendStackInsideInput(node.stack, new Frame(false));
+            return `(yield* (function*() {\n${stack}return "";\n})())`;
+
         case InputOpcode.SENSING_KEY_DOWN:
             return `runtime.ioDevices.keyboard.getKeyIsDown(${this.descendInput(node.key)})`;
 
@@ -1017,6 +1021,20 @@ class JSGenerator {
         // Leaving a stack -- any assumptions made in the current stack do not apply outside of it
         // TODO: in if/else this might create an extra unused object
         this.popFrame();
+    }
+
+    /**
+     * @param {IntermediateStack} stack
+     * @param {Frame} frame
+     * @returns {string}
+     */
+    descendStackInsideInput(stack, frame) {
+        const oldSource = this.source;
+        this.source = "";
+        this.descendStack(stack, frame);
+        const result = this.source;
+        this.source = oldSource;
+        return result;
     }
 
     /**

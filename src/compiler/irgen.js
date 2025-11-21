@@ -254,6 +254,13 @@ class ScriptTreeGenerator {
             return new IntermediateInput(InputOpcode.PROCEDURE_ARGUMENT, InputType.ANY, {index});
         }
 
+        case 'control_inline_stack_output': {
+            this.script.yields = true;
+            return new IntermediateInput(InputOpcode.PM_CONTROL_INLINE_BLOCK, InputType.ANY, {
+                code: this.descendSubstack(block, 'SUBSTACK')
+            });
+        }
+
         case 'data_variable':
             return new IntermediateInput(InputOpcode.VAR_GET, InputType.ANY, {
                 variable: this.descendVariable(block, 'VARIABLE', SCALAR_TYPE)
