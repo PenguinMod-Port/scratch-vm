@@ -224,8 +224,9 @@ class ScriptTreeGenerator {
             return this.createConstantInput(block.fields.NUM.value, preserveStrings);
         case 'text':
             return this.createConstantInput(block.fields.TEXT.value, preserveStrings);
+        case 'operator_checkboxBoolean': //im lazy
         case 'checkbox':
-            return this.createConstantInput(block.fields.CHECKBOX.value === 'TRUE', preserveStrings);
+            return this.createConstantInput(block.fields.CHECKBOX.value === 'TRUE');
         case 'argument_reporter_string_number': {
             const name = block.fields.VALUE.value;
             // lastIndexOf because multiple parameters with the same name will use the value of the last definition
@@ -254,6 +255,7 @@ class ScriptTreeGenerator {
             return new IntermediateInput(InputOpcode.PROCEDURE_ARGUMENT, InputType.ANY, {index});
         }
 
+        //pm control
         case 'control_inline_stack_output': {
             this.script.yields = true;
             return new IntermediateInput(InputOpcode.PM_CONTROL_INLINE_BLOCK, InputType.ANY, {
@@ -477,18 +479,11 @@ class ScriptTreeGenerator {
                 right: this.descendInputOfBlock(block, 'NUM2').toType(InputType.NUMBER)
             });
 
-        case 'operator_xor':
-            return new IntermediateInput(InputOpcode.PM_OP_XOR, InputType.BOOLEAN, {
-                left: this.descendInputOfBlock(block, 'OPERAND1').toType(InputType.BOOLEAN),
-                right: this.descendInputOfBlock(block, 'OPERAND2').toType(InputType.BOOLEAN)
-            });
-        case 'operator_xnor':
-            return new IntermediateInput(InputOpcode.OP_NOT, InputType.BOOLEAN, {
-                operand: new IntermediateInput(InputOpcode.PM_OP_XOR, InputType.BOOLEAN, {
-                    left: this.descendInputOfBlock(block, 'OPERAND1').toType(InputType.BOOLEAN),
-                    right: this.descendInputOfBlock(block, 'OPERAND2').toType(InputType.BOOLEAN)
-                })
-            });
+        //pm operators
+        case 'operator_boolify':
+            return this.descendInputOfBlock(block, 'ONE').toType(InputType.BOOLEAN);
+        case 'operator_falseBoolean':
+            return this.createConstantInput(true);
         case 'operator_nand':
             return new IntermediateInput(InputOpcode.OP_NOT, InputType.BOOLEAN, {
                 operand: new IntermediateInput(InputOpcode.OP_AND, InputType.BOOLEAN, {
@@ -502,6 +497,22 @@ class ScriptTreeGenerator {
                     left: this.descendInputOfBlock(block, 'OPERAND1').toType(InputType.BOOLEAN),
                     right: this.descendInputOfBlock(block, 'OPERAND2').toType(InputType.BOOLEAN)
                 })
+            });
+        case 'operator_stringify':
+            return this.descendInputOfBlock(block, 'ONE').toType(InputType.STRING);
+        case 'operator_trueBoolean':
+            return this.createConstantInput(true);
+        case 'operator_xnor':
+            return new IntermediateInput(InputOpcode.OP_NOT, InputType.BOOLEAN, {
+                operand: new IntermediateInput(InputOpcode.PM_OP_XOR, InputType.BOOLEAN, {
+                    left: this.descendInputOfBlock(block, 'OPERAND1').toType(InputType.BOOLEAN),
+                    right: this.descendInputOfBlock(block, 'OPERAND2').toType(InputType.BOOLEAN)
+                })
+            });
+        case 'operator_xor':
+            return new IntermediateInput(InputOpcode.PM_OP_XOR, InputType.BOOLEAN, {
+                left: this.descendInputOfBlock(block, 'OPERAND1').toType(InputType.BOOLEAN),
+                right: this.descendInputOfBlock(block, 'OPERAND2').toType(InputType.BOOLEAN)
             });
 
         case 'procedures_call': {
@@ -652,6 +663,7 @@ class ScriptTreeGenerator {
         }
 
         switch (block.opcode) {
+        //pm branched procedures
         case 'argument_reporter_command': {
             const name = block.fields.VALUE.value;
             const index = this.script.arguments.lastIndexOf(name);

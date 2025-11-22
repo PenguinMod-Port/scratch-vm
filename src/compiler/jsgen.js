@@ -226,6 +226,7 @@ class JSGenerator {
                 return `"${sanitize(node.value.toString())}"`;
             } throw new Error(`JS: Unknown constant input type '${block.type}'.`);
 
+        //pm control
         case InputOpcode.PM_CONTROL_INLINE_BLOCK:
             let stack = this.descendStackInline(node.code, new Frame(false), {allowReturns: true});
             return `(yield* (function*() {\n${stack}return "";\n})())`;
@@ -397,6 +398,7 @@ class JSGenerator {
         case InputOpcode.OP_POW_10:
             return `(10 ** ${this.descendInput(node.value)})`;
 
+        //pm operators
         case InputOpcode.PM_OP_SIGN:
             return `Math.sign(${this.descendInput(node.value)})`;
         case InputOpcode.PM_OP_XOR:
@@ -565,6 +567,7 @@ class JSGenerator {
         case InputOpcode.OLD_COMPILER_COMPATIBILITY_LAYER:
             return this.oldCompilerStub.descendStackedBlockFromNewCompiler(block);
 
+        //pm branched procedures
         case StackOpcode.PM_PROCEDURE_COMMANDARG:
             if (node.index !== -1) {
                 let outputVariable = this.localVariables.next();
