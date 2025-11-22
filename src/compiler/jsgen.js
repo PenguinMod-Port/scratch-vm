@@ -227,7 +227,7 @@ class JSGenerator {
             } throw new Error(`JS: Unknown constant input type '${block.type}'.`);
 
         case InputOpcode.PM_CONTROL_INLINE_BLOCK:
-            let stack = this.descendStackInsideInput(node.code, new Frame(false), {allowReturns: true});
+            let stack = this.descendStackInline(node.code, new Frame(false), {allowReturns: true});
             return `(yield* (function*() {\n${stack}return "";\n})())`;
 
         case InputOpcode.SENSING_KEY_DOWN:
@@ -420,7 +420,7 @@ class JSGenerator {
             for (const input of node.arguments) {
                 if (input instanceof IntermediateStack) {
                     //is a stack input
-                    let stack = this.descendStackInsideInput(input, new Frame(false), {isWarp: procedureData.isWarp, allowReturns: true});
+                    let stack = this.descendStackInline(input, new Frame(false), {isWarp: procedureData.isWarp, allowReturns: true});
                     args.push(`function*(thread, target, runtime, stage) {${stack}}`);
                 } else {
                     args.push(this.descendInput(input));
@@ -904,7 +904,7 @@ class JSGenerator {
             for (const input of node.arguments) {
                 if (input instanceof IntermediateStack) {
                     //is a stack input
-                    let stack = this.descendStackInsideInput(input, new Frame(false), {isWarp: procedureData.isWarp, allowReturns: true});
+                    let stack = this.descendStackInline(input, new Frame(false), {isWarp: procedureData.isWarp, allowReturns: true});
                     args.push(`function*(thread, target, runtime, stage) {${stack}}`);
                 } else {
                     args.push(this.descendInput(input));
@@ -1018,7 +1018,7 @@ class JSGenerator {
      * @param {Object} properties
      * @returns {string}
      */
-    descendStackInsideInput(stack, frame, properties = {}) {
+    descendStackInline(stack, frame, properties = {}) {
         const oldSource = this.source;
         this.source = "";
         this.descendStack(stack, frame, properties);
