@@ -227,7 +227,7 @@ class JSGenerator {
             } throw new Error(`JS: Unknown constant input type '${block.type}'.`);
 
         case InputOpcode.PM_CONTROL_INLINE_BLOCK:
-            let stack = this.descendStackInsideInput(node.code, new Frame(false));
+            let stack = this.descendStackInsideInput(node.code, new Frame(false), {allowReturns: true});
             return `(yield* (function*() {\n${stack}return "";\n})())`;
 
         case InputOpcode.SENSING_KEY_DOWN:
@@ -420,18 +420,8 @@ class JSGenerator {
             for (const input of node.arguments) {
                 if (input instanceof IntermediateStack) {
                     //is a stack input
-                    const temp = this.source;
-                    this.source = "function*(thread, target, runtime, stage) {"
-                    const temp2 = this.isWarp;
-                    this.isWarp = procedureData.isWarp;
-                    const temp3 = this.allowReturns;
-                    this.allowReturns = true;
-                    this.descendStack(input, new Frame(false));
-                    this.allowReturns = temp3;
-                    this.isWarp = temp2;
-                    this.source += "}";
-                    args.push(this.source);
-                    this.source = temp;
+                    let stack = this.descendStackInsideInput(input, new Frame(false), {isWarp: procedureData.isWarp, allowReturns: true});
+                    args.push(`function*(thread, target, runtime, stage) {${stack}}`);
                 } else {
                     args.push(this.descendInput(input));
                 }
@@ -914,18 +904,8 @@ class JSGenerator {
             for (const input of node.arguments) {
                 if (input instanceof IntermediateStack) {
                     //is a stack input
-                    const temp = this.source;
-                    this.source = "function*(thread, target, runtime, stage) {"
-                    const temp2 = this.isWarp;
-                    this.isWarp = procedureData.isWarp;
-                    const temp3 = this.allowReturns;
-                    this.allowReturns = true;
-                    this.descendStack(input, new Frame(false));
-                    this.allowReturns = temp3;
-                    this.isWarp = temp2;
-                    this.source += "}";
-                    args.push(this.source);
-                    this.source = temp;
+                    let stack = this.descendStackInsideInput(input, new Frame(false), {isWarp: procedureData.isWarp, allowReturns: true});
+                    args.push(`function*(thread, target, runtime, stage) {${stack}}`);
                 } else {
                     args.push(this.descendInput(input));
                 }
@@ -1010,16 +990,22 @@ class JSGenerator {
     /**
      * @param {IntermediateStack} stack
      * @param {Frame} frame
+     * @param {Object} properties
      */
-    descendStack (stack, frame) {
+    descendStack (stack, frame, properties = {}) {
         // Entering a stack -- all bets are off.
         // TODO: allow if/else to inherit values
         this.pushFrame(frame);
+
+        const oldProperties = Object.fromEntries(Object.keys(properties).map(key => [key, this[key]]));
+        Object.entries(properties).forEach(([key, value]) => this[key] = value);
 
         for (let i = 0; i < stack.blocks.length; i++) {
             frame.isLastBlock = i === stack.blocks.length - 1;
             this.descendStackedBlock(stack.blocks[i]);
         }
+
+        Object.entries(oldProperties).forEach(([key, value]) => this[key] = value);
 
         // Leaving a stack -- any assumptions made in the current stack do not apply outside of it
         // TODO: in if/else this might create an extra unused object
@@ -1029,12 +1015,13 @@ class JSGenerator {
     /**
      * @param {IntermediateStack} stack
      * @param {Frame} frame
+     * @param {Object} properties
      * @returns {string}
      */
-    descendStackInsideInput(stack, frame) {
+    descendStackInsideInput(stack, frame, properties = {}) {
         const oldSource = this.source;
         this.source = "";
-        this.descendStack(stack, frame);
+        this.descendStack(stack, frame, properties);
         const result = this.source;
         this.source = oldSource;
         return result;
