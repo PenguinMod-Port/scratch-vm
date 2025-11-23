@@ -1192,7 +1192,7 @@ class JSGenerator {
      * @param {string} valueJS JS code of value to return.
      */
     stopScriptAndReturn (valueJS) {
-        if (this.isProcedure || this.ir.thread.stackClick || this.allowReturns) {
+        if (this.isProcedure || this.script.stackClicked || this.allowReturns) {
             this.source += `return ${valueJS};\n`;
         } else {
             this.retire();
@@ -1236,14 +1236,14 @@ class JSGenerator {
 
         if (!this.isProcedure) script += `try {\n`
 
-        let allowReturns = this.ir.thread.stackClick
-        if (allowReturns) {
+        let allowBubble = this.script.stackClicked && !this.isProcedure;
+        if (allowBubble) {
             script += `let returns = ${this.script.yields ? `yield* (function*()` : `(function()`} {\n`;
         }
         
         script += this.source;
 
-        if (allowReturns) {
+        if (allowBubble) {
             script += `})();\n`;
             script += `if (returns !== undefined) runtime.visualReport(target, "${sanitize(this.script.bottomBlockId)}", returns);\n`;
         }

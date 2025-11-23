@@ -294,6 +294,12 @@ class IntermediateScript {
         this.isProcedure = false;
 
         /**
+         * Whether this script was executed through clicking the stack.
+         * @type {boolean}
+         */
+        this.stackClicked = false;
+
+        /**
          * This procedure's variant, if any.
          * @type {string}
          */

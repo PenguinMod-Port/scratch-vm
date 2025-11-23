@@ -75,6 +75,7 @@ class ScriptTreeGenerator {
          */
         this.script = new IntermediateScript();
         this.script.warpTimer = this.target.runtime.compilerOptions.warpTimer;
+        this.script.stackClicked = thread.stackClicked;
 
         /**
          * Cache of variable ID to variable data object.
