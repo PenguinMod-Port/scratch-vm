@@ -1473,12 +1473,8 @@ class ScriptTreeGenerator {
         this.script.topBlockId = topBlockId;
 
         let blockId = topBlockId;
-        while (blockId !== null) {
-            const block = this.getBlockById(blockId);
-            if (!block) {
-                break;
-            }
-            blockId = block.next;
+        while (this.getBlockById(this.getBlockById(blockId).next)) {
+            blockId = this.getBlockById(blockId).next;
         }
         this.script.bottomBlockId = blockId;
 
