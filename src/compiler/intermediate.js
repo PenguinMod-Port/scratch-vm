@@ -276,6 +276,12 @@ class IntermediateScript {
         this.topBlockId = null;
 
         /**
+         * The ID of the bottom block of this script.
+         * @type {string?}
+         */
+        this.bottomBlockId = null;
+
+        /**
          * List of nodes that make up this script.
          * @type {IntermediateStack?}
          */

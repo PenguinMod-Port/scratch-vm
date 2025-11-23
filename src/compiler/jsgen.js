@@ -967,7 +967,7 @@ class JSGenerator {
             const value = this.localVariables.next();
             this.source += `const ${value} = ${this.descendInput(node.input)};`;
             // blocks like legacy no-ops can return a literal `undefined`
-            this.source += `if (${value} !== undefined) runtime.visualReport(target, "${sanitize(this.script.topBlockId)}", ${value});\n`;
+            this.source += `if (${value} !== undefined) runtime.visualReport(target, "${sanitize(this.script.bottomBlockId)}", ${value});\n`;
             break;
         }
 
@@ -1241,7 +1241,8 @@ class JSGenerator {
         if (!this.isProcedure) {
             script += `} catch (e) {\n`;
             script += `console.warn(this.toString(), e);\n`;
-            script += `runtime.visualReport(target, "${sanitize(this.script.topBlockId)}", String(e), true);\n`;
+            script += `runtime.visualReport(target, "${sanitize(this.script.bottomBlockId)}", String(e), true);\n`;
+            script += `retire();\n`;
             script += `};\n`;
         }
 

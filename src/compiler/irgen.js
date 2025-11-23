@@ -763,8 +763,8 @@ class ScriptTreeGenerator {
             });
         case 'control_try_catch':
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_TRY_CATCH, {
-                try: this.descendSubstack(block, 'TRY'),
-                catch: this.descendSubstack(block, 'CATCH')
+                try: this.descendSubstack(block, 'SUBSTACK'),
+                catch: this.descendSubstack(block, 'SUBSTACK2')
             });
 
         case 'data_addtolist':
@@ -1471,6 +1471,16 @@ class ScriptTreeGenerator {
         this.blocks.populateProcedureCache();
 
         this.script.topBlockId = topBlockId;
+
+        let blockId = topBlockId;
+        while (blockId !== null) {
+            const block = this.getBlockById(blockId);
+            if (!block) {
+                break;
+            }
+            blockId = block.next;
+        }
+        this.script.bottomBlockId = blockId;
 
         const topBlock = this.getBlockById(topBlockId);
         if (!topBlock) {
