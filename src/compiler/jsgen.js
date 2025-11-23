@@ -1242,7 +1242,7 @@ class JSGenerator {
             script += `} catch (e) {\n`;
             script += `console.warn(this.toString(), e);\n`;
             script += `runtime.visualReport(target, "${sanitize(this.script.topBlockId)}", String(e), true);\n`;
-            script += `});\n`;
+            script += `};\n`;
         }
 
         script += '}; })';
