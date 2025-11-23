@@ -256,12 +256,12 @@ class ScriptTreeGenerator {
         }
 
         //pm control
-        case 'control_inline_stack_output': {
-            this.script.yields = true;
+        case 'control_error':
+            return new IntermediateInput(InputOpcode.PM_CONTROL_TRY_CATCH_ERROR, InputType.STRING);
+        case 'control_inline_stack_output': 
             return new IntermediateInput(InputOpcode.PM_CONTROL_INLINE_BLOCK, InputType.ANY, {
                 code: this.descendSubstack(block, 'SUBSTACK')
-            });
-        }
+            }, true);
 
         case 'data_variable':
             return new IntermediateInput(InputOpcode.VAR_GET, InputType.ANY, {
@@ -667,8 +667,7 @@ class ScriptTreeGenerator {
         case 'argument_reporter_command': {
             const name = block.fields.VALUE.value;
             const index = this.script.arguments.lastIndexOf(name);
-            this.script.yields = true;
-            return new IntermediateStackBlock(StackOpcode.PM_PROCEDURE_COMMANDARG, {index});
+            return new IntermediateStackBlock(StackOpcode.PM_PROCEDURE_COMMANDARG, {index}, true);
         }
 
         case 'control_all_at_once':
@@ -756,6 +755,17 @@ class ScriptTreeGenerator {
             return new IntermediateStackBlock(StackOpcode.CONTROL_CLEAR_COUNTER);
         case 'control_incr_counter':
             return new IntermediateStackBlock(StackOpcode.CONTORL_INCR_COUNTER);
+
+        //pm control
+        case 'control_throw_error':
+            return new IntermediateStackBlock(StackOpcode.PM_CONTROL_THROW_ERROR, {
+                error: this.descendInputOfBlock(block, 'ERROR').toType(InputType.STRING)
+            });
+        case 'control_try_catch':
+            return new IntermediateStackBlock(StackOpcode.PM_CONTROL_TRY_CATCH, {
+                try: this.descendSubstack(block, 'TRY'),
+                catch: this.descendSubstack(block, 'CATCH')
+            });
 
         case 'data_addtolist':
             return new IntermediateStackBlock(StackOpcode.LIST_ADD, {

@@ -122,6 +122,9 @@ const StackOpcode = {
     CONTROL_CLEAR_COUNTER: 'control.counterClear',
     CONTORL_INCR_COUNTER: 'control.counterIncr',
 
+    PM_CONTROL_THROW_ERROR: 'control.throwError',
+    PM_CONTROL_TRY_CATCH: 'control.tryCatch',
+
     LIST_ADD: 'list.add',
     LIST_INSERT: 'list.instert',
     LIST_REPLACE: 'list.replace',
@@ -207,6 +210,7 @@ const InputOpcode = {
     OLD_COMPILER_COMPATIBILITY_LAYER: 'oldCompiler',
 
     PM_CONTROL_INLINE_BLOCK: 'control.inlineBlock',
+    PM_CONTROL_TRY_CATCH_ERROR: 'control.tryCatchError',
 
     LOOKS_BACKDROP_NUMBER: 'looks.backdropNumber',
     LOOKS_BACKDROP_NAME: 'looks.backdropName',

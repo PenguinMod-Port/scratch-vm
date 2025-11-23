@@ -3108,10 +3108,11 @@ class Runtime extends EventEmitter {
      * @param {Target} target The target that the block was run in.
      * @param {string} blockId ID for the block.
      * @param {string} value Value to show associated with the block.
+     * @param {boolean?} error True if the value is an error value.
      */
-    visualReport (target, blockId, value) {
+    visualReport (target, blockId, value, error = false) {
         if (target === this.getEditingTarget()) {
-            this.emit(Runtime.VISUAL_REPORT, {id: blockId, value: String(value)});
+            this.emit(Runtime.VISUAL_REPORT, {id: blockId, value: String(value), error});
         }
     }
 

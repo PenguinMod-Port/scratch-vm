@@ -230,6 +230,8 @@ class JSGenerator {
         case InputOpcode.PM_CONTROL_INLINE_BLOCK:
             let stack = this.descendStackInline(node.code, new Frame(false), {allowReturns: true});
             return `(yield* (function*() {\n${stack}return "";\n})())`;
+        case InputOpcode.PM_CONTROL_TRY_CATCH_ERROR:
+            return `typeof _pmControlTryCatchError !== "undefined" ? _pmControlTryCatchError : ""`;
 
         case InputOpcode.SENSING_KEY_DOWN:
             return `runtime.ioDevices.keyboard.getKeyIsDown(${this.descendInput(node.key)})`;
@@ -691,6 +693,19 @@ class JSGenerator {
             break;
         case StackOpcode.CONTORL_INCR_COUNTER:
             this.source += 'runtime.ext_scratch3_control._counter++;\n';
+            break;
+
+        //pm control
+        case StackOpcode.PM_CONTROL_THROW_ERROR:
+            this.source += `throw ${this.descendInput(node.error)};\n`;
+            break;
+        case StackOpcode.PM_CONTROL_TRY_CATCH:
+            this.source += 'try {\n';
+            this.descendStack(node.try, new Frame(false));
+            this.source += '} catch (e) {\n';
+            this.source += `const _pmControlTryCatchError = String(e);\n`;
+            this.descendStack(node.catch, new Frame(false));
+            this.source += '}\n';
             break;
 
         case StackOpcode.EVENT_BROADCAST:
@@ -1219,16 +1234,16 @@ class JSGenerator {
         }
         script += ') {\n';
 
-        script += `try {\n`
+        if (!this.isProcedure) script += `try {\n`
 
         script += this.source;
         
-        script += `} catch (e) {\n`;
-        script += `console.warn(this.toString(), e);\n`;
-        script += `runtime.emit("BLOCK_STACK_ERROR", {`;
-        script += `id:"${sanitize(this.script.topBlockId)}",`;
-        script += `value:String(e)`;
-        script += `});\n`;
+        if (!this.isProcedure) {
+            script += `} catch (e) {\n`;
+            script += `console.warn(this.toString(), e);\n`;
+            script += `runtime.visualReport(target, "${sanitize(this.script.topBlockId)}", ${value}, true);\n`;
+            script += `});\n`;
+        }
 
         script += '}; })';
 
