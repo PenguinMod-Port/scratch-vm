@@ -1219,7 +1219,16 @@ class JSGenerator {
         }
         script += ') {\n';
 
+        script += `try {\n`
+
         script += this.source;
+        
+        script += `} catch (e) {\n`;
+        script += `console.warn(this.toString(), e);\n`;
+        script += `runtime.emit("BLOCK_STACK_ERROR", {`;
+        script += `id:"${sanitize(this.script.topBlockId)}",`;
+        script += `value:String(e)`;
+        script += `});\n`;
 
         script += '}; })';
 
