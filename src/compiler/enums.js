@@ -209,6 +209,7 @@ const InputOpcode = {
     COMPATIBILITY_LAYER: 'compat',
     OLD_COMPILER_COMPATIBILITY_LAYER: 'oldCompiler',
 
+    PM_CONTROL_IF_ELSE_REPORT: 'control.ifElseReport',
     PM_CONTROL_INLINE_BLOCK: 'control.inlineBlock',
     PM_CONTROL_TRY_CATCH_ERROR: 'control.tryCatchError',
 

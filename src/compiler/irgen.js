@@ -259,6 +259,14 @@ class ScriptTreeGenerator {
         //pm control
         case 'control_error':
             return new IntermediateInput(InputOpcode.PM_CONTROL_TRY_CATCH_ERROR, InputType.STRING);
+        case 'control_if_return_else_return':
+            let whenTrue = this.descendInputOfBlock(block, 'TEXT1');
+            let whenFalse = this.descendInputOfBlock(block, 'TEXT2');
+            return new IntermediateInput(InputOpcode.PM_CONTROL_IF_ELSE_REPORT, whenTrue.type | whenFalse.type, {
+                condition: this.descendInputOfBlock(block, 'boolean').toType(InputType.BOOLEAN),
+                whenTrue,
+                whenFalse
+            })
         case 'control_inline_stack_output': 
             return new IntermediateInput(InputOpcode.PM_CONTROL_INLINE_BLOCK, InputType.ANY, {
                 code: this.descendSubstack(block, 'SUBSTACK')

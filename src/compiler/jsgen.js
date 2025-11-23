@@ -227,6 +227,8 @@ class JSGenerator {
             } throw new Error(`JS: Unknown constant input type '${block.type}'.`);
 
         //pm control
+        case InputOpcode.PM_CONTROL_IF_ELSE_REPORT:
+            return `(${this.descendInput(node.condition)} ? ${this.descendInput(node.whenTrue)} : ${this.descendInput(node.whenFalse)})`
         case InputOpcode.PM_CONTROL_INLINE_BLOCK:
             let stack = this.descendStackInline(node.code, new Frame(false), {allowReturns: true});
             return `(yield* (function*() {\n${stack}return "";\n})())`;
