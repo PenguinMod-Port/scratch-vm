@@ -235,7 +235,7 @@ class JSGenerator {
         case InputOpcode.PM_CONTROL_IF_ELSE_REPORT:
             return `(${this.descendInput(node.condition)} ? ${this.descendInput(node.whenTrue)} : ${this.descendInput(node.whenFalse)})`
         case InputOpcode.PM_CONTROL_INLINE_BLOCK:
-            let stack = this.descendStackInline(node.code, new Frame(false), {allowReturns: true});
+            let stack = this.descendStackInline(node.code, {allowReturns: true});
             return `(yield* (function*() {\n${stack}return "";\n})())`;
         case InputOpcode.PM_CONTROL_TRY_CATCH_ERROR:
             return `typeof _pmControlTryCatchError !== "undefined" ? _pmControlTryCatchError : ""`;
@@ -431,7 +431,7 @@ class JSGenerator {
             for (const input of node.arguments) {
                 if (input instanceof IntermediateStack) {
                     //is a stack input
-                    let stack = this.descendStackInline(input, new Frame(false), {isWarp: procedureData.isWarp, allowReturns: true});
+                    let stack = this.descendStackInline(input, {isWarp: procedureData.isWarp, allowReturns: true});
                     args.push(`function*(thread, target, runtime, stage) {${stack}}`);
                 } else {
                     args.push(this.descendInput(input));
@@ -543,7 +543,7 @@ class JSGenerator {
         case StackOpcode.COMPATIBILITY_LAYER: {
             // If the last command in a loop returns a promise, immediately continue to the next iteration.
             // If you don't do this, the loop effectively yields twice per iteration and will run at half-speed.
-            const isLastInLoop = this.isLastBlockInLoop();
+            const isLastInLoop = this.isLastBlock && this.inLoop;
 
             const blockType = node.blockType;
             if (blockType === BlockType.COMMAND || blockType === BlockType.HAT) {
@@ -555,7 +555,7 @@ class JSGenerator {
                 this.source += `switch (${branchVariable}.branch) {\n`;
                 for (const index in node.substacks) {
                     this.source += `case ${+index}: {\n`;
-                    this.descendStack(node.substacks[index], new Frame(false));
+                    this.descendStack(node.substacks[index]);
                     this.source += `break;\n`;
                     this.source += `}\n`; // close case
                 }
@@ -628,19 +628,19 @@ class JSGenerator {
             this.source += `while (${index} < ${this.descendInput(node.count)}) { `;
             this.source += `${index}++; `;
             this.source += `${this.referenceVariable(node.variable)}.value = ${index};\n`;
-            this.descendStack(node.do, new Frame(true));
+            this.descendStack(node.do, {inLoop: true});
             this.yieldLoop();
             this.source += '}\n';
             break;
         }
         case StackOpcode.CONTROL_IF_ELSE:
             this.source += `if (${this.descendInput(node.condition)}) {\n`;
-            this.descendStack(node.whenTrue, new Frame(false));
+            this.descendStack(node.whenTrue);
             // only add the else branch if it won't be empty
             // this makes scripts have a bit less useless noise in them
             if (node.whenFalse.blocks.length) {
                 this.source += `} else {\n`;
-                this.descendStack(node.whenFalse, new Frame(false));
+                this.descendStack(node.whenFalse);
             }
             this.source += `}\n`;
             break;
@@ -651,7 +651,7 @@ class JSGenerator {
             } else {
                 this.source += `for (var ${i} = ${this.descendInput(node.times)}; ${i} >= 0.5; ${i}--) {\n`;
             }
-            this.descendStack(node.do, new Frame(true));
+            this.descendStack(node.do, {inLoop: true});
             this.yieldLoop();
             this.source += `}\n`;
             break;
@@ -687,7 +687,7 @@ class JSGenerator {
         }
         case StackOpcode.CONTROL_WHILE:
             this.source += `while (${this.descendInput(node.condition)}) {\n`;
-            this.descendStack(node.do, new Frame(true));
+            this.descendStack(node.do, {inLoop: true});
             if (node.warpTimer) {
                 this.yieldStuckOrNotWarp();
             } else {
@@ -708,10 +708,10 @@ class JSGenerator {
             break;
         case StackOpcode.PM_CONTROL_TRY_CATCH:
             this.source += 'try {\n';
-            this.descendStack(node.try, new Frame(false));
+            this.descendStack(node.try);
             this.source += '} catch (e) {\n';
             this.source += `const _pmControlTryCatchError = String(e);\n`;
-            this.descendStack(node.catch, new Frame(false));
+            this.descendStack(node.catch);
             this.source += '}\n';
             break;
 
@@ -929,7 +929,7 @@ class JSGenerator {
             for (const input of node.arguments) {
                 if (input instanceof IntermediateStack) {
                     //is a stack input
-                    let stack = this.descendStackInline(input, new Frame(false), {isWarp: procedureData.isWarp, allowReturns: true});
+                    let stack = this.descendStackInline(input, {isWarp: procedureData.isWarp, allowReturns: true});
                     args.push(`function*(thread, target, runtime, stage) {${stack}}`);
                 } else {
                     args.push(this.descendInput(input));
@@ -1280,7 +1280,7 @@ class JSGenerator {
      */
     compile () {
         if (this.script.stack) {
-            this.descendStack(this.script.stack, new Frame(false));
+            this.descendStack(this.script.stack);
         }
         this.stopScript();
 
