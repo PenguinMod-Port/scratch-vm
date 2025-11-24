@@ -71,6 +71,7 @@ const isSafeInputForEqualsOptimization = (input, other) => {
 
 /**
  * A frame contains some information about the current substack being compiled.
+ * @deprecated
  */
 class Frame {
     constructor (isLoop) {
@@ -103,18 +104,23 @@ class JSGenerator {
 
         this.isWarp = script.isWarp;
         this.isProcedure = script.isProcedure;
-        this.allowReturns = false;
         this.warpTimer = script.warpTimer;
+
+        this.allowReturns = false;
+        this.inLoop = false;
+        this.isLastBlock = false;
 
         /**
          * Stack of frames, most recent is last item.
          * @type {Frame[]}
+         * @deprecated
          */
         this.frames = [];
 
         /**
          * The current Frame.
          * @type {Frame?}
+         * @deprecated
          */
         this.currentFrame = null;
 
@@ -133,34 +139,33 @@ class JSGenerator {
     /**
      * Enter a new frame
      * @param {Frame} frame New frame.
+     * @deprecated
      */
     pushFrame (frame) {
         this.frames.push(frame);
         this.currentFrame = frame;
+        this.currentFrame._temp = this.inLoop;
+
+        this.inLoop = this.inLoop || frame.isLoop;
     }
 
     /**
      * Exit the current frame
+     * @deprecated
      */
     popFrame () {
+        this.inLoop = this.currentFrame._temp;
+
         this.frames.pop();
         this.currentFrame = this.frames[this.frames.length - 1];
     }
 
     /**
      * @returns {boolean} true if the current block is the last command of a loop
+     * @deprecated
      */
     isLastBlockInLoop () {
-        for (let i = this.frames.length - 1; i >= 0; i--) {
-            const frame = this.frames[i];
-            if (!frame.isLastBlock) {
-                return false;
-            }
-            if (frame.isLoop) {
-                return true;
-            }
-        }
-        return false;
+        return this.isLastBlock && this.inLoop;
     }
 
     /**
@@ -1009,39 +1014,43 @@ class JSGenerator {
 
     /**
      * @param {IntermediateStack} stack
-     * @param {Frame} frame
      * @param {Object} properties
      */
-    descendStack (stack, frame, properties = {}) {
+    descendStack (stack, properties = {}, ...args) {
         // Entering a stack -- all bets are off.
         // TODO: allow if/else to inherit values
-        this.pushFrame(frame);
+        var frame
+        if (properties instanceof Frame) {
+            frame = properties;
+            properties = args[0] ?? {};
+        }
+        if (frame) this.pushFrame(frame);
 
         const oldProperties = Object.fromEntries(Object.keys(properties).map(key => [key, this[key]]));
         Object.entries(properties).forEach(([key, value]) => this[key] = value);
+        const oldIsLastBlock = this.isLastBlock;
 
         for (let i = 0; i < stack.blocks.length; i++) {
-            frame.isLastBlock = i === stack.blocks.length - 1;
+            this.isLastBlock = i === stack.blocks.length - 1;
+            if (frame) frame.isLastBlock = this.isLastBlock;
             this.descendStackedBlock(stack.blocks[i]);
         }
 
+        this.isLastBlock = oldIsLastBlock;
         Object.entries(oldProperties).forEach(([key, value]) => this[key] = value);
 
         // Leaving a stack -- any assumptions made in the current stack do not apply outside of it
         // TODO: in if/else this might create an extra unused object
-        this.popFrame();
+        if (frame) this.popFrame();
     }
 
     /**
-     * @param {IntermediateStack} stack
-     * @param {Frame} frame
-     * @param {Object} properties
      * @returns {string}
      */
-    descendStackInline(stack, frame, properties = {}) {
+    descendStackInline(...args) {
         const oldSource = this.source;
         this.source = "";
-        this.descendStack(stack, frame, properties);
+        this.descendStack(...args);
         const result = this.source;
         this.source = oldSource;
         return result;
