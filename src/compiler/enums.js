@@ -122,6 +122,9 @@ const StackOpcode = {
     CONTROL_CLEAR_COUNTER: 'control.counterClear',
     CONTORL_INCR_COUNTER: 'control.counterIncr',
 
+    PM_CONTROL_ALL_AT_ONCE: 'control.allAtOnce',
+    PM_CONTROL_CONTINUE_LOOP: 'control.continueLoop',
+    PM_CONTROL_ESCAPE_LOOP: 'control.escapeLoop',
     PM_CONTROL_THROW_ERROR: 'control.throwError',
     PM_CONTROL_TRY_CATCH: 'control.tryCatch',
 

@@ -679,13 +679,6 @@ class ScriptTreeGenerator {
             return new IntermediateStackBlock(StackOpcode.PM_PROCEDURE_COMMANDARG, {index}, true);
         }
 
-        case 'control_all_at_once':
-            // In Scratch 3, this block behaves like "if 1 = 1"
-            return new IntermediateStackBlock(StackOpcode.CONTROL_IF_ELSE, {
-                condition: this.createConstantInput(true).toType(InputType.BOOLEAN),
-                whenTrue: this.descendSubstack(block, 'SUBSTACK'),
-                whenFalse: new IntermediateStack()
-            });
         case 'control_create_clone_of':
             return new IntermediateStackBlock(StackOpcode.CONTROL_CLONE_CREATE, {
                 target: this.descendInputOfBlock(block, 'CLONE_OPTION').toType(InputType.STRING)
@@ -766,6 +759,15 @@ class ScriptTreeGenerator {
             return new IntermediateStackBlock(StackOpcode.CONTORL_INCR_COUNTER);
 
         //pm control
+        case 'control_all_at_once':
+            // In PenguinMod, this runs the substack as run without screen refresh.
+            return new IntermediateStackBlock(StackOpcode.PM_CONTROL_ALL_AT_ONCE, {
+                stack: this.descendSubstack(block, 'SUBSTACK')
+            });
+        case 'control_continueLoop':
+            return new IntermediateStackBlock(InputOpcode.PM_CONTROL_CONTINUE_LOOP);
+        case 'control_exitLoop':
+            return new IntermediateStackBlock(InputOpcode.PM_CONTROL_ESCAPE_LOOP);
         case 'control_throw_error':
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_THROW_ERROR, {
                 error: this.descendInputOfBlock(block, 'ERROR').toType(InputType.STRING)

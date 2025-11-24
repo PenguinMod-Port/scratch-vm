@@ -703,6 +703,23 @@ class JSGenerator {
             break;
 
         //pm control
+        case StackOpcode.PM_CONTROL_ALL_AT_ONCE:
+            this.descendStack(node.stack, {isWarp: true});
+            break;
+        case StackOpcode.PM_CONTROL_CONTINUE_LOOP:
+            if (this.inLoop) {
+                this.source += 'continue;\n';
+            } else {
+                this.source += `throw 'All "continue loop" blocks must be inside of a looping block.';\n`;
+            }
+            break;
+        case StackOpcode.PM_CONTROL_ESCAPE_LOOP:
+            if (this.inLoop) {
+                this.source += 'break;\n';
+            } else {
+                this.source += `throw 'All "escape loop" blocks must be inside of a looping block.';\n`;
+            }
+            break;
         case StackOpcode.PM_CONTROL_THROW_ERROR:
             this.source += `throw ${this.descendInput(node.error)};\n`;
             break;
