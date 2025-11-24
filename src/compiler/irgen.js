@@ -765,9 +765,9 @@ class ScriptTreeGenerator {
                 stack: this.descendSubstack(block, 'SUBSTACK')
             });
         case 'control_continueLoop':
-            return new IntermediateStackBlock(InputOpcode.PM_CONTROL_CONTINUE_LOOP);
+            return new IntermediateStackBlock(StackOpcode.PM_CONTROL_CONTINUE_LOOP);
         case 'control_exitLoop':
-            return new IntermediateStackBlock(InputOpcode.PM_CONTROL_ESCAPE_LOOP);
+            return new IntermediateStackBlock(StackOpcode.PM_CONTROL_ESCAPE_LOOP);
         case 'control_throw_error':
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_THROW_ERROR, {
                 error: this.descendInputOfBlock(block, 'ERROR').toType(InputType.STRING)
