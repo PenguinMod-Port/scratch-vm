@@ -201,6 +201,27 @@ class Scratch3ControlBlocks {
         // removed before the release of 2.0.)
         util.startBranch(1, false);
     }
+
+    _deleteClones(cloneOption, target) {
+        // Set clone target
+        let cloneTarget;
+        if (cloneOption === '_myself_') {
+            cloneTarget = target;
+        } else {
+            cloneTarget = this.runtime.getSpriteTargetByName(cloneOption);
+        }
+
+        // If clone target is not found, return
+        if (!cloneTarget) return;
+        const sprite = cloneTarget.sprite;
+        if (!sprite) return;
+        if (!sprite.clones) return;
+        for (let clone of sprite.clones) {
+            if (clone.isOriginal) continue;
+            this.runtime.disposeTarget(clone);
+            this.runtime.stopForTarget(clone);
+        }
+    }
 }
 
 module.exports = Scratch3ControlBlocks;

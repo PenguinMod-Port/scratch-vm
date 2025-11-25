@@ -124,6 +124,7 @@ const StackOpcode = {
 
     PM_CONTROL_ALL_AT_ONCE: 'control.allAtOnce',
     PM_CONTROL_CONTINUE_LOOP: 'control.continueLoop',
+    PM_CONTROL_DELETE_CLONES: 'control.deleteClones',
     PM_CONTROL_ESCAPE_LOOP: 'control.escapeLoop',
     PM_CONTROL_THROW_ERROR: 'control.throwError',
     PM_CONTROL_TRY_CATCH: 'control.tryCatch',
@@ -213,8 +214,11 @@ const InputOpcode = {
     COMPATIBILITY_LAYER: 'compat',
     OLD_COMPILER_COMPATIBILITY_LAYER: 'oldCompiler',
 
+    CONTROL_COUNTER: 'control.counter',
+
     PM_CONTROL_IF_ELSE_REPORT: 'control.ifElseReport',
     PM_CONTROL_INLINE_BLOCK: 'control.inlineBlock',
+    PM_CONTROL_IS_CLONE: 'control.isClone',
     PM_CONTROL_TRY_CATCH_ERROR: 'control.tryCatchError',
 
     LOOKS_BACKDROP_NUMBER: 'looks.backdropNumber',
@@ -303,8 +307,6 @@ const InputOpcode = {
 
     PROCEDURE_CALL: 'procedures.call',
     PROCEDURE_ARGUMENT: 'procedures.argument',
-
-    CONTROL_COUNTER: 'control.counter',
 
     TW_KEY_LAST_PRESSED: 'tw.lastKeyPressed'
 };

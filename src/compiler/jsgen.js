@@ -237,8 +237,10 @@ class JSGenerator {
         case InputOpcode.PM_CONTROL_INLINE_BLOCK:
             let stack = this.descendStackInline(node.code, {allowReturns: true});
             return `(yield* (function*() {\n${stack}return "";\n})())`;
+        case InputOpcode.PM_CONTROL_IS_CLONE:
+            return `(!target.isClone)`;
         case InputOpcode.PM_CONTROL_TRY_CATCH_ERROR:
-            return `typeof _pmControlTryCatchError !== "undefined" ? _pmControlTryCatchError : ""`;
+            return `(typeof _pmControlTryCatchError !== "undefined" ? _pmControlTryCatchError : "")`;
 
         case InputOpcode.SENSING_KEY_DOWN:
             return `runtime.ioDevices.keyboard.getKeyIsDown(${this.descendInput(node.key)})`;
@@ -712,6 +714,9 @@ class JSGenerator {
             } else {
                 this.source += `throw 'All "continue loop" blocks must be inside of a looping block.';\n`;
             }
+            break;
+        case StackOpcode.PM_CONTROL_DELETE_CLONES:
+            this.source += `runtime.ext_scratch3_control._deleteClones(${this.descendInput(node.target)}, target);\n`;
             break;
         case StackOpcode.PM_CONTROL_ESCAPE_LOOP:
             if (this.inLoop) {

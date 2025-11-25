@@ -271,6 +271,8 @@ class ScriptTreeGenerator {
             return new IntermediateInput(InputOpcode.PM_CONTROL_INLINE_BLOCK, InputType.ANY, {
                 code: this.descendSubstack(block, 'SUBSTACK')
             }, true);
+        case 'control_is_clone':
+            return new IntermediateInput(InputOpcode.PM_CONTROL_IS_CLONE, InputType.BOOLEAN);
 
         case 'data_variable':
             return new IntermediateInput(InputOpcode.VAR_GET, InputType.ANY, {
@@ -766,6 +768,10 @@ class ScriptTreeGenerator {
             });
         case 'control_continueLoop':
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_CONTINUE_LOOP);
+        case 'control_delete_clones_of':
+            return new IntermediateStackBlock(StackOpcode.PM_CONTROL_DELETE_CLONES, {
+                target: this.descendInputOfBlock(block, 'CLONE_OPTION').toType(InputType.STRING)
+            });
         case 'control_exitLoop':
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_ESCAPE_LOOP);
         case 'control_throw_error':
