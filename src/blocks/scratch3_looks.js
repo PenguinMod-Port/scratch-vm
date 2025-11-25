@@ -287,6 +287,7 @@ class Scratch3LooksBlocks {
             looks_sayforsecs: this.sayforsecs,
             looks_think: this.think,
             looks_thinkforsecs: this.thinkforsecs,
+            looks_stoptalking: this.stoptalking,
             looks_show: this.show,
             looks_hide: this.hide,
             looks_hideallsprites: () => {}, // legacy no-op block
@@ -609,6 +610,10 @@ class Scratch3LooksBlocks {
         }
         // Else return name
         return util.target.getCostumes()[util.target.currentCostume].name;
+    }
+
+    stoptalking (args, util) {
+        this._say('', util.target);
     }
 }
 
