@@ -216,7 +216,7 @@ class Scratch3ControlBlocks {
         const sprite = cloneTarget.sprite;
         if (!sprite) return;
         if (!sprite.clones) return;
-        for (let clone of sprite.clones) {
+        for (let clone of [...sprite.clones]) {
             if (clone.isOriginal) continue;
             this.runtime.disposeTarget(clone);
             this.runtime.stopForTarget(clone);
