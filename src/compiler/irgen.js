@@ -777,6 +777,11 @@ class ScriptTreeGenerator {
                 try: this.descendSubstack(block, 'SUBSTACK'),
                 catch: this.descendSubstack(block, 'SUBSTACK2')
             });
+        case 'control_waitsecondsoruntil':
+            return new IntermediateStackBlock(StackOpcode.PM_CONTROL_WAIT_OR_UNTIL, {
+                seconds: this.descendInputOfBlock(block, 'DURATION').toType(InputType.NUMBER),
+                condition: this.descendInputOfBlock(block, 'CONDITION').toType(InputType.BOOLEAN)
+            }, true);
 
         case 'data_addtolist':
             return new IntermediateStackBlock(StackOpcode.LIST_ADD, {

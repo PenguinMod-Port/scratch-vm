@@ -731,6 +731,18 @@ class JSGenerator {
             this.descendStack(node.catch);
             this.source += '}\n';
             break;
+        case StackOpcode.PM_CONTROL_WAIT_OR_UNTIL:
+            const duration = this.localVariables.next();
+            this.source += `thread.timer = timer();\n`;
+            this.source += `var ${duration} = Math.max(0, 1000 * ${this.descendInput(node.seconds)});\n`;
+            this.requestRedraw();
+            // always yield at least once, even on 0 second durations
+            this.yieldNotWarp();
+            this.source += `while ((thread.timer.timeElapsed() < ${duration}) && (!${this.descendInput(node.condition)})) {\n`;
+            this.yieldStuckOrNotWarp();
+            this.source += '}\n';
+            this.source += 'thread.timer = null;\n';
+            break;
 
         case StackOpcode.EVENT_BROADCAST:
             this.source += `startHats("event_whenbroadcastreceived", { BROADCAST_OPTION: ${this.descendInput(node.broadcast)} });\n`;
