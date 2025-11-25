@@ -238,7 +238,7 @@ class JSGenerator {
             let stack = this.descendStackInline(node.code, {allowReturns: true});
             return `(yield* (function*() {\n${stack}return "";\n})())`;
         case InputOpcode.PM_CONTROL_IS_CLONE:
-            return `(!target.isClone)`;
+            return `(!target.isOriginal)`;
         case InputOpcode.PM_CONTROL_TRY_CATCH_ERROR:
             return `(typeof _pmControlTryCatchError !== "undefined" ? _pmControlTryCatchError : "")`;
 
@@ -1006,7 +1006,7 @@ class JSGenerator {
 
         case StackOpcode.VISUAL_REPORT: {
             const value = this.localVariables.next();
-            this.source += `const ${value} = ${this.descendInput(node.input)};`;
+            this.source += `const ${value} = ${this.descendInput(node.input)};\n`;
             // blocks like legacy no-ops can return a literal `undefined`
             this.source += `if (${value} !== undefined) runtime.visualReport(target, "${sanitize(this.script.bottomBlockId)}", ${value});\n`;
             break;
