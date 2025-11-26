@@ -161,6 +161,8 @@ const StackOpcode = {
     LOOKS_COSTUME_NEXT: 'looks.nextCostume',
     LOOKS_COSTUME_SET: 'looks.switchCostume',
 
+    PM_LOOKS_STOP_SPEAKING: 'looks.stopSpeaking',
+
     MOTION_X_SET: 'motion.setX',
     MOTION_X_CHANGE: 'motion.changeX',
     MOTION_Y_SET: 'motion.setY',

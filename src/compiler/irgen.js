@@ -270,7 +270,7 @@ class ScriptTreeGenerator {
         case 'control_inline_stack_output': 
             return new IntermediateInput(InputOpcode.PM_CONTROL_INLINE_BLOCK, InputType.ANY, {
                 code: this.descendSubstack(block, 'SUBSTACK')
-            }, true);
+            });
         case 'control_is_clone':
             return new IntermediateInput(InputOpcode.PM_CONTROL_IS_CLONE, InputType.BOOLEAN);
 
@@ -913,6 +913,10 @@ class ScriptTreeGenerator {
             return new IntermediateStackBlock(StackOpcode.LOOKS_COSTUME_SET, {
                 costume: this.descendInputOfBlock(block, 'COSTUME', true)
             });
+
+        //pm looks
+        case 'looks_stoptalking':
+            return new IntermediateStackBlock(StackOpcode.PM_LOOKS_STOP_TALKING, {});
 
         case 'motion_changexby':
             return new IntermediateStackBlock(StackOpcode.MOTION_X_CHANGE, {

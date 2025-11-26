@@ -236,7 +236,7 @@ class JSGenerator {
             return `(${this.descendInput(node.condition)} ? ${this.descendInput(node.whenTrue)} : ${this.descendInput(node.whenFalse)})`
         case InputOpcode.PM_CONTROL_INLINE_BLOCK:
             let stack = this.descendStackInline(node.code, {allowReturns: true});
-            return `(yield* (function*() {\n${stack}return "";\n})())`;
+            return `(${this.script.yields ? 'yield* (function*' : '(function'}() {\n${stack}return "";\n})())`;
         case InputOpcode.PM_CONTROL_IS_CLONE:
             return `(!target.isOriginal)`;
         case InputOpcode.PM_CONTROL_TRY_CATCH_ERROR:
@@ -861,6 +861,10 @@ class JSGenerator {
             break;
         case StackOpcode.LOOKS_COSTUME_SET:
             this.source += `runtime.ext_scratch3_looks._setCostume(target, ${this.descendInput(node.costume)});\n`;
+            break;
+
+        case StackOpcode.PM_LOOKS_STOP_SPEAKING:
+            this.source += `runtime.ext_scratch3_looks._say('', target);\n`;
             break;
 
         case StackOpcode.MOTION_X_CHANGE:
