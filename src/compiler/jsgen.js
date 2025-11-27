@@ -1014,7 +1014,7 @@ class JSGenerator {
         
         //pm variables
         case StackOpcode.PM_VAR_SET_VISIBLE: {
-            this.source += `runtime.monitorBlocks.changeBlock({ id: "${sanitize(node.variable.id)}", element: "checkbox", value: ${node.visible} }, runtime);\n`;
+            this.source += `runtime.monitorBlocks.changeBlock({ id: "${sanitize(node.variable.id)}", element: "checkbox", value: ${this.descendInput(node.visible)} }, runtime);\n`;
             break;
         }
 
