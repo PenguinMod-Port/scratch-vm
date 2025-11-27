@@ -302,6 +302,12 @@ class ScriptTreeGenerator {
                 list: this.descendVariable(block, 'LIST', LIST_TYPE)
             });
 
+        //pm variables
+        case 'data_variablevisible':
+            return new IntermediateInput(InputOpcode.PM_VAR_VISIBLE, InputType.BOOLEAN, {
+                variable: this.descendVariable(block, 'VARIABLE', SCALAR_TYPE)
+            });
+
         case 'event_broadcast_menu': {
             const broadcastOption = block.fields.BROADCAST_OPTION;
             const broadcastVariable = this.target.lookupBroadcastMsg(broadcastOption.id, broadcastOption.value);
@@ -852,6 +858,13 @@ class ScriptTreeGenerator {
         case 'data_showvariable':
             return new IntermediateStackBlock(StackOpcode.VAR_SHOW, {
                 variable: this.descendVariable(block, 'VARIABLE', SCALAR_TYPE)
+            });
+
+        //pm variables
+        case 'data_setvariablevisible':
+            return new IntermediateStackBlock(StackOpcode.PM_VAR_SET_VISIBLE, {
+                variable: this.descendVariable(block, 'VARIABLE', SCALAR_TYPE),
+                visible: this.descendInputOfBlock(block, 'VISIBILITY').toType(InputType.BOOLEAN)
             });
 
         case 'event_broadcast':

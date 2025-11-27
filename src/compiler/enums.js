@@ -142,6 +142,8 @@ const StackOpcode = {
     VAR_SHOW: 'var.show',
     VAR_HIDE: 'var.hide',
 
+    PM_VAR_SET_VISIBLE: 'var.setVisible',
+
     EVENT_BROADCAST: 'event.broadcast',
     EVENT_BROADCAST_AND_WAIT: 'event.broadcastAndWait',
 
@@ -230,6 +232,8 @@ const InputOpcode = {
     LOOKS_SIZE_GET: 'looks.size',
 
     VAR_GET: 'var.get',
+
+    PM_VAR_VISIBLE: 'var.visible',
 
     LIST_GET: 'list.get',
     LIST_LENGTH: 'list.length',

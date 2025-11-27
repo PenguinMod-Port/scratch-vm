@@ -525,6 +525,10 @@ class JSGenerator {
         case InputOpcode.VAR_GET:
             return `${this.referenceVariable(node.variable)}.value`;
 
+        //pm variables
+        case InputOpcode.PM_VAR_VISIBLE:
+            return `(runtime.monitorBlocks.getBlock("${sanitize(node.variable.id)}")?.isMonitored ?? false)`
+
         default:
             log.warn(`JS: Unknown input: ${block.opcode}`, node);
             throw new Error(`JS: Unknown input: ${block.opcode}`);
@@ -1007,6 +1011,12 @@ class JSGenerator {
         case StackOpcode.VAR_SHOW:
             this.source += `runtime.monitorBlocks.changeBlock({ id: "${sanitize(node.variable.id)}", element: "checkbox", value: true }, runtime);\n`;
             break;
+        
+        //pm variables
+        case StackOpcode.PM_VAR_SET_VISIBLE: {
+            this.source += `runtime.monitorBlocks.changeBlock({ id: "${sanitize(node.variable.id)}", element: "checkbox", value: ${node.visible} }, runtime);\n`;
+            break;
+        }
 
         case StackOpcode.VISUAL_REPORT: {
             const value = this.localVariables.next();
