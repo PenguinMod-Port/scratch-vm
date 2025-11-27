@@ -929,7 +929,7 @@ class ScriptTreeGenerator {
 
         //pm looks
         case 'looks_stoptalking':
-            return new IntermediateStackBlock(StackOpcode.PM_LOOKS_STOP_TALKING, {});
+            return new IntermediateStackBlock(StackOpcode.PM_LOOKS_STOP_SPEAKING, {});
 
         case 'motion_changexby':
             return new IntermediateStackBlock(StackOpcode.MOTION_X_CHANGE, {
