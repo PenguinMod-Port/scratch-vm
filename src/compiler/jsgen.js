@@ -231,6 +231,9 @@ class JSGenerator {
                 return `"${sanitize(node.value.toString())}"`;
             } throw new Error(`JS: Unknown constant input type '${block.type}'.`);
 
+        case InputOpcode.CONTROL_COUNTER:
+            return 'runtime.ext_scratch3_control._counter';
+
         //pm control
         case InputOpcode.PM_CONTROL_IF_ELSE_REPORT:
             return `(${this.descendInput(node.condition)} ? ${this.descendInput(node.whenTrue)} : ${this.descendInput(node.whenFalse)})`
@@ -414,44 +417,7 @@ class JSGenerator {
             return `Math.sign(${this.descendInput(node.value)})`;
         case InputOpcode.PM_OP_XOR:
             return `(${this.descendInput(node.left)} !== ${this.descendInput(node.right)})`;
-
-        case InputOpcode.PROCEDURE_CALL: {
-            const procedureCode = node.code;
-            const procedureVariant = node.variant;
-            const procedureData = this.ir.procedures[procedureVariant];
-            if (procedureData.stack === null) {
-                // TODO still need to evaluate arguments for side effects
-                return '""';
-            }
-
-            // Recursion makes this complicated because:
-            //  - We need to yield *between* each call in the same command block
-            //  - We need to evaluate arguments *before* that yield happens
-
-            const procedureReference = `thread.procedures["${sanitize(procedureVariant)}"]`;
-            const args = [];
-            for (const input of node.arguments) {
-                if (input instanceof IntermediateStack) {
-                    //is a stack input
-                    let stack = this.descendStackInline(input, {isWarp: procedureData.isWarp, allowReturns: true});
-                    args.push(`function*(thread, target, runtime, stage) {${stack}}`);
-                } else {
-                    args.push(this.descendInput(input));
-                }
-            }
-            const joinedArgs = args.join(',');
-
-            const yieldForRecursion = !this.isWarp && procedureCode === this.script.procedureCode;
-            const yieldForHat = this.isInHat;
-            if (yieldForRecursion || yieldForHat) {
-                const runtimeFunction = procedureData.yields ? 'yieldThenCallGenerator' : 'yieldThenCall';
-                return `(yield* ${runtimeFunction}(${procedureReference}, ${joinedArgs}))`;
-            }
-            if (procedureData.yields) {
-                return `(yield* ${procedureReference}(${joinedArgs}))`;
-            }
-            return `${procedureReference}(${joinedArgs})`;
-        }
+        
         case InputOpcode.SENSING_ANSWER:
             return `runtime.ext_scratch3_sensing._answer`;
         case InputOpcode.SENSING_COLOR_TOUCHING_COLOR:
@@ -512,22 +478,60 @@ class JSGenerator {
             return 'runtime.ioDevices.userData.getUsername()';
         case InputOpcode.SENSING_TIME_YEAR:
             return `(new Date().getFullYear())`;
-
         case InputOpcode.SENSING_TIMER_GET:
             return 'runtime.ioDevices.clock.projectTimer()';
 
-        case InputOpcode.CONTROL_COUNTER:
-            return 'runtime.ext_scratch3_control._counter';
-
-        case InputOpcode.TW_KEY_LAST_PRESSED:
-            return 'runtime.ioDevices.keyboard.getLastKeyPressed()';
+        //pm sensing
+        case InputOpcode.PM_SENSING_TIME_TIMESTAMP:
+            return `Date.now()`;
 
         case InputOpcode.VAR_GET:
             return `${this.referenceVariable(node.variable)}.value`;
 
         //pm variables
         case InputOpcode.PM_VAR_VISIBLE:
-            return `(runtime.monitorBlocks.getBlock("${sanitize(node.variable.id)}")?.isMonitored ?? false)`
+            return `(runtime.monitorBlocks.getBlock("${sanitize(node.variable.id)}")?.isMonitored ?? false)`;
+
+        case InputOpcode.TW_KEY_LAST_PRESSED:
+            return 'runtime.ioDevices.keyboard.getLastKeyPressed()';
+
+        case InputOpcode.PROCEDURE_CALL: {
+            const procedureCode = node.code;
+            const procedureVariant = node.variant;
+            const procedureData = this.ir.procedures[procedureVariant];
+            if (procedureData.stack === null) {
+                // TODO still need to evaluate arguments for side effects
+                return '""';
+            }
+
+            // Recursion makes this complicated because:
+            //  - We need to yield *between* each call in the same command block
+            //  - We need to evaluate arguments *before* that yield happens
+
+            const procedureReference = `thread.procedures["${sanitize(procedureVariant)}"]`;
+            const args = [];
+            for (const input of node.arguments) {
+                if (input instanceof IntermediateStack) {
+                    //is a stack input
+                    let stack = this.descendStackInline(input, {isWarp: procedureData.isWarp, allowReturns: true});
+                    args.push(`function*(thread, target, runtime, stage) {${stack}}`);
+                } else {
+                    args.push(this.descendInput(input));
+                }
+            }
+            const joinedArgs = args.join(',');
+
+            const yieldForRecursion = !this.isWarp && procedureCode === this.script.procedureCode;
+            const yieldForHat = this.isInHat;
+            if (yieldForRecursion || yieldForHat) {
+                const runtimeFunction = procedureData.yields ? 'yieldThenCallGenerator' : 'yieldThenCall';
+                return `(yield* ${runtimeFunction}(${procedureReference}, ${joinedArgs}))`;
+            }
+            if (procedureData.yields) {
+                return `(yield* ${procedureReference}(${joinedArgs}))`;
+            }
+            return `${procedureReference}(${joinedArgs})`;
+        }
 
         default:
             log.warn(`JS: Unknown input: ${block.opcode}`, node);
