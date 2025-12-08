@@ -531,6 +531,18 @@ class ScriptTreeGenerator {
                 left: this.descendInputOfBlock(block, 'OPERAND1').toType(InputType.BOOLEAN),
                 right: this.descendInputOfBlock(block, 'OPERAND2').toType(InputType.BOOLEAN)
             });
+        case 'operator_valid_type':
+            const value = this.descendInputOfBlock(block, 'TEXT').toType(InputType.NUMBER);
+            const operator = block.fields.TYPE.value.toLowerCase();
+            switch (operator) {
+                case "boolean":
+                    return new IntermediateInput(InputOpcode.PM_OP_IS_BOOLEAN, InputType.BOOLEAN, {value});
+                case "number":
+                    return new IntermediateInput(InputOpcode.PM_OP_IS_NUMBER, InputType.BOOLEAN, {value});
+                case "string":
+                    return new IntermediateInput(InputOpcode.PM_OP_IS_STRING, InputType.BOOLEAN, {value});
+                default: return this.createConstantInput(false);
+            }
 
         case 'procedures_call': {
             const procedureInfo = this.getProcedureInfo(block);

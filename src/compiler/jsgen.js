@@ -413,6 +413,12 @@ class JSGenerator {
             return `(10 ** ${this.descendInput(node.value)})`;
 
         //pm operators
+        case InputOpcode.PM_OP_IS_BOOLEAN:
+            return `(["0", "1", "false", "true"].includes(String(${this.descendInput(node.value)})))`;
+        case InputOpcode.PM_OP_IS_NUMBER:
+            return `(!isNaN(Number(${this.descendInput(node.value)})))`;
+        case InputOpcode.PM_OP_IS_STRING:
+            return `(${this.descendInput(node.value)} !== null)`
         case InputOpcode.PM_OP_SIGN:
             return `Math.sign(${this.descendInput(node.value)})`;
         case InputOpcode.PM_OP_XOR:

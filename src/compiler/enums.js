@@ -277,6 +277,9 @@ const InputOpcode = {
     OP_ROUND: 'op.round',
     OP_SUBTRACT: 'op.subtract',
 
+    PM_OP_IS_BOOLEAN: 'op.isBoolean',
+    PM_OP_IS_NUMBER: 'op.isNumber',
+    PM_OP_IS_STRING: 'op.isString',
     PM_OP_SIGN: 'op.sign',
     PM_OP_XOR: 'op.xor',
 
