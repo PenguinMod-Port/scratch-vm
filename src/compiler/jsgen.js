@@ -482,6 +482,10 @@ class JSGenerator {
             return 'runtime.ioDevices.clock.projectTimer()';
 
         //pm sensing
+        case InputOpcode.PM_SENSING_HAS_NUMBER:
+            return `/\d/.test(Cast.toString(${this.descendInput(node.text)}))`;
+        case InputOpcode.PM_SENSING_IS_TEXT:
+            return `isNaN(Number(${this.descendInput(node.text)}))`;
         case InputOpcode.PM_SENSING_TIME_TIMESTAMP:
             return `Date.now()`;
 

@@ -626,6 +626,31 @@ class ScriptTreeGenerator {
         case 'sensing_username':
             return new IntermediateInput(InputOpcode.SENSING_USERNAME, InputType.STRING);
 
+        //pm sensing
+        case 'sensing_thing_has_number':
+            let text = this.descendInputOfBlock(block, 'TEXT1');
+            if (text.isSubtypeOf(InputType.NUMBER)) return this.createConstantInput(true);
+            return new IntermediateInput(InputOpcode.PM_SENSING_HAS_NUMBER, InputType.BOOLEAN, {
+                text
+            });
+        case 'sensing_thing_has_text':
+            // ts has no code in pre-port pm, soo im just gonna make it always return true
+            return this.createConstantInput(true);
+        case 'sensing_thing_is_number':
+            let text = this.descendInputOfBlock(block, 'TEXT1');
+            if (text.isSubtypeOf(InputType.NUMBER)) return this.createConstantInput(true);
+            return new IntermediateInput(InputOpcode.OP_NOT, InputType.BOOLEAN, {
+                operand: new IntermediateInput(InputOpcode.PM_SENSING_IS_TEXT, InputType.BOOLEAN, {
+                    text
+                })
+            });
+        case 'sensing_thing_is_text':
+            let text = this.descendInputOfBlock(block, 'TEXT1');
+            if (text.isSubtypeOf(InputType.NUMBER)) return this.createConstantInput(false);
+            return new IntermediateInput(InputOpcode.PM_SENSING_IS_TEXT, InputType.BOOLEAN, {
+                text
+            });
+
         case 'sound_sounds_menu':
             // This menu is special compared to other menus -- it actually has an opcode function.
             return this.createConstantInput(block.fields.SOUND_MENU.value, true);

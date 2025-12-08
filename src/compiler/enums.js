@@ -311,6 +311,8 @@ const InputOpcode = {
     SENSING_TOUCHING_OBJECT: 'sensing.touching',
     SENSING_USERNAME: 'sensing.username',
 
+    PM_SENSING_HAS_NUMBER: 'sensing.hasNumber',
+    PM_SENSING_IS_TEXT: 'sensing.isText',
     PM_SENSING_TIME_TIMESTAMP: 'sensing.timestamp',
 
     PROCEDURE_CALL: 'procedures.call',

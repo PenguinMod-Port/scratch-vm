@@ -130,6 +130,15 @@ class IntermediateInput {
     }
 
     /**
+     * Checks that type does not have any other types
+     * @param {InputType} type
+     * @returns
+     */
+    isSubtypeOf(type) {
+        return (this.type | type) === type;
+    }
+
+    /**
      * Converts this input to a target type.
      * If this input is a constant the conversion is performed now, at compile time.
      * If the input changes, the conversion is performed at runtime.
