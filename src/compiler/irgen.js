@@ -533,7 +533,7 @@ class ScriptTreeGenerator {
                 right: this.descendInputOfBlock(block, 'OPERAND2').toType(InputType.BOOLEAN)
             });
         case 'operator_valid_type':
-            const value = this.descendInputOfBlock(block, 'TEXT').toType(InputType.NUMBER);
+            const value = this.descendInputOfBlock(block, 'TEXT')
             const operator = block.fields.TYPE.value.toLowerCase();
             switch (operator) {
                 case "boolean":
