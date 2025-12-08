@@ -259,7 +259,7 @@ class ScriptTreeGenerator {
         //pm control
         case 'control_error':
             return new IntermediateInput(InputOpcode.PM_CONTROL_TRY_CATCH_ERROR, InputType.STRING);
-        case 'control_if_return_else_return':
+        case 'control_if_return_else_return': {
             let whenTrue = this.descendInputOfBlock(block, 'TEXT1');
             let whenFalse = this.descendInputOfBlock(block, 'TEXT2');
             return new IntermediateInput(InputOpcode.PM_CONTROL_IF_ELSE_REPORT, whenTrue.type | whenFalse.type, {
@@ -267,6 +267,7 @@ class ScriptTreeGenerator {
                 whenTrue,
                 whenFalse
             })
+        }
         case 'control_inline_stack_output': 
             return new IntermediateInput(InputOpcode.PM_CONTROL_INLINE_BLOCK, InputType.ANY, {
                 code: this.descendSubstack(block, 'SUBSTACK')
@@ -639,16 +640,17 @@ class ScriptTreeGenerator {
             return new IntermediateInput(InputOpcode.SENSING_USERNAME, InputType.STRING);
 
         //pm sensing
-        case 'sensing_thing_has_number':
+        case 'sensing_thing_has_number': {
             let text = this.descendInputOfBlock(block, 'TEXT1');
             if (text.isSubtypeOf(InputType.NUMBER)) return this.createConstantInput(true);
             return new IntermediateInput(InputOpcode.PM_SENSING_HAS_NUMBER, InputType.BOOLEAN, {
                 text
             });
+        }
         case 'sensing_thing_has_text':
             // ts has no code in pre-port pm, soo im just gonna make it always return true
             return this.createConstantInput(true);
-        case 'sensing_thing_is_number':
+        case 'sensing_thing_is_number': {
             let text = this.descendInputOfBlock(block, 'TEXT1');
             if (text.isSubtypeOf(InputType.NUMBER)) return this.createConstantInput(true);
             return new IntermediateInput(InputOpcode.OP_NOT, InputType.BOOLEAN, {
@@ -656,12 +658,14 @@ class ScriptTreeGenerator {
                     text
                 })
             });
-        case 'sensing_thing_is_text':
+        }
+        case 'sensing_thing_is_text': {
             let text = this.descendInputOfBlock(block, 'TEXT1');
             if (text.isSubtypeOf(InputType.NUMBER)) return this.createConstantInput(false);
             return new IntermediateInput(InputOpcode.PM_SENSING_IS_TEXT, InputType.BOOLEAN, {
                 text
             });
+        }
 
         case 'sound_sounds_menu':
             // This menu is special compared to other menus -- it actually has an opcode function.
