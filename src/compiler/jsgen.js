@@ -239,7 +239,7 @@ class JSGenerator {
             return `(${this.descendInput(node.condition)} ? ${this.descendInput(node.whenTrue)} : ${this.descendInput(node.whenFalse)})`
         case InputOpcode.PM_CONTROL_INLINE_BLOCK:
             let stack = this.descendStackInline(node.code, {allowReturns: true});
-            return `(${this.script.yields ? 'yield* (function*' : '(function'}() {\n${stack}return "";\n})())`;
+            return `(yield* (function*() {\n${stack}return "";\n})())`;
         case InputOpcode.PM_CONTROL_IS_CLONE:
             return `(!target.isOriginal)`;
         case InputOpcode.PM_CONTROL_TRY_CATCH_ERROR:
@@ -743,6 +743,10 @@ class JSGenerator {
                 this.source += `throw 'All "escape loop" blocks must be inside of a looping block.';\n`;
             }
             break;
+        case StackOpcode.PM_CONTROL_RESTART_PROJECT:
+            this.source += `runtime.greenFlag();\n`;
+            this.retire();
+            break;
         case StackOpcode.PM_CONTROL_THROW_ERROR:
             this.source += `throw ${this.descendInput(node.error)};\n`;
             break;
@@ -1157,7 +1161,8 @@ class JSGenerator {
         // After running retire() (sets thread status and cleans up some unused data), we need to return to the event loop.
         // When in a procedure, return will only send us back to the previous procedure, so instead we yield back to the sequencer.
         // Outside of a procedure, return will correctly bring us back to the sequencer.
-        if (this.isProcedure) {
+        // also needed for stuff that allows returns cause thats scoped inside another function
+        if (this.isProcedure || this.allowReturns) {
             this.source += 'retire(); yield;\n';
         } else {
             this.source += 'retire(); return;\n';

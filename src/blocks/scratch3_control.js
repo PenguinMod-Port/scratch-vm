@@ -38,6 +38,7 @@ class Scratch3ControlBlocks {
             control_get_counter: this.getCounter,
             control_incr_counter: this.incrCounter,
             control_clear_counter: this.clearCounter,
+            control_backToGreenFlag: this.backToGreenFlag,
             control_all_at_once: this.allAtOnce
         };
     }
@@ -48,6 +49,28 @@ class Scratch3ControlBlocks {
                 restartExistingThreads: false
             }
         };
+    }
+    
+    backToGreenFlag(_, util) {
+        const thisThread = util.thread.topBlock;
+        this.runtime.emit("PROJECT_START_BEFORE_RESET");
+        this.runtime.threads
+            .filter(thread => thread.topBlock !== thisThread)
+            .forEach(thread => thread.stopThisScript());
+        // green flag behaviour
+        this.runtime.emit("PROJECT_START");
+        this.runtime.updateCurrentMSecs();
+        this.runtime.ioDevices.clock.resetProjectTimer();
+        this.runtime.targets.forEach(target => target.clearEdgeActivatedValues());
+        for (let i = this.runtime.targets.length - 1; i >= 0; i--) {
+            const thisTarget = this.runtime.targets[i];
+            thisTarget.onGreenFlag();
+            if (!thisTarget.isOriginal) {
+                this.runtime.disposeTarget(thisTarget);
+                this.runtime.stopForTarget(thisTarget);
+            }
+        }
+        this.runtime.startHats("event_whenflagclicked");
     }
 
     repeat (args, util) {

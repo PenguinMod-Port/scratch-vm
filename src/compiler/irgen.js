@@ -271,7 +271,7 @@ class ScriptTreeGenerator {
         case 'control_inline_stack_output': 
             return new IntermediateInput(InputOpcode.PM_CONTROL_INLINE_BLOCK, InputType.ANY, {
                 code: this.descendSubstack(block, 'SUBSTACK')
-            });
+            }, true);
         case 'control_is_clone':
             return new IntermediateInput(InputOpcode.PM_CONTROL_IS_CLONE, InputType.BOOLEAN);
 
@@ -822,6 +822,8 @@ class ScriptTreeGenerator {
             });
         case 'control_exitLoop':
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_ESCAPE_LOOP);
+        case 'control_restartproject':
+            return new IntermediateStackBlock(StackOpcode.PM_CONTROL_RESTART_PROJECT);
         case 'control_throw_error':
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_THROW_ERROR, {
                 error: this.descendInputOfBlock(block, 'ERROR').toType(InputType.STRING)
