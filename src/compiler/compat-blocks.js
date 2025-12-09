@@ -8,7 +8,7 @@
 // Please keep these lists alphabetical.
 
 const stacked = [
-    'control_backToGreenFlag'
+    'control_backToGreenFlag',
     'looks_changestretchby',
     'looks_hideallsprites',
     'looks_say',
