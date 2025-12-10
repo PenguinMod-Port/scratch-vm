@@ -149,7 +149,9 @@ class ScriptTreeGenerator {
     }
 
     createConstantInput (constant, preserveStrings = false) {
-        if (constant === null) throw new Error('IR: Constant cannot have a null value.');
+        if (constant === null) {
+            return new IntermediateInput(InputOpcode.CONSTANT, InputType.NULL)
+        }
 
         constant += '';
         const numConstant = +constant;

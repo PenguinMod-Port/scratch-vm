@@ -211,7 +211,9 @@ class JSGenerator {
             return this.oldCompilerStub.descendInputFromNewCompiler(block);
 
         case InputOpcode.CONSTANT:
-            if (block.isAlwaysType(InputType.NUMBER)) {
+            if (block.isAlwaysType(InputType.NULL)) {
+                return "null";
+            } else if (block.isAlwaysType(InputType.NUMBER)) {
                 if (typeof node.value !== 'number') throw new Error(`JS: '${block.type}' type constant had ${typeof node.value} type value. Expected number.`);
                 if (Object.is(node.value, -0)) return '-0';
                 return node.value.toString();
