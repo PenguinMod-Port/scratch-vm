@@ -708,7 +708,7 @@ const serializeMonitors = function (monitors, runtime, extensions) {
 const serializeConfig = function (runtime) {
     const config = Object.create(null);
 
-    if (runtime.frameLoop.framerate !== 30) config.framerate = runtime.frameLoop.frameRate;
+    if (runtime.frameLoop.framerate !== 30) config.frameRate = runtime.frameLoop.framerate;
     if (runtime.interpolationEnabled) config.interpolation = true;
     if (runtime.renderer.useHighQualityRender) config.hqPen = true;
     if (runtime.compilerOptions.warpTimer) config.warpTimer = true;
@@ -1527,7 +1527,7 @@ const checkPlatformCompatibility = (json, runtime) => {
 };
 
 const deserializeConfig = function (config, runtime) {
-    runtime.setFramerate(config.framerate ?? 30);
+    runtime.setFramerate(config.frameRate ?? 30);
     runtime.setInterpolation(!!config.interpolation);
     runtime.renderer.setUseHighQualityRender(!!config.hqPen);
     runtime.compilerOptions.warpTimer = !!config.warpTimer;
