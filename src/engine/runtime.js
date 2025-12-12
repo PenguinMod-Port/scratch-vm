@@ -2502,13 +2502,6 @@ class Runtime extends EventEmitter {
         if (this.paused) return;
         this.emit(Runtime.RUNTIME_PRE_PAUSED);
         this.paused = true;
-        // pause all audio contexts (that includes exts with their own AC or gain node)
-        this.audioEngine.audioContext.suspend();
-        for (const audioData of this._extensionAudioObjects.values()) {
-            if (audioData.audioContext) {
-                audioData.audioContext.suspend();
-            }
-        }
 
         this.ioDevices.clock.pause();
         for (const thread of this.threads) {
@@ -2523,13 +2516,6 @@ class Runtime extends EventEmitter {
     play () {
         if (!this.paused) return;
         this.paused = false;
-        // resume all audio contexts (that includes exts with their own AC or gain node)
-        this.audioEngine.audioContext.resume();
-        for (const audioData of this._extensionAudioObjects.values()) {
-            if (audioData.audioContext) {
-                audioData.audioContext.resume();
-            }
-        }
 
         this.ioDevices.clock.resume();
         for (const thread of this.threads) {
