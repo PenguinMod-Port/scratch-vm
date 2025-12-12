@@ -1532,9 +1532,11 @@ const deserializeConfig = function (config, runtime) {
     runtime.renderer.setUseHighQualityRender(!!config.hqPen);
     runtime.compilerOptions.warpTimer = !!config.warpTimer;
 
-    runtime.runtimeOptions.maxClones = ((config.maxClones === -1 ? Infinity : config.maxClones) ?? runtime.constructor.MAX_CLONES); 
-    runtime.runtimeOptions.miscLimits = !!config.miscLimits;
-    runtime.runtimeOptions.fencing = !!config.fencing;
+    runtime.setRuntimeOptions({
+        maxClones: (config.maxClones === -1 ? Infinity : config.maxClones) ?? runtime.constructor.MAX_CLONES,
+        miscLimits: !!config.miscLimits,
+        fencing: !!config.fencing
+    });
     
     runtime.setStageSize(config.stageSize?.width, config.stageSize?.height);
 }
