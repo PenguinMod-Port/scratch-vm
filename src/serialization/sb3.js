@@ -705,6 +705,28 @@ const serializeMonitors = function (monitors, runtime, extensions) {
         .toArray();
 };
 
+const serializeConfig = function (runtime) {
+    const config = Object.create(null);
+
+    if (runtime.frameLoop.framerate !== 30) config.framerate = runtime.frameLoop.frameRate;
+    if (runtime.interpolationEnabled) config.interpolation = true;
+    if (runtime.renderer.useHighQualityRender) config.hqPen = true;
+    if (runtime.compilerOptions.warpTimer) config.warpTimer = true;
+
+    if (runtime.runtimeOptions.maxClones !== runtime.constructor.MAX_CLONES) config.maxClones = (runtime.runtimeOptions.maxClones === Infinity ? -1 : runtime.runtimeOptions.maxClones);
+    if (runtime.runtimeOptions.miscLimits) config.miscLimits = true;
+    if (runtime.runtimeOptions.fencing) config.fencing = true;
+
+    if (runtime.stageHeight !== 360 || runtime.stageWidth !== 480) {
+        config.stageSize = {
+            width: runtime.stageWidth,
+            height: runtime.stageHeight
+        }
+    }
+
+    return config;
+}
+
 /**
  * Serializes the specified VM runtime.
  * @param {!Runtime} runtime VM runtime instance to be serialized.
@@ -780,6 +802,8 @@ const serialize = function (runtime, targetId, {allowOptimization = true} = {}) 
     if (fonts) {
         obj.customFonts = fonts;
     }
+
+    obj.config = serializeConfig(runtime);
 
     // Assemble metadata
     const meta = Object.create(null);
@@ -1502,6 +1526,19 @@ const checkPlatformCompatibility = (json, runtime) => {
     });
 };
 
+const deserializeConfig = function (config, runtime) {
+    runtime.setFramerate(config.framerate ?? 30);
+    runtime.setInterpolation(!!config.interpolation);
+    runtime.renderer.setUseHighQualityRender(!!config.hqPen);
+    runtime.compilerOptions.warpTimer = !!config.warpTimer;
+
+    runtime.runtimeOptions.maxClones = ((config.maxClones === -1 ? Infinity : config.maxClones) ?? runtime.constructor.MAX_CLONES); 
+    runtime.runtimeOptions.miscLimits = !!config.miscLimits;
+    runtime.runtimeOptions.fencing = !!config.fencing;
+    
+    runtime.setStageSize(config.stageSize?.width, config.stageSize?.height);
+}
+
 /**
  * Deserialize the specified representation of a VM runtime and loads it into the provided runtime instance.
  * @param  {object} json - JSON representation of a VM runtime.
@@ -1551,6 +1588,8 @@ const deserialize = async function (json, runtime, zip, isSingleSprite) {
         .sort((a, b) => a.layerOrder - b.layerOrder);
 
     const monitorObjects = json.monitors || [];
+
+    if (json.config) deserializeConfig(json.config, runtime);
 
     return fontPromise.then(() => targetObjects.map(target => parseScratchAssets(target, runtime, zip)))
         // Force this promise to wait for the next loop in the js tick. Let

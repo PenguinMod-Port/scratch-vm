@@ -2722,7 +2722,7 @@ class Runtime extends EventEmitter {
      * @param {number} width New stage width
      * @param {number} height New stage height
      */
-    setStageSize (width, height) {
+    setStageSize (width = 480, height = 360) {
         width = Math.round(Math.max(1, width));
         height = Math.round(Math.max(1, height));
         if (this.stageWidth !== width || this.stageHeight !== height) {
@@ -2905,6 +2905,10 @@ class Runtime extends EventEmitter {
         if (storedWidth !== this.stageWidth || storedHeight !== this.stageHeight) {
             this.setStageSize(storedWidth, storedHeight);
         }
+
+        //since this type of storing stuff is deprecated, remove the comment
+        delete this.getTargetForStage().comments[comment.id];
+        this.emitProjectChanged();
     }
 
     _generateAllProjectOptions () {
@@ -2940,18 +2944,7 @@ class Runtime extends EventEmitter {
     }
 
     storeProjectOptions () {
-        const options = this.generateDifferingProjectOptions();
-        // TODO: translate
-        const text = `Configuration for https://turbowarp.org/\nYou can move, resize, and minimize this comment, but don't edit it by hand. This comment can be deleted to remove the stored settings.\n${ExtendedJSON.stringify(options)}${COMMENT_CONFIG_MAGIC}`;
-        const existingComment = this.findProjectOptionsComment();
-        if (existingComment) {
-            existingComment.text = text;
-        } else {
-            const target = this.getTargetForStage();
-            // TODO: smarter position logic
-            target.createComment(uid(), null, text, 50, 50, 350, 170, false);
-        }
-        this.emitProjectChanged();
+        //project options now stored inside project json so this function is useless
     }
 
     /**
