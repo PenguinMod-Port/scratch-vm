@@ -931,6 +931,31 @@ class Runtime extends EventEmitter {
     }
 
     /**
+     * Event name when the runtime is paused temporarily.
+     * @const {string}
+     */
+    static get RUNTIME_PAUSED () {
+        return 'RUNTIME_PAUSED';
+    }
+
+    /**
+     * Event name when the runtime is about to be paused temporarily.
+     * Fires before runtime.paused = true.
+     * @const {string}
+     */
+    static get RUNTIME_PRE_PAUSED () {
+        return 'RUNTIME_PRE_PAUSED';
+    }
+
+    /**
+     * Event name when the runtime is unpaused.
+     * @const {string}
+     */
+    static get RUNTIME_UNPAUSED () {
+        return 'RUNTIME_UNPAUSED';
+    }
+
+    /**
      * Event name for reporting that a block was updated and needs to be rerendered.
      * @const {string}
      */
@@ -2468,6 +2493,49 @@ class Runtime extends EventEmitter {
             this.targets[i].onGreenFlag();
         }
         this.startHats('event_whenflagclicked');
+    }
+
+    /**
+     * Pause running scripts
+     */
+    pause () {
+        if (this.paused) return;
+        this.emit(Runtime.RUNTIME_PRE_PAUSED);
+        this.paused = true;
+        // pause all audio contexts (that includes exts with their own AC or gain node)
+        this.audioEngine.audioContext.suspend();
+        for (const audioData of this._extensionAudioObjects.values()) {
+            if (audioData.audioContext) {
+                audioData.audioContext.suspend();
+            }
+        }
+
+        this.ioDevices.clock.pause();
+        for (const thread of this.threads) {
+            thread.pause();
+        }
+        this.emit(Runtime.RUNTIME_PAUSED);
+    }
+
+    /**
+     * Unpause running scripts
+     */
+    play () {
+        if (!this.paused) return;
+        this.paused = false;
+        // resume all audio contexts (that includes exts with their own AC or gain node)
+        this.audioEngine.audioContext.resume();
+        for (const audioData of this._extensionAudioObjects.values()) {
+            if (audioData.audioContext) {
+                audioData.audioContext.resume();
+            }
+        }
+
+        this.ioDevices.clock.resume();
+        for (const thread of this.threads) {
+            thread.play();
+        }
+        this.emit(Runtime.RUNTIME_UNPAUSED);
     }
 
     /**
