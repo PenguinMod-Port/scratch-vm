@@ -2552,6 +2552,8 @@ class Runtime extends EventEmitter {
         this.threadMap.clear();
 
         this.resetRunId();
+
+        this.startHats('event_whenstopclicked');
     }
 
     _renderInterpolatedPositions () {
