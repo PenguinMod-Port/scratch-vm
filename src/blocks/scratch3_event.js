@@ -16,6 +16,15 @@ class Scratch3EventBlocks {
                 KEY_OPTION: 'any'
             });
         });
+
+        this.runtime.on('KEY_HIT', key => {
+            this.runtime.startHats('event_whenkeyhit', {
+                KEY_OPTION: key
+            });
+            this.runtime.startHats('event_whenkeyhit', {
+                KEY_OPTION: 'any'
+            });
+        });
         
         this.runtime.on('RUNTIME_STEP_START', () => {
             this.runtime.startHats('event_always');
@@ -78,6 +87,9 @@ class Scratch3EventBlocks {
             event_whenmousescrolled: {
                 restartExistingThreads: false
             },
+            event_whenkeyhit: {
+                restartExistingThreads: false
+            }
         };
     }
 
