@@ -264,6 +264,16 @@ class Thread {
     }
 
     /**
+     * Thread status for a paused thread.
+     * Thread is in this state when it has been told to pause and needs to pause 
+     * any new yields from the compiler
+     * @const
+     */
+    static get STATUS_PAUSED () {
+        return 5;
+    }
+
+    /**
      * @param {Target} target The target running the thread.
      * @param {string} topBlock ID of the thread's top block.
      * @returns {string} A unique ID for this target and thread.
@@ -460,6 +470,23 @@ class Thread {
             if (--callCount < 0) return false;
         }
         return false;
+    }
+
+    /**
+     * pause this thread
+     */
+    pause () {
+        this.originalStatus = this.status;
+        this.status = Thread.STATUS_PAUSED;
+        if (this.timer) this.timer.pause();
+    }
+
+    /**
+     * unpause this thread
+     */
+    play () {
+        this.status = this.originalStatus;
+        if (this.timer) this.timer.play();
     }
 
     /**
