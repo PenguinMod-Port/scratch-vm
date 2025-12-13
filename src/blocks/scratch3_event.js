@@ -75,6 +75,9 @@ class Scratch3EventBlocks {
             event_whenstopclicked: {
                 restartExistingThreads: true
             },
+            event_whenmousescrolled: {
+                restartExistingThreads: false
+            },
         };
     }
 
