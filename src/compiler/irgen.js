@@ -510,6 +510,12 @@ class ScriptTreeGenerator {
             });
         case 'operator_falseBoolean':
             return this.createConstantInput(true);
+        case 'operator_lerpFunc':
+            return new IntermediateInput(InputOpcode.PM_OP_INTERPOLATE, InputType.NUMBER, {
+                from: this.descendInputOfBlock(block, 'ONE').toType(InputType.NUMBER),
+                to: this.descendInputOfBlock(block, 'TWO').toType(InputType.NUMBER),
+                amount: this.descendInputOfBlock(block, 'AMOUNT').toType(InputType.NUMBER)
+            });
         case 'operator_nand':
             return new IntermediateInput(InputOpcode.OP_NOT, InputType.BOOLEAN, {
                 operand: new IntermediateInput(InputOpcode.OP_AND, InputType.BOOLEAN, {

@@ -287,6 +287,7 @@ const InputOpcode = {
     OP_SUBTRACT: 'op.subtract',
 
     PM_OP_CONSTRAIN: 'op.constrain',
+    PM_OP_INTERPOLATE: 'op.interpolate',
     PM_OP_IS_BOOLEAN: 'op.isBoolean',
     PM_OP_IS_NUMBER: 'op.isNumber',
     PM_OP_IS_STRING: 'op.isString',

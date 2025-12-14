@@ -416,7 +416,9 @@ class JSGenerator {
 
         //pm operators
         case InputOpcode.PM_OP_CONSTRAIN:
-            return `Math.min(Math.max(${this.descendInput(node.min)}, ${this.descendInput(node.input)}), ${this.descendInput(node.max)})`
+            return `Math.min(Math.max(${this.descendInput(node.min)}, ${this.descendInput(node.input)}), ${this.descendInput(node.max)})`;
+        case InputOpcode.PM_OP_INTERPOLATE:
+            return `((a, b, c) => (b - a) * c + a)(${this.descendInput(node.from)}, ${this.descendInput(node.to)}, ${this.descendInput(node.amount)})`;
         case InputOpcode.PM_OP_IS_BOOLEAN:
             return `(["0", "1", "false", "true"].includes(String(${this.descendInput(node.value)})))`;
         case InputOpcode.PM_OP_IS_NUMBER:
