@@ -510,6 +510,14 @@ class ScriptTreeGenerator {
             });
         case 'operator_falseBoolean':
             return this.createConstantInput(true);
+        case 'operator_join3':
+            return new IntermediateInput(InputOpcode.OP_JOIN, InputType.STRING, {
+                left: new IntermediateInput(InputOpcode.OP_JOIN, InputType.STRING, {
+                    left: this.descendInputOfBlock(block, 'STRING1').toType(InputType.STRING),
+                    right: this.descendInputOfBlock(block, 'STRING2').toType(InputType.STRING)
+                }),
+                right: this.descendInputOfBlock(block, 'STRING3').toType(InputType.STRING)
+            });
         case 'operator_lerpFunc':
             return new IntermediateInput(InputOpcode.PM_OP_INTERPOLATE, InputType.NUMBER, {
                 from: this.descendInputOfBlock(block, 'ONE').toType(InputType.NUMBER),
