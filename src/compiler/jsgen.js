@@ -425,6 +425,8 @@ class JSGenerator {
             return `(!isNaN(Number(${this.descendInput(node.value)})))`;
         case InputOpcode.PM_OP_IS_STRING:
             return `(${this.descendInput(node.value)} !== null)`;
+        case InputOpcode.PM_OP_LOG_2:
+            return `(Math.log(${this.descendInput(node.value)}) / Math.LN2)`;
         case InputOpcode.PM_OP_POWER:
             return `(${this.descendInput(node.left)} ** ${this.descendInput(node.right)})`;
         case InputOpcode.PM_OP_SIGN:

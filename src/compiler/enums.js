@@ -291,6 +291,7 @@ const InputOpcode = {
     PM_OP_IS_BOOLEAN: 'op.isBoolean',
     PM_OP_IS_NUMBER: 'op.isNumber',
     PM_OP_IS_STRING: 'op.isString',
+    PM_OP_LOG_2: 'op.log2',
     PM_OP_POWER: 'op.power',
     PM_OP_SIGN: 'op.sign',
     PM_OP_XOR: 'op.xor',
