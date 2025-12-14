@@ -510,6 +510,13 @@ class ScriptTreeGenerator {
             });
         case 'operator_falseBoolean':
             return this.createConstantInput(true);
+        case 'operator_gtorequal':
+            return new IntermediateInput(InputOpcode.OP_NOT, InputType.BOOLEAN, {
+                operand: new IntermediateInput(InputOpcode.OP_LESS, InputType.BOOLEAN, {
+                    left: this.descendInputOfBlock(block, 'OPERAND1'),
+                    right: this.descendInputOfBlock(block, 'OPERAND2')
+                })
+            });
         case 'operator_join3':
             return new IntermediateInput(InputOpcode.OP_JOIN, InputType.STRING, {
                 left: new IntermediateInput(InputOpcode.OP_JOIN, InputType.STRING, {
@@ -524,6 +531,13 @@ class ScriptTreeGenerator {
                 to: this.descendInputOfBlock(block, 'TWO').toType(InputType.NUMBER),
                 amount: this.descendInputOfBlock(block, 'AMOUNT').toType(InputType.NUMBER)
             });
+        case 'operator_ltorequal':
+            return new IntermediateInput(InputOpcode.OP_NOT, InputType.BOOLEAN, {
+                operand: new IntermediateInput(InputOpcode.OP_GREATER, InputType.BOOLEAN, {
+                    left: this.descendInputOfBlock(block, 'OPERAND1'),
+                    right: this.descendInputOfBlock(block, 'OPERAND2')
+                })
+            });
         case 'operator_nand':
             return new IntermediateInput(InputOpcode.OP_NOT, InputType.BOOLEAN, {
                 operand: new IntermediateInput(InputOpcode.OP_AND, InputType.BOOLEAN, {
@@ -536,6 +550,13 @@ class ScriptTreeGenerator {
                 operand: new IntermediateInput(InputOpcode.OP_OR, InputType.BOOLEAN, {
                     left: this.descendInputOfBlock(block, 'OPERAND1').toType(InputType.BOOLEAN),
                     right: this.descendInputOfBlock(block, 'OPERAND2').toType(InputType.BOOLEAN)
+                })
+            });
+        case 'operator_notequal':
+            return new IntermediateInput(InputOpcode.OP_NOT, InputType.BOOLEAN, {
+                operand: new IntermediateInput(InputOpcode.OP_EQUALS, InputType.BOOLEAN, {
+                    left: this.descendInputOfBlock(block, 'OPERAND1'),
+                    right: this.descendInputOfBlock(block, 'OPERAND2')
                 })
             });
         case 'operator_power':
