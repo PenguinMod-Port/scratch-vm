@@ -1385,6 +1385,7 @@ class Runtime extends EventEmitter {
             type: extendedOpcode,
             inputsInline: true,
             category: categoryInfo.name,
+            branches: blockInfo.branches ?? [],
             extensions: [],
             colour: blockInfo.color1 ?? categoryInfo.color1,
             colourSecondary: blockInfo.color2 ?? categoryInfo.color2,
@@ -1474,7 +1475,7 @@ class Runtime extends EventEmitter {
             break;
         }
 
-        // Allow extensiosn to override outputShape
+        // Allow extensions to override outputShape
         if (blockInfo.blockShape) {
             blockJSON.outputShape = blockInfo.blockShape;
         }
@@ -1486,8 +1487,20 @@ class Runtime extends EventEmitter {
         const convertPlaceholders = this._convertPlaceholders.bind(this, context);
         const extensionMessageContext = this.makeMessageContextForTarget();
 
+        // convert branchCount to new branches property
+        if (blockJSON.branches.length === 0 && blockInfo.branchCount > 0) {
+            for (let i = 0; i < blockInfo.branchCount; i++) {
+                blockJSON.branches.push({});
+            }
+        }
+
+        // setup names for branches
+        blockJSON.branches.forEach((branch, i) => {
+            branch.name ??= i > 0 ? i + 1 : '';
+        });
+
         // alternate between a block "arm" with text on it and an open slot for a substack
-        while (inTextNum < blockText.length || inBranchNum < blockInfo.branchCount) {
+        while (inTextNum < blockText.length || inBranchNum < blockJSON.branches.length) {
             if (inTextNum < blockText.length) {
                 context.outLineNum = outLineNum;
                 const lineText = maybeFormatMessage(blockText[inTextNum], extensionMessageContext);
@@ -1500,11 +1513,12 @@ class Runtime extends EventEmitter {
                 ++inTextNum;
                 ++outLineNum;
             }
-            if (inBranchNum < blockInfo.branchCount) {
+            if (inBranchNum < blockJSON.branches.length) {
+                const branch = blockJSON.branches[inBranchNum];
                 blockJSON[`message${outLineNum}`] = '%1';
                 blockJSON[`args${outLineNum}`] = [{
                     type: 'input_statement',
-                    name: `SUBSTACK${inBranchNum > 0 ? inBranchNum + 1 : ''}`
+                    name: `SUBSTACK${branch.name}`
                 }];
                 ++inBranchNum;
                 ++outLineNum;

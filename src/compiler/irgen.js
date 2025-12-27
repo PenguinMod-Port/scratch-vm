@@ -1500,10 +1500,7 @@ class ScriptTreeGenerator {
         if (blockType === BlockType.CONDITIONAL || blockType === BlockType.LOOP) {
             for (const inputName in block.inputs) {
                 if (!inputName.startsWith('SUBSTACK')) continue;
-                const branchNum = inputName === 'SUBSTACK' ? 1 : +inputName.substring('SUBSTACK'.length);
-                if (!isNaN(branchNum)) {
-                    substacks[branchNum] = this.descendSubstack(block, inputName);
-                }
+                substacks[inputName] = this.descendSubstack(block, inputName);
             }
         }
 

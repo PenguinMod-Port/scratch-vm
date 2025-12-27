@@ -581,10 +581,10 @@ class JSGenerator {
             } else if (blockType === BlockType.CONDITIONAL || blockType === BlockType.LOOP) {
                 const branchVariable = this.localVariables.next();
                 this.source += `const ${branchVariable} = createBranchInfo(${blockType === BlockType.LOOP});\n`;
-                this.source += `while (${branchVariable}.branch = +(${this.generateCompatibilityLayerCall(node, false, branchVariable)})) {\n`;
-                this.source += `switch (${branchVariable}.branch) {\n`;
+                this.source += `while (${branchVariable}.branch = (${this.generateCompatibilityLayerCall(node, false, branchVariable)})) {\n`;
+                this.source += `switch ("SUBSTACK" + (${branchVariable}.branch == 1 ? "" : ${branchVariable}.branch)) {\n`;
                 for (const index in node.substacks) {
-                    this.source += `case ${+index}: {\n`;
+                    this.source += `case "${sanitize(index.toString())}": {\n`;
                     this.descendStack(node.substacks[index]);
                     this.source += `break;\n`;
                     this.source += `}\n`; // close case
