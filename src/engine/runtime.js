@@ -3175,7 +3175,7 @@ class Runtime extends EventEmitter {
      */
     visualReport (target, blockId, value, error = false) {
         if (target === this.getEditingTarget()) {
-            this.emit(Runtime.VISUAL_REPORT, {id: blockId, value: String(value), error});
+            this.emit(Runtime.VISUAL_REPORT, {id: blockId, value, error});
         }
     }
 
