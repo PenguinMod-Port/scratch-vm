@@ -1475,10 +1475,9 @@ class Runtime extends EventEmitter {
             break;
         }
 
-        // Allow extensions to override outputShape
-        if (blockInfo.blockShape) {
-            blockJSON.outputShape = blockInfo.blockShape;
-        }
+        if (blockInfo.blockShape) blockJSON.outputShape = blockInfo.blockShape; // Allow extensions to override outputShape
+        if (blockInfo.forceOutputType !== undefined) blockJSON.output = blockInfo.forceOutputType; // Allow extensions to override output type
+        if (blockInfo.outputCheck !== undefined) blockJSON.output = blockInfo.outputCheck; // ditto for above but i wanted a nicer name
 
         const blockText = Array.isArray(blockInfo.text) ? blockInfo.text : [blockInfo.text];
         let inTextNum = 0; // text for the next block "arm" is blockText[inTextNum]
@@ -1700,12 +1699,8 @@ class Runtime extends EventEmitter {
                 typeof argInfo.defaultValue === 'undefined' ? null :
                     maybeFormatMessage(argInfo.defaultValue, this.makeMessageContextForTarget()).toString();
 
-            if (argTypeInfo.check) {
-                // Right now the only type of 'check' we have specifies that the
-                // input slot on the block accepts Boolean reporters, so it should be
-                // shaped like a hexagon
-                argJSON.check = argTypeInfo.check;
-            }
+            argJSON.check = argInfo.check === undefined ? argTypeInfo.check : argInfo.check;
+            argJSON.shape = argInfo.shape === undefined ? argTypeInfo.shape : argInfo.shape;
 
             let valueName;
             let shadowType;

@@ -171,8 +171,7 @@ const jwArray = {
     Block: {
         blockType: BlockType.REPORTER,
         blockShape: BlockShape.SQUARE,
-        forceOutputType: "Array",
-        //allowDropAnywhere: true,
+        outputCheck: "Array",
         disableMonitor: true
     },
     Argument: {
