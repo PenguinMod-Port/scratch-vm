@@ -26,7 +26,12 @@ const defaultBuiltinExtensions = {
     boost: () => require('../extensions/scratch3_boost'),
     gdxfor: () => require('../extensions/scratch3_gdx_for'),
     // tw: core extension
-    tw: () => require('../extensions/tw')
+    tw: () => require('../extensions/tw'),
+
+    // -- penguinmod --
+
+    // jwklong
+    jwArray: () => require('../extensions/penguinmod/jwArray'),
 };
 
 /**
