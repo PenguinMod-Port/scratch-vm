@@ -3,6 +3,7 @@ const log = require('../util/log');
 const maybeFormatMessage = require('../util/maybe-format-message');
 
 const BlockType = require('./block-type');
+const CompileMode = require('./compile-mode');
 const SecurityManager = require('./tw-security-manager');
 
 // These extensions are currently built into the VM repository but should not be loaded at startup.
@@ -583,6 +584,10 @@ class ExtensionManager {
                     serviceObject[funcName](args, util, realBlockInfo);
             })();
 
+            if (blockInfo.compileMode == CompileMode.GENERATOR) {
+                blockInfo.func = dispatch.services[serviceName][funcName];
+                break;
+            }
             blockInfo.func = (args, util) => {
                 const realBlockInfo = getBlockInfo(args);
                 // TODO: filter args using the keys of realBlockInfo.arguments? maybe only if sandboxed?

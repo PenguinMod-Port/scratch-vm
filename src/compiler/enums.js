@@ -110,6 +110,7 @@ const StackOpcode = {
     VISUAL_REPORT: 'visualReport',
     COMPATIBILITY_LAYER: 'compat',
     OLD_COMPILER_COMPATIBILITY_LAYER: 'oldCompiler',
+    EXTENSION_GENERATOR: 'extensionGenerator',
 
     HAT_EDGE: 'hat.edge',
     HAT_PREDICATE: 'hat.predicate',
@@ -226,6 +227,7 @@ const InputOpcode = {
 
     COMPATIBILITY_LAYER: 'compat',
     OLD_COMPILER_COMPATIBILITY_LAYER: 'oldCompiler',
+    EXTENSION_GENERATOR: 'extensionGenerator',
 
     CONTROL_COUNTER: 'control.counter',
 

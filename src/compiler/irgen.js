@@ -3,6 +3,7 @@
 const Cast = require('../util/cast');
 const StringUtil = require('../util/string-util');
 const BlockType = require('../extension-support/block-type');
+const CompileMode = require('../extension-support/compile-mode');
 const Variable = require('../engine/variable');
 const log = require('../util/log');
 const compatBlocks = require('./compat-blocks');
@@ -738,7 +739,13 @@ class ScriptTreeGenerator {
                 if (blockInfo) {
                     const type = blockInfo.info.blockType;
                     if (type === BlockType.REPORTER || type === BlockType.BOOLEAN) {
-                        return this.descendCompatLayerInput(block);
+                        let compileMode = blockInfo.info.compileMode ?? CompileMode.COMPAT;
+                        switch (compileMode) {
+                            case CompileMode.COMPAT:
+                                return this.descendCompatLayerInput(block);
+                            case CompileMode.GENERATOR:
+                                return this.descendExtensionGeneratorInput(block);
+                        }
                     }
                 }
             }
@@ -1166,7 +1173,13 @@ class ScriptTreeGenerator {
                 if (blockInfo) {
                     const type = blockInfo.info.blockType;
                     if (type === BlockType.COMMAND || type === BlockType.CONDITIONAL || type === BlockType.LOOP) {
-                        return this.descendCompatLayerStack(block);
+                        let compileMode = blockInfo.info.compileMode ?? CompileMode.COMPAT;
+                        switch (compileMode) {
+                            case CompileMode.COMPAT:
+                                return this.descendCompatLayerStack(block);
+                            case CompileMode.GENERATOR:
+                                return this.descendExtensionGeneratorStack(block);
+                        }
                     }
                 }
             }
@@ -1508,6 +1521,60 @@ class ScriptTreeGenerator {
             opcode: block.opcode,
             id: block.id,
             blockType,
+            inputs,
+            fields,
+            substacks
+        }, true);
+    }
+
+    descendExtensionGeneratorInput (block) {
+        const blockInfo = this.getBlockInfo(block.opcode).info;
+
+        const fields = {};
+        for (const name of Object.keys(block.fields)) {
+            fields[name] = block.fields[name].value;
+        }
+
+        const inputs = {};
+        for (const name of Object.keys(blockInfo.arguments).filter(v => !Object.keys(fields).includes(v))) {
+            inputs[name] = this.descendInputOfBlock(block, name, true);
+        }
+
+        const substacks = {};
+        for (const inputName of blockInfo.branches.map(v => v.name)) {
+            substacks[inputName] = this.descendSubstack(block, `SUBSTACK${inputName}`);
+        }
+
+        return new IntermediateInput(InputOpcode.EXTENSION_GENERATOR, InputType.ANY, {
+            opcode: block.opcode,
+            blockInfo,
+            inputs,
+            fields,
+            substacks
+        }, true);
+    }
+
+    descendExtensionGeneratorStack (block) {
+        const blockInfo = this.getBlockInfo(block.opcode).info;
+
+        const fields = {};
+        for (const name of Object.keys(block.fields)) {
+            fields[name] = block.fields[name].value;
+        }
+
+        const inputs = {};
+        for (const name of Object.keys(blockInfo.arguments).filter(v => !Object.keys(fields).includes(v))) {
+            inputs[name] = this.descendInputOfBlock(block, name, true);
+        }
+
+        const substacks = {};
+        for (const inputName of blockInfo.branches.map(v => v.name)) {
+            substacks[inputName] = this.descendSubstack(block, `SUBSTACK${inputName}`);
+        }
+
+        return new IntermediateStackBlock(StackOpcode.EXTENSION_GENERATOR, {
+            opcode: block.opcode,
+            blockInfo,
             inputs,
             fields,
             substacks

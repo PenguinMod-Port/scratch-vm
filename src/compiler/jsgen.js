@@ -210,6 +210,9 @@ class JSGenerator {
         case InputOpcode.OLD_COMPILER_COMPATIBILITY_LAYER:
             return this.oldCompilerStub.descendInputFromNewCompiler(block);
 
+        case InputOpcode.EXTENSION_GENERATOR:
+            return `(${this.generateExtensionGeneratorCall(node)})`;
+
         case InputOpcode.CONSTANT:
             if (block.isAlwaysType(InputType.NULL)) {
                 return "null";
@@ -603,8 +606,12 @@ class JSGenerator {
             break;
         }
 
-        case InputOpcode.OLD_COMPILER_COMPATIBILITY_LAYER:
+        case StackOpcode.OLD_COMPILER_COMPATIBILITY_LAYER:
             return this.oldCompilerStub.descendStackedBlockFromNewCompiler(block);
+
+        case StackOpcode.EXTENSION_GENERATOR:
+            this.source += `${this.generateExtensionGeneratorCall(node)};\n`;
+            break;
 
         //pm branched procedures
         case StackOpcode.PM_PROCEDURE_COMMANDARG:
@@ -1252,6 +1259,32 @@ class JSGenerator {
         }
         const opcodeFunction = this.evaluateOnce(`runtime.getOpcodeFunction("${sanitize(opcode)}")`);
         result += `}, ${opcodeFunction}, ${this.isWarp}, ${setFlags}, "${sanitize(node.id)}", ${frameName})`;
+
+        this.yielded();
+
+        return result;
+    }
+
+    generateExtensionGeneratorCall(node) {
+        const opcodeFunction = this.evaluateOnce(`runtime.getOpcodeFunction("${sanitize(node.opcode)}")`);
+
+        let result = `yield* ${opcodeFunction}({`;
+
+        for (const inputName of Object.keys(node.inputs)) {
+            const input = node.inputs[inputName];
+            const compiledInput = this.descendInput(input);
+            result += `"${sanitize(inputName)}":function*() {return ${compiledInput};},`;
+        }
+        for (const fieldName of Object.keys(node.fields)) {
+            const field = node.fields[fieldName];
+            result += `"${sanitize(fieldName)}":function*() {return "${sanitize(field)}";},`;
+        }
+        result += '}, {'
+        for (const substackName of Object.keys(node.substacks)) {
+            const substack = node.substacks[substackName];
+            result += `"${sanitize(substackName)}":function*() {${this.descendStackInline(substack, {allowReturns: true, inLoop: false})}},`;
+        }
+        result += '}, {thread, target, runtime, stage})';
 
         this.yielded();
 

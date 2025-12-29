@@ -1,6 +1,7 @@
 const BlockType = require('../../../extension-support/block-type')
 const BlockShape = require('../../../extension-support/block-shape')
 const ArgumentType = require('../../../extension-support/argument-type')
+const CompileMode = require('../../../extension-support/compile-mode')
 const Cast = require('../../../util/cast')
 
 let arrayLimit = 2 ** 32 - 1
@@ -171,7 +172,7 @@ const jwArray = {
     Block: {
         blockType: BlockType.REPORTER,
         blockShape: BlockShape.SQUARE,
-        outputCheck: "Array",
+        forceOutputType: "Array",
         disableMonitor: true
     },
     Argument: {
@@ -271,7 +272,8 @@ class Extension {
                 {
                     opcode: 'builder',
                     text: 'array builder [SHADOW]',
-                    branches: [{}],
+                    compileMode: CompileMode.GENERATOR,
+                    branches: [{name: "BRANCH"}],
                     arguments: {
                         SHADOW: {
                             fillIn: 'builderCurrent'
@@ -691,8 +693,11 @@ class Extension {
         return new jwArray.Type(STRING.split(DIVIDER), true)
     }
 
-    builder() {
-        return 'noop'
+    builder = function* ({}, {BRANCH}, {thread}) {
+        thread._jwArrayBuilderIndex ??= [];
+        thread._jwArrayBuilderIndex.push([])
+        yield* BRANCH();
+        return jwArray.Type.toArray(thread._jwArrayBuilderIndex.pop());
     }
 
     builderCurrent({}, util) {

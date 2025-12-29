@@ -112,7 +112,7 @@ class ScriptTreeGeneratorStub {
     descendStackedBlockFromNewCompiler (block) {
         const node = this.descendStackedBlock.call(this.fakeThis, block);
         if (node) {
-            return new IntermediateStackBlock(InputOpcode.OLD_COMPILER_COMPATIBILITY_LAYER, {
+            return new IntermediateStackBlock(StackOpcode.OLD_COMPILER_COMPATIBILITY_LAYER, {
                 oldNode: node
             }, true);
         }

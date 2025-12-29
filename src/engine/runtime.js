@@ -1381,11 +1381,12 @@ class Runtime extends EventEmitter {
     _convertBlockForScratchBlocks (blockInfo, categoryInfo) {
         const extendedOpcode = `${categoryInfo.id}_${blockInfo.opcode}`;
 
+        blockInfo.branches ??= []
+
         const blockJSON = {
             type: extendedOpcode,
             inputsInline: true,
             category: categoryInfo.name,
-            branches: blockInfo.branches ?? [],
             extensions: [],
             colour: blockInfo.color1 ?? categoryInfo.color1,
             colourSecondary: blockInfo.color2 ?? categoryInfo.color2,
@@ -1477,8 +1478,7 @@ class Runtime extends EventEmitter {
 
         if (blockInfo.blockShape) blockJSON.outputShape = blockInfo.blockShape; // Allow extensions to override outputShape
         if (blockInfo.forceOutputType !== undefined) blockJSON.output = blockInfo.forceOutputType; // Allow extensions to override output type
-        if (blockInfo.outputCheck !== undefined) blockJSON.output = blockInfo.outputCheck; // ditto for above but i wanted a nicer name
-        if (blockInfo.canDragDuplicate) blockJSON.canDragDuplicate = true;
+        if (blockInfo.canDragDuplicate) blockJSON.canDragDuplicate = true; // can drag duplicate
 
         const blockText = Array.isArray(blockInfo.text) ? blockInfo.text : [blockInfo.text];
         let inTextNum = 0; // text for the next block "arm" is blockText[inTextNum]
@@ -1488,19 +1488,19 @@ class Runtime extends EventEmitter {
         const extensionMessageContext = this.makeMessageContextForTarget();
 
         // convert branchCount to new branches property
-        if (blockJSON.branches.length === 0 && blockInfo.branchCount > 0) {
+        if (blockInfo.branches.length === 0 && blockInfo.branchCount > 0) {
             for (let i = 0; i < blockInfo.branchCount; i++) {
-                blockJSON.branches.push({});
+                blockInfo.branches.push({});
             }
         }
 
         // setup names for branches
-        blockJSON.branches.forEach((branch, i) => {
+        blockInfo.branches.forEach((branch, i) => {
             branch.name ??= i > 0 ? i + 1 : '';
         });
 
         // alternate between a block "arm" with text on it and an open slot for a substack
-        while (inTextNum < blockText.length || inBranchNum < blockJSON.branches.length) {
+        while (inTextNum < blockText.length || inBranchNum < blockInfo.branches.length) {
             if (inTextNum < blockText.length) {
                 context.outLineNum = outLineNum;
                 const lineText = maybeFormatMessage(blockText[inTextNum], extensionMessageContext);
@@ -1513,8 +1513,8 @@ class Runtime extends EventEmitter {
                 ++inTextNum;
                 ++outLineNum;
             }
-            if (inBranchNum < blockJSON.branches.length) {
-                const branch = blockJSON.branches[inBranchNum];
+            if (inBranchNum < blockInfo.branches.length) {
+                const branch = blockInfo.branches[inBranchNum];
                 blockJSON[`message${outLineNum}`] = '%1';
                 blockJSON[`args${outLineNum}`] = [{
                     type: 'input_statement',
