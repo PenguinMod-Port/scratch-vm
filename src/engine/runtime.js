@@ -1478,6 +1478,7 @@ class Runtime extends EventEmitter {
         if (blockInfo.blockShape) blockJSON.outputShape = blockInfo.blockShape; // Allow extensions to override outputShape
         if (blockInfo.forceOutputType !== undefined) blockJSON.output = blockInfo.forceOutputType; // Allow extensions to override output type
         if (blockInfo.outputCheck !== undefined) blockJSON.output = blockInfo.outputCheck; // ditto for above but i wanted a nicer name
+        if (blockInfo.canDragDuplicate) blockJSON.canDragDuplicate = true;
 
         const blockText = Array.isArray(blockInfo.text) ? blockInfo.text : [blockInfo.text];
         let inTextNum = 0; // text for the next block "arm" is blockText[inTextNum]
@@ -1722,6 +1723,10 @@ class Runtime extends EventEmitter {
                 valueName = placeholder;
                 shadowType = (argTypeInfo.shadow && argTypeInfo.shadow.type) || null;
                 fieldName = (argTypeInfo.shadow && argTypeInfo.shadow.fieldName) || null;
+
+                if (argInfo.fillIn || argInfo.fillInGlobal) {
+                    shadowType = argInfo.fillInGlobal || `${context.categoryInfo.id}_${argInfo.fillIn}`;
+                }
             }
 
             // <value> is the ScratchBlocks name for a block input.
