@@ -1286,7 +1286,7 @@ class JSGenerator {
      * @param {string} valueJS JS code of value to return.
      */
     stopScriptAndReturn (valueJS) {
-        if (this.script.stackClicked && !this.isProcedure) {
+        if (this.script.stackClicked && !(this.isProcedure || this.allowReturns)) {
             this.source += `retire(); return ${valueJS};\n`;
         } else if (this.isProcedure || this.script.stackClicked || this.allowReturns) {
             this.source += `return ${valueJS};\n`;

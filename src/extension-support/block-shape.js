@@ -17,9 +17,24 @@ const BlockShape = {
     ROUND: ScratchBlocksConstants.OUTPUT_SHAPE_ROUND,
 
     /**
-     * Output shape: squared (any/all values; strings).
+     * Output shape: squared (arrays).
      */
-    SQUARE: ScratchBlocksConstants.OUTPUT_SHAPE_SQUARE
+    SQUARE: ScratchBlocksConstants.OUTPUT_SHAPE_SQUARE,
+
+    /**
+     * Output shape: leaf (vectors).
+     */
+    LEAF: ScratchBlocksConstants.OUTPUT_SHAPE_LEAF,
+
+    /**
+     * Output shape: plus (objects/classes or class instances).
+     */
+    PLUS: ScratchBlocksConstants.OUTPUT_SHAPE_PLUS,
+
+    /**
+     * Output shape: octagonal (scratch targets).
+     */
+    OCTAGONAL: ScratchBlocksConstants.OUTPUT_SHAPE_OCTAGONAL
 };
 
 module.exports = BlockShape;
