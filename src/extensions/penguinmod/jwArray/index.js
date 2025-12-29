@@ -185,7 +185,7 @@ class Extension {
     constructor() {
         vm.jwArray = jwArray
 
-        /**vm.runtime.registerSerializer( //this basically copies variable serialization
+        /*vm.runtime.registerSerializer( //this basically copies variable serialization
             "jwArray",
             v => v.array.map(w => {
                 if (typeof w == "object" && w != null && w.customId) {
@@ -203,8 +203,8 @@ class Extension {
                 }
                 return w
             }), true)
-        );
-        vm.runtime.registerCompiledExtensionBlocks('jwArray', this.getCompileInfo());*/
+        );*/
+        vm.runtime.registerCompiledExtensionBlocks('jwArray', this.getCompileInfo());
     }
 
     getInfo() {

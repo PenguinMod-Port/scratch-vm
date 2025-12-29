@@ -727,6 +727,31 @@ class ScriptTreeGenerator {
             return new IntermediateInput(InputOpcode.TW_KEY_LAST_PRESSED, InputType.STRING);
 
         default: {
+            // pm: old extension compiler support
+            const extensionId = String(block.opcode).split('_')[0];
+            const blockId = String(block.opcode).replace(extensionId + '_', '');
+            if (oldCompilerCompatiblity.IRGeneratorStub.hasExtensionIr(extensionId) && oldCompilerCompatiblity.IRGeneratorStub.getExtensionIr(extensionId)[blockId]) {
+                // this is an extension block that wants to be compiled
+                const irFunc = oldCompilerCompatiblity.IRGeneratorStub.getExtensionIr(extensionId)[blockId];
+                let irData = null;
+                // make sure irFunc isnt broken
+                try {
+                    irData = irFunc(this, block);
+                } catch (err) {
+                    log.warn(extensionId + '_' + blockId, 'failed to create IR data;', err);
+                }
+                if (irData) {
+                    // check if it is this type, we dont want to descend a stack as an input
+                    if (irData.kind === 'input') {
+                        // set proper kind
+                        irData.kind = extensionId + '.' + blockId;
+                        return new IntermediateInput(InputOpcode.OLD_COMPILER_COMPATIBILITY_LAYER, InputType.ANY, {
+                            oldNode: irData
+                        }, true);
+                    }
+                }
+            }
+
             const opcodeFunction = this.runtime.getOpcodeFunction(block.opcode);
             if (opcodeFunction) {
                 // It might be a non-compiled primitive from a standard category
@@ -1155,6 +1180,31 @@ class ScriptTreeGenerator {
             return new IntermediateStackBlock(StackOpcode.SENSING_TIMER_RESET);
 
         default: {
+            // pm: old extension compiler support
+            const extensionId = String(block.opcode).split('_')[0];
+            const blockId = String(block.opcode).replace(extensionId + '_', '');
+            if (oldCompilerCompatiblity.IRGeneratorStub.hasExtensionIr(extensionId) && oldCompilerCompatiblity.IRGeneratorStub.getExtensionIr(extensionId)[blockId]) {
+                // this is an extension block that wants to be compiled
+                const irFunc = oldCompilerCompatiblity.IRGeneratorStub.getExtensionIr(extensionId)[blockId];
+                let irData = null;
+                // make sure irFunc isnt broken
+                try {
+                    irData = irFunc(this, block);
+                } catch (err) {
+                    log.warn(extensionId + '_' + blockId, 'failed to create IR data;', err);
+                }
+                if (irData) {
+                    // check if it is this type, we dont want to descend a stack as an input
+                    if (irData.kind === 'stack') {
+                        // set proper kind
+                        irData.kind = extensionId + '.' + blockId;
+                        return new IntermediateInput(InputOpcode.OLD_COMPILER_COMPATIBILITY_LAYER, InputType.ANY, {
+                            oldNode: irData
+                        }, true);
+                    }
+                }
+            }
+
             const opcodeFunction = this.runtime.getOpcodeFunction(block.opcode);
             if (opcodeFunction) {
                 // It might be a non-compiled primitive from a standard category

@@ -1064,6 +1064,17 @@ class Runtime extends EventEmitter {
         this[`ext_${name}`] = extensionObject;
     }
 
+    registerCompiledExtensionBlocks (extensionId, information) {
+        if (!information) return;
+        if (!information.ir) return;
+        if (!information.js) return;
+
+        const OldCompiler = require('../compiler/old-compiler-compatibility');
+
+        OldCompiler.IRGeneratorStub.setExtensionIr(extensionId, information.ir);
+        OldCompiler.JSGeneratorStub.setExtensionJs(extensionId, information.js);
+    }
+
     getMonitorState () {
         return this._monitorState;
     }
