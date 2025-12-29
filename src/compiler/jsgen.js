@@ -1276,7 +1276,7 @@ class JSGenerator {
 
     stopScript () {
         if (this.isProcedure) {
-            this.source += 'return "";\n';
+            this.source += 'return;\n';
         } else {
             this.retire();
         }
