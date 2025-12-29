@@ -187,13 +187,13 @@ class ScriptTreeGenerator {
         const input = parentBlock.inputs[inputName];
         if (!input) {
             log.warn(`IR: ${parentBlock.opcode}: missing input ${inputName}`, parentBlock);
-            return this.createConstantInput(0);
+            return this.createConstantInput(null);
         }
         const inputId = input.block;
         const block = this.getBlockById(inputId);
         if (!block) {
             log.warn(`IR: ${parentBlock.opcode}: could not find input ${inputName} with ID ${inputId}`);
-            return this.createConstantInput(0);
+            return this.createConstantInput(null);
         }
 
         const intermediate = this.descendInput(block, preserveStrings);
