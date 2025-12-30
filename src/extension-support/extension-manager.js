@@ -112,6 +112,12 @@ class ExtensionManager {
         this._loadedExtensions = new Map();
 
         /**
+         * @type {Object.<string, [string, Function][]>}
+         * @private
+         */
+        this._extensionDependencies = {};
+
+        /**
          * Responsible for determining security policies related to custom extensions.
          */
         this.securityManager = new SecurityManager();
@@ -179,9 +185,11 @@ class ExtensionManager {
 
         const extension = this.builtinExtensions[extensionId]();
         const extensionInstance = new extension(this.runtime);
+        this._loadedExtensions.set(extensionId, 'fakeServiceName');
+        this.loadNewDependencies().then(() => {
         const serviceName = this._registerInternalExtension(extensionInstance);
-        this._loadedExtensions.set(extensionId, serviceName);
-        this.runtime.compilerRegisterExtension(extensionId, extensionInstance);
+            this.runtime.compilerRegisterExtension(extensionId, extensionInstance);
+        })
     }
 
     addBuiltinExtension (extensionId, extensionClass) {
@@ -243,6 +251,8 @@ class ExtensionManager {
                 dispatch.callSync('extensions', 'registerExtensionServiceSync', serviceName);
                 this._loadedExtensions.set(extensionInfo.id, serviceName);
             }
+
+            await this.loadNewDependencies();
 
             this._finishedLoadingExtensionScript();
             return;
@@ -615,6 +625,47 @@ class ExtensionManager {
 
     isExtensionURLLoaded (url) {
         return Object.values(this.workerURLs).includes(url);
+    }
+
+    /**
+     * @param {string} extensionId
+     * @param {string} dependency
+     * @param {Function} callback
+     */
+    addExtensionDependency(extensionId, dependency, callback = () => {}) {
+        this._extensionDependencies[extensionId] ??= [];
+        this._extensionDependencies[extensionId].push([dependency, callback]);
+    }
+
+    /**
+     * @param {string} extensionId
+     * @returns {string[]}
+     */
+    getExtensionDependencies(extensionId) {
+        return (this._extensionDependencies[extensionId] ?? []).map(([id]) => id);
+    }
+
+    /**
+     * @param {string} extensionId
+     * @returns {string[]}
+     */
+    getExtensionDependants(extensionId) {
+        return Object.entries(this._extensionDependencies).filter(([id, deps]) => deps.map(v => v[0]).includes(extensionId)).map(([id]) => id);
+    }
+
+    async loadNewDependencies() {
+        const allDependencies = Object.values(this._extensionDependencies).flat();
+        const newDependencies = allDependencies.filter(([id]) => !this._loadedExtensions.has(id));
+        
+        for (const v of allDependencies) {
+            let id = v[0];
+            let callback = v[1];
+            if (!this._loadedExtensions.has(id)) {
+                await this.loadExtensionURL(id);
+            }
+            callback();
+            v[1] = () => {};
+        }
     }
 }
 

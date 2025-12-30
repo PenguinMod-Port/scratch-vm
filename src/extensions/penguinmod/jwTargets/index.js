@@ -134,8 +134,7 @@ class Extension {
             v => new Target.Type(v)
         );
 
-        if (!vm.jwArray) vm.extensionManager.loadExtensionIdSync('jwArray')
-        jwArray = vm.jwArray
+        vm.extensionManager.addExtensionDependency("jwTargets", "jwArray", () => jwArray = vm.jwArray)
     }
 
     getInfo() {
