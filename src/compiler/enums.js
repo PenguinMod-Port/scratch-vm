@@ -172,6 +172,8 @@ const StackOpcode = {
     LOOKS_SAY: 'looks.say',
     LOOKS_THINK: 'looks.think',
 
+    PM_LOOKS_CHANGE_STRETCH: 'looks.changeStretch',
+    PM_LOOKS_SET_STRETCH: 'looks.setStretch',
     PM_LOOKS_STOP_SPEAKING: 'looks.stopSpeaking',
 
     MOTION_X_SET: 'motion.setX',
@@ -239,6 +241,9 @@ const InputOpcode = {
     LOOKS_COSTUME_NUMBER: 'looks.costumeNumber',
     LOOKS_COSTUME_NAME: 'looks.costumeName',
     LOOKS_SIZE_GET: 'looks.size',
+
+    PM_LOOKS_STRETCH_X: 'looks.stretchX',
+    PM_LOOKS_STRETCH_Y: 'looks.stretchY',
 
     VAR_GET: 'var.get',
 

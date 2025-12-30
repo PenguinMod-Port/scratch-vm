@@ -331,6 +331,12 @@ class ScriptTreeGenerator {
             return new IntermediateInput(InputOpcode.LOOKS_COSTUME_NAME, InputType.STRING);
         case 'looks_size':
             return new IntermediateInput(InputOpcode.LOOKS_SIZE_GET, InputType.NUMBER_POS);
+        
+        //pm looks
+        case 'looks_stretchGetX':
+            return new IntermediateInput(InputOpcode.PM_LOOKS_STRETCH_X, InputType.NUMBER);
+        case 'looks_stretchGetY':
+            return new IntermediateInput(InputOpcode.PM_LOOKS_STRETCH_Y, InputType.NUMBER);
 
         case 'motion_direction':
             return new IntermediateInput(InputOpcode.MOTION_DIRECTION_GET, InputType.NUMBER_REAL);
@@ -1054,6 +1060,16 @@ class ScriptTreeGenerator {
             });
 
         //pm looks
+        case 'looks_changeStretch':
+            return new IntermediateStackBlock(StackOpcode.PM_LOOKS_CHANGE_STRETCH, {
+                x: this.descendInputOfBlock(block, 'X').toType(InputType.NUMBER),
+                y: this.descendInputOfBlock(block, 'Y').toType(InputType.NUMBER)
+            });
+        case 'looks_setStretch':
+            return new IntermediateStackBlock(StackOpcode.PM_LOOKS_SET_STRETCH, {
+                x: this.descendInputOfBlock(block, 'X').toType(InputType.NUMBER),
+                y: this.descendInputOfBlock(block, 'Y').toType(InputType.NUMBER)
+            });
         case 'looks_stoptalking':
             return new IntermediateStackBlock(StackOpcode.PM_LOOKS_STOP_SPEAKING, {});
 

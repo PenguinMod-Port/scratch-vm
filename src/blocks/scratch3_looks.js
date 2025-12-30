@@ -307,7 +307,11 @@ class Scratch3LooksBlocks {
             looks_goforwardbackwardlayers: this.goForwardBackwardLayers,
             looks_size: this.getSize,
             looks_costumenumbername: this.getCostumeNumberName,
-            looks_backdropnumbername: this.getBackdropNumberName
+            looks_backdropnumbername: this.getBackdropNumberName,
+
+            //pm monitors
+            looks_stretchGetX: ({}, {target}) => target.stretch[0],
+            looks_stretchGetY: ({}, {target}) => target.stretch[1], 
         };
     }
 
@@ -323,7 +327,15 @@ class Scratch3LooksBlocks {
             },
             looks_backdropnumbername: {
                 getId: (_, fields) => getMonitorIdForBlockWithArgs('backdropnumbername', fields)
-            }
+            },
+            looks_stretchGetX: {
+                isSpriteSpecific: true,
+                getId: targetId => `${targetId}_stretchGetX`
+            },
+            looks_stretchGetY: {
+                isSpriteSpecific: true,
+                getId: targetId => `${targetId}_stretchGetY`
+            },
         };
     }
 

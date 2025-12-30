@@ -281,6 +281,12 @@ class JSGenerator {
         case InputOpcode.LOOKS_COSTUME_NUMBER:
             return '(target.currentCostume + 1)';
 
+        //pm looks
+        case InputOpcode.PM_LOOKS_STRETCH_X:
+            return 'target.stretch[0]';
+        case InputOpcode.PM_LOOKS_STRETCH_Y:
+            return 'target.stretch[1]';
+
         case InputOpcode.MOTION_DIRECTION_GET:
             return 'target.direction';
         case InputOpcode.MOTION_X_GET:
@@ -901,6 +907,13 @@ class JSGenerator {
             this.source += `runtime.ext_scratch3_looks._think(${this.descendInput(node.message)}, target);\n`;
             break;
 
+        //pm looks
+        case StackOpcode.PM_LOOKS_CHANGE_STRETCH:
+            this.source += `target.setStretch(${this.descendInput(node.x)} + target.stretch[0], ${this.descendInput(node.y)} + target.stretch[1]);\n`;
+            break;
+        case StackOpcode.PM_LOOKS_SET_STRETCH:
+            this.source += `target.setStretch(${this.descendInput(node.x)}, ${this.descendInput(node.y)});\n`;
+            break;
         case StackOpcode.PM_LOOKS_STOP_SPEAKING:
             this.source += `runtime.ext_scratch3_looks._say('', target);\n`;
             break;
