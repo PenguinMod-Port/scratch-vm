@@ -488,12 +488,26 @@ const serializeSound = function (sound) {
 const isVariableValueSafeForJSON = value => (
     typeof value === 'number' ||
     typeof value === 'string' ||
-    typeof value === 'boolean'
+    typeof value === 'boolean' ||
+    value === null
 );
-const makeSafeForJSON = value => {
+const makeSafeForJSON = (value, runtime) => {
     if (Array.isArray(value)) {
         let copy = null;
         for (let i = 0; i < value.length; i++) {
+            if (value[i]?.customId) {
+                if (!copy) {
+                    // Only copy the list when needed
+                    copy = value.slice();
+                }
+                const {serialize} = runtime.serializers[copy[i].customId];
+                copy[i] = {
+                    customType: true,
+                    typeId: copy[i].customId,
+                    serialized: serialize(copy[i])
+                };
+                continue;
+            }
             if (!isVariableValueSafeForJSON(value[i])) {
                 if (!copy) {
                     // Only copy the list when needed
@@ -506,6 +520,14 @@ const makeSafeForJSON = value => {
             return copy;
         }
         return value;
+    }
+    if (value.customId) {
+        const {serialize} = runtime.serializers[value.customId];
+        return {
+            customType: true,
+            typeId: value.customId,
+            serialized: serialize(value)
+        };
     }
     if (isVariableValueSafeForJSON(value)) {
         return value;
@@ -520,7 +542,7 @@ const makeSafeForJSON = value => {
  * separated by type to compress the representation of each given variable and
  * reduce duplicate information.
  */
-const serializeVariables = function (variables) {
+const serializeVariables = function (variables, runtime) {
     const obj = Object.create(null);
     // separate out variables into types at the top level so we don't have
     // keep track of a type for each
@@ -534,12 +556,12 @@ const serializeVariables = function (variables) {
             continue;
         }
         if (v.type === Variable.LIST_TYPE) {
-            obj.lists[varId] = [v.name, makeSafeForJSON(v.value)];
+            obj.lists[varId] = [v.name, makeSafeForJSON(v.value, runtime)];
             continue;
         }
 
         // otherwise should be a scalar type
-        obj.variables[varId] = [v.name, makeSafeForJSON(v.value)];
+        obj.variables[varId] = [v.name, makeSafeForJSON(v.value, runtime)];
         // only scalar vars have the potential to be cloud vars
         if (v.isCloud) obj.variables[varId].push(true);
     }
@@ -582,12 +604,12 @@ const serializeComments = function (comments) {
  * @param {Set} extensions A set of extensions to add extension IDs to
  * @return {object} A serialized representation of the given target.
  */
-const serializeTarget = function (target, extensions) {
+const serializeTarget = function (target, extensions, runtime) {
     const obj = Object.create(null);
     let targetExtensions = [];
     obj.isStage = target.isStage;
     obj.name = obj.isStage ? 'Stage' : target.name;
-    const vars = serializeVariables(target.variables);
+    const vars = serializeVariables(target.variables, runtime);
     obj.variables = vars.variables;
     obj.lists = vars.lists;
     obj.broadcasts = vars.broadcasts;
@@ -755,7 +777,7 @@ const serialize = function (runtime, targetId, {allowOptimization = true} = {}) 
         });
     }
 
-    const serializedTargets = flattenedOriginalTargets.map(t => serializeTarget(t, extensions))
+    const serializedTargets = flattenedOriginalTargets.map(t => serializeTarget(t, extensions, runtime))
         .map((serialized, index) => {
             // can't serialize extensionStorage until the list of used extensions is fully known
             const target = originalTargetsToSerialize[index];

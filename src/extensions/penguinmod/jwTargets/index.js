@@ -128,11 +128,11 @@ class Extension {
         });
 
         vm.jwTargets = Target
-        /*vm.runtime.registerSerializer(
+        vm.runtime.registerSerializer(
             "jwTargets", 
             v => v.targetId, 
             v => new Target.Type(v)
-        );*/
+        );
 
         if (!vm.jwArray) vm.extensionManager.loadExtensionIdSync('jwArray')
         jwArray = vm.jwArray

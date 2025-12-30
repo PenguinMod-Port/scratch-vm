@@ -538,6 +538,9 @@ class Runtime extends EventEmitter {
          * Total number of finished or errored scratch-storage load() requests since the runtime was created or cleared.
          */
         this.finishedAssetRequests = 0;
+
+        // lists all custom serializers
+        this.serializers = {};
     }
 
     /**
@@ -3591,6 +3594,25 @@ class Runtime extends EventEmitter {
         };
 
         return callback().then(onSuccess, onError);
+    }
+
+    /**
+     * registers a custom serializer to allow saving custom data into standard variables
+     * @param {string} id custom id of the data that is serialized
+     * @param {Function} serialize the function to be ran on unserialized data in variables
+     * @param {Function} deserialize the function to be ran on serialized data in project file
+     */
+    registerSerializer (id, serialize, deserialize) {
+        if (typeof serialize !== 'function') {
+            throw new TypeError('serialize must be of type function');
+        }
+        if (typeof deserialize !== 'function') {
+            throw new TypeError('deserialize must be of type function');
+        }
+        this.serializers[id] = {
+            serialize,
+            deserialize
+        };
     }
 }
 

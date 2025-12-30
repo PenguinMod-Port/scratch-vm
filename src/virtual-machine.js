@@ -843,6 +843,25 @@ class VirtualMachine extends EventEmitter {
             this.runtime.executableTargets.sort((a, b) => a.layerOrder - b.layerOrder);
             targets.forEach(target => {
                 delete target.layerOrder;
+
+                //deserialize custom typed variables Now!
+                for (const varId in target.variables) {
+                    const variable = target.variables[varId];
+                    if (variable.type === Variable.LIST_TYPE) {
+                        for (const idx in variable.value) {
+                            const item = variable.value[idx];
+                            if (item.customType) {
+                                const {deserialize} = this.runtime.serializers[item.typeId];
+                                variable.value[idx] = deserialize(item.serialized, target, variable);
+                            }
+                        }
+                    }
+                    if (variable.value?.customType) {
+                        const customData = variable.value;
+                        const {deserialize} = this.runtime.serializers[customData.typeId];
+                        variable.value = deserialize(customData.serialized, target, variable);
+                    }
+                }
             });
 
             // Select the first target for editing, e.g., the first sprite.
@@ -859,7 +878,7 @@ class VirtualMachine extends EventEmitter {
             if (wholeProject) {
                 this.runtime.parseProjectOptions();
             }
-
+            
             // Update the VM user's knowledge of targets and blocks on the workspace.
             this.emitTargetsUpdate(false /* Don't emit project change */);
             this.emitWorkspaceUpdate();
