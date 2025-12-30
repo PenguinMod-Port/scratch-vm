@@ -27,6 +27,7 @@ const {serializeSounds, serializeCostumes} = require('./serialization/serialize-
 require('canvas-toBlob');
 const {exportCostume} = require('./serialization/tw-costume-import-export');
 const Base64Util = require('./util/base64-util');
+const SemVer = require('./util/semver');
 
 const RESERVED_NAMES = ['_mouse_', '_stage_', '_edge_', '_myself_', '_random_'];
 
@@ -266,6 +267,9 @@ class VirtualMachine extends EventEmitter {
                 };
             }
         };
+
+        // pm
+        this.pmVersion = new SemVer("0.1.0")
     }
 
     /**
