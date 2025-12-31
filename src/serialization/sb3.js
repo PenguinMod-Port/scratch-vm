@@ -219,6 +219,9 @@ const serializeBlock = function (block) {
     if (block.comment) {
         obj.comment = block.comment;
     }
+    if (block.collapsed) {
+        obj.collapsed = true;
+    }
     return obj;
 };
 

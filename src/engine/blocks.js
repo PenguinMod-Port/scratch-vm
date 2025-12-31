@@ -668,7 +668,7 @@ class Blocks {
      */
     changeBlock (args) {
         // Validate
-        if (['field', 'mutation', 'checkbox'].indexOf(args.element) === -1) return;
+        if (['field', 'mutation', 'checkbox', 'collapsed'].indexOf(args.element) === -1) return;
         let block = this._blocks[args.id];
         if (typeof block === 'undefined') return;
         switch (args.element) {
@@ -787,6 +787,9 @@ class Blocks {
             }
             break;
         }
+        case 'collapsed':
+            block.collapsed = args.value;
+            break;
         }
 
         this.emitProjectChanged();
@@ -1188,6 +1191,7 @@ class Blocks {
             `<${tagName}
                 id="${xmlEscape(block.id)}"
                 type="${xmlEscape(block.opcode)}"
+                ${block.collapsed ? 'collapsed="true"' : ''}
                 ${block.topLevel ? `x="${block.x}" y="${block.y}"` : ''}
             >`;
         const commentId = block.comment;
