@@ -33,6 +33,7 @@ const defaultBuiltinExtensions = {
     // jwklong
     jwArray: () => require('../extensions/penguinmod/jwArray'),
     jwTargets: () => require('../extensions/penguinmod/jwTargets'),
+    jwColor: () => require('../extensions/penguinmod/jwColor'),
 };
 
 /**
