@@ -34,6 +34,7 @@ const defaultBuiltinExtensions = {
     jwArray: () => require('../extensions/penguinmod/jwArray'),
     jwTargets: () => require('../extensions/penguinmod/jwTargets'),
     jwColor: () => require('../extensions/penguinmod/jwColor'),
+    jwVector: () => require('../extensions/penguinmod/jwVector'),
 };
 
 /**
