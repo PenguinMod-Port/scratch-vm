@@ -34,7 +34,17 @@ const BlockShape = {
     /**
      * Output shape: octagonal (scratch targets).
      */
-    OCTAGONAL: ScratchBlocksConstants.OUTPUT_SHAPE_OCTAGONAL
+    OCTAGONAL: ScratchBlocksConstants.OUTPUT_SHAPE_OCTAGONAL,
+
+    /**
+     * Output shape: bumped (BigInt).
+     */
+    BUMPED: ScratchBlocksConstants.OUTPUT_SHAPE_BUMPED,
+
+    /**
+     * Output shape: indented (XML / html elements).
+     */
+    INDENTED: ScratchBlocksConstants.OUTPUT_SHAPE_INDENTED
 };
 
 module.exports = BlockShape;

@@ -37,8 +37,21 @@ const ScratchBlocksConstants = {
 
     /**
      * ENUM for output shape: octagonal (scratch targets).
+     * @const
      */
-    OUTPUT_SHAPE_OCTAGONAL: 6
+    OUTPUT_SHAPE_OCTAGONAL: 6,
+
+    /**
+     * ENUM for output shape: bumped (BigInt).
+     * @const
+     */
+    OUTPUT_SHAPE_BUMPED: 7,
+
+    /**
+     * ENUM for output shape: indented (XML / html elements).
+     * @const
+     */
+    OUTPUT_SHAPE_INDENTED: 8
 };
 
 module.exports = ScratchBlocksConstants;
