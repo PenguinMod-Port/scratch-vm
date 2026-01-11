@@ -759,6 +759,18 @@ class JSGenerator {
                 this.source += `throw 'All "escape loop" blocks must be inside of a looping block.';\n`;
             }
             break;
+        case StackOpcode.PM_CONTROL_REPEAT_SECONDS: {
+            const duration = this.localVariables.next();
+            const timer = this.localVariables.next();
+            this.source += `let ${timer} = timer();\n`;
+            this.source += `var ${duration} = Math.max(0, 1000 * ${this.descendInput(node.seconds)});\n`;
+            this.requestRedraw();
+            this.source += `while (${timer}.timeElapsed() < ${duration}) {\n`;
+            this.descendStack(node.do, {inLoop: true});
+            this.yieldLoop();
+            this.source += '}\n';
+            break;
+        }
         case StackOpcode.PM_CONTROL_RESTART_PROJECT:
             this.source += `runtime.greenFlag();\n`;
             this.retire();

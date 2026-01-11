@@ -902,6 +902,11 @@ class ScriptTreeGenerator {
             });
         case 'control_exitLoop':
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_ESCAPE_LOOP);
+        case 'control_repeatForSeconds':
+            return new IntermediateStackBlock(StackOpcode.PM_CONTROL_REPEAT_SECONDS, {
+                seconds: this.descendInputOfBlock(block, 'TIMES').toType(InputType.NUMBER),
+                do: this.descendSubstack(block, 'SUBSTACK')
+            }, this.analyzeLoop());
         case 'control_restartproject':
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_RESTART_PROJECT);
         case 'control_throw_error':
