@@ -238,6 +238,7 @@ class Frame {
     constructor (isLoop) {
         this.isLoop = isLoop;
         this.isLastBlock = false;
+        this.allowReturns = false;
     }
 }
 
