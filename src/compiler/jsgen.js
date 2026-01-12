@@ -1311,7 +1311,7 @@ class JSGenerator {
      * @param {string} valueJS JS code of value to return.
      */
     stopScriptAndReturn (valueJS) {
-        if (this.script.stackClicked && !(this.isProcedure || this.allowReturns)) {
+        if (!this.isProcedure && !this.allowReturns && !this.script.stackClicked) {
             this.source += `retire(); return ${valueJS};\n`;
         } else if (this.isProcedure || this.script.stackClicked || this.allowReturns) {
             this.source += `return ${valueJS};\n`;
@@ -1367,6 +1367,7 @@ class JSGenerator {
         if (allowBubble) {
             script += `})();\n`;
             script += `if (returns !== undefined) runtime.visualReport(target, "${sanitize(this.script.bottomBlockId)}", returns);\n`;
+            script += `retire();\n`;
         }
         
         if (!this.isProcedure) {
