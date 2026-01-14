@@ -37,6 +37,8 @@ const defaultBuiltinExtensions = {
     jwVector: () => require('../extensions/penguinmod/jwVector'),
     jwXML: () => require('../extensions/penguinmod/jwXML'),
     jwLambda: () => require('../extensions/penguinmod/jwLambda'),
+    jwPointer: () => require('../extensions/penguinmod/jwPointer'),
+    jwScope: () => require('../extensions/penguinmod/jwScope'),
 };
 
 /**
@@ -191,7 +193,8 @@ class ExtensionManager {
         const extensionInstance = new extension(this.runtime);
         this._loadedExtensions.set(extensionId, 'fakeServiceName');
         this.loadNewDependencies().then(() => {
-        const serviceName = this._registerInternalExtension(extensionInstance);
+            const serviceName = this._registerInternalExtension(extensionInstance);
+            this._loadedExtensions.set(extensionId, serviceName);
             this.runtime.compilerRegisterExtension(extensionId, extensionInstance);
         })
     }
