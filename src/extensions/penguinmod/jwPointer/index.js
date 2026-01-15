@@ -123,6 +123,8 @@ class Extension {
                 return pointer;
             }
         );
+
+        vm.runtime.on("PROJECT_START", this.destroyAll.bind(this))
     }
 
     getInfo() {
