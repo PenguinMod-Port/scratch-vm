@@ -118,9 +118,7 @@ class Extension {
             v => [v.pointerID, pointers.get(v.pointerID) !== undefined], 
             v => {
                 currentPointerID = Math.max(v[0]+1, currentPointerID);
-                let pointer = new Pointer.Type(v[0]);
-                if (v[1]) pointer.init();
-                return pointer;
+                return new Pointer.Type(v[0]);
             }
         );
 
