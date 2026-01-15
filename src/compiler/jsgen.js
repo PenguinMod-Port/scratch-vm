@@ -798,6 +798,9 @@ class JSGenerator {
             this.source += '}\n';
             this.source += 'thread.timer = null;\n';
             break;
+        case StackOpcode.PM_CONTROL_WAIT_TICK:
+            this.yieldNotWarp();
+            break;
 
         case StackOpcode.EVENT_BROADCAST:
             this.source += `startHats("event_whenbroadcastreceived", { BROADCAST_OPTION: ${this.descendInput(node.broadcast)} });\n`;

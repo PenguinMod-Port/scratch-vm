@@ -137,6 +137,7 @@ const StackOpcode = {
     PM_CONTROL_THROW_ERROR: 'control.throwError',
     PM_CONTROL_TRY_CATCH: 'control.tryCatch',
     PM_CONTROL_WAIT_OR_UNTIL: 'control.waitOrUntil',
+    PM_CONTROL_WAIT_TICK: 'control.waitTick',
 
     LIST_ADD: 'list.add',
     LIST_INSERT: 'list.instert',

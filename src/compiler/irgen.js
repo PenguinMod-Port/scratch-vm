@@ -923,6 +923,8 @@ class ScriptTreeGenerator {
                 seconds: this.descendInputOfBlock(block, 'DURATION').toType(InputType.NUMBER),
                 condition: this.descendInputOfBlock(block, 'CONDITION').toType(InputType.BOOLEAN)
             }, true);
+        case 'control_waittick':
+            return new IntermediateStackBlock(StackOpcode.PM_CONTROL_WAIT_TICK, {}, true);
 
         case 'data_addtolist':
             return new IntermediateStackBlock(StackOpcode.LIST_ADD, {
