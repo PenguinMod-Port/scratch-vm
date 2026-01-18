@@ -566,6 +566,8 @@ class ScriptTreeGenerator {
                     right: this.descendInputOfBlock(block, 'OPERAND2')
                 })
             });
+        case 'operator_null':
+            return this.createConstantInput(null);
         case 'operator_power':
             return new IntermediateInput(InputOpcode.PM_OP_POWER, InputType.NUMBER_OR_NAN, {
                 left: this.descendInputOfBlock(block, 'NUM1').toType(InputType.NUMBER),
