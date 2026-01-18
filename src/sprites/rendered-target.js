@@ -108,6 +108,12 @@ class RenderedTarget extends Target {
         this.size = 100;
 
         /**
+         * The stretch percent on each axis
+         * @type {array}
+         */
+        this.stretch = [100, 100];
+
+        /**
          * Currently selected costume index.
          * @type {number}
          */
@@ -304,7 +310,34 @@ class RenderedTarget extends Target {
             const scaleFlip = (this.direction < 0) ? -1 : 1;
             finalScale = [scaleFlip * this.size, this.size];
         }
+
+        // stretch
+        finalScale[0] *= this.stretch[0] / 100;
+        finalScale[1] *= this.stretch[1] / 100;
+
         return {direction: finalDirection, scale: finalScale};
+    }
+
+    /**
+     * set the stretch of this sprite
+     * @param {number} x the stretch percentage on the x axis
+     * @param {number} y the stretch percentage on the y axis
+     */
+    setStretch (x, y) {
+        if (this.isStage) {
+            return;
+        }
+
+        this.stretch = [x, y];
+        if (this.renderer) {
+            const {direction: renderedDirection, scale} = this._getRenderedDirectionAndScale();
+            this.renderer.updateDrawableDirectionScale(this.drawableID, renderedDirection, scale);
+            if (this.visible) {
+                this.emitVisualChange();
+                this.runtime.requestRedraw();
+            }
+        }
+        this.runtime.requestTargetsUpdate(this);
     }
 
     /**
@@ -974,6 +1007,7 @@ class RenderedTarget extends Target {
         newClone.draggable = this.draggable;
         newClone.visible = this.visible;
         newClone.size = this.size;
+        newClone.stretch = Clone.simple(this.stretch);
         newClone.currentCostume = this.currentCostume;
         newClone.rotationStyle = this.rotationStyle;
         newClone.effects = Clone.simple(this.effects);
@@ -999,9 +1033,10 @@ class RenderedTarget extends Target {
             newTarget.draggable = this.draggable;
             newTarget.visible = this.visible;
             newTarget.size = this.size;
+            newTarget.stretch = Clone.simple(this.stretch);
             newTarget.currentCostume = this.currentCostume;
             newTarget.rotationStyle = this.rotationStyle;
-            newTarget.effects = JSON.parse(JSON.stringify(this.effects));
+            newTarget.effects = Clone.simple(this.effects);
             newTarget.variables = this.duplicateVariables(newTarget.blocks);
             newTarget.updateAllDrawableProperties();
             return newTarget;

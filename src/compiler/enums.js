@@ -84,11 +84,17 @@ const InputType = {
     /** Any input that can be interperated as a boolean. Equal to BOOLEAN | STRING_BOOLEAN */
     BOOLEAN_INTERPRETABLE: 0x1800,
 
+    /** An instance of a class (for cuatom types in extensions) */
+    CUSTOM_TYPE: 0x2000,
+
+    /** The value 'null' */
+    NULL: 0x4000,
+
     /** Any value type (a type a scratch variable can hold). Equal to NUMBER_OR_NAN | STRING | BOOLEAN */
-    ANY: 0x1FFF,
+    ANY: 0x7FFF,
 
     /** An array of values in the form [R, G, B] */
-    COLOR: 0x2000
+    COLOR: 0x8000
 };
 
 /**
@@ -122,6 +128,17 @@ const StackOpcode = {
     CONTROL_CLEAR_COUNTER: 'control.counterClear',
     CONTORL_INCR_COUNTER: 'control.counterIncr',
 
+    PM_CONTROL_ALL_AT_ONCE: 'control.allAtOnce',
+    PM_CONTROL_CONTINUE_LOOP: 'control.continueLoop',
+    PM_CONTROL_DELETE_CLONES: 'control.deleteClones',
+    PM_CONTROL_ESCAPE_LOOP: 'control.escapeLoop',
+    PM_CONTROL_REPEAT_SECONDS: 'control.repeatSeconds',
+    PM_CONTROL_RESTART_PROJECT: 'control.restartProject',
+    PM_CONTROL_THROW_ERROR: 'control.throwError',
+    PM_CONTROL_TRY_CATCH: 'control.tryCatch',
+    PM_CONTROL_WAIT_OR_UNTIL: 'control.waitOrUntil',
+    PM_CONTROL_WAIT_TICK: 'control.waitTick',
+
     LIST_ADD: 'list.add',
     LIST_INSERT: 'list.instert',
     LIST_REPLACE: 'list.replace',
@@ -133,6 +150,8 @@ const StackOpcode = {
     VAR_SET: 'var.set',
     VAR_SHOW: 'var.show',
     VAR_HIDE: 'var.hide',
+
+    PM_VAR_SET_VISIBLE: 'var.setVisible',
 
     EVENT_BROADCAST: 'event.broadcast',
     EVENT_BROADCAST_AND_WAIT: 'event.broadcastAndWait',
@@ -154,6 +173,10 @@ const StackOpcode = {
     LOOKS_COSTUME_SET: 'looks.switchCostume',
     LOOKS_SAY: 'looks.say',
     LOOKS_THINK: 'looks.think',
+
+    PM_LOOKS_CHANGE_STRETCH: 'looks.changeStretch',
+    PM_LOOKS_SET_STRETCH: 'looks.setStretch',
+    PM_LOOKS_STOP_SPEAKING: 'looks.stopSpeaking',
 
     MOTION_X_SET: 'motion.setX',
     MOTION_X_CHANGE: 'motion.changeX',
@@ -182,7 +205,9 @@ const StackOpcode = {
     SENSING_TIMER_RESET: 'timer.reset',
 
     PROCEDURE_RETURN: 'procedures.return',
-    PROCEDURE_CALL: 'procedures.call'
+    PROCEDURE_CALL: 'procedures.call',
+
+    PM_PROCEDURE_COMMANDARG: 'procedures.commandarg'
 };
 
 /**
@@ -206,13 +231,25 @@ const InputOpcode = {
     COMPATIBILITY_LAYER: 'compat',
     OLD_COMPILER_COMPATIBILITY_LAYER: 'oldCompiler',
 
+    CONTROL_COUNTER: 'control.counter',
+
+    PM_CONTROL_IF_ELSE_REPORT: 'control.ifElseReport',
+    PM_CONTROL_INLINE_BLOCK: 'control.inlineBlock',
+    PM_CONTROL_IS_CLONE: 'control.isClone',
+    PM_CONTROL_TRY_CATCH_ERROR: 'control.tryCatchError',
+
     LOOKS_BACKDROP_NUMBER: 'looks.backdropNumber',
     LOOKS_BACKDROP_NAME: 'looks.backdropName',
     LOOKS_COSTUME_NUMBER: 'looks.costumeNumber',
     LOOKS_COSTUME_NAME: 'looks.costumeName',
     LOOKS_SIZE_GET: 'looks.size',
 
+    PM_LOOKS_STRETCH_X: 'looks.stretchX',
+    PM_LOOKS_STRETCH_Y: 'looks.stretchY',
+
     VAR_GET: 'var.get',
+
+    PM_VAR_VISIBLE: 'var.visible',
 
     LIST_GET: 'list.get',
     LIST_LENGTH: 'list.length',
@@ -256,6 +293,16 @@ const InputOpcode = {
     OP_ROUND: 'op.round',
     OP_SUBTRACT: 'op.subtract',
 
+    PM_OP_CONSTRAIN: 'op.constrain',
+    PM_OP_INTERPOLATE: 'op.interpolate',
+    PM_OP_IS_BOOLEAN: 'op.isBoolean',
+    PM_OP_IS_NUMBER: 'op.isNumber',
+    PM_OP_IS_STRING: 'op.isString',
+    PM_OP_LOG_2: 'op.log2',
+    PM_OP_POWER: 'op.power',
+    PM_OP_SIGN: 'op.sign',
+    PM_OP_XOR: 'op.xor',
+
     SENSING_ANSWER: 'sensing.answer',
     SENSING_COLOR_TOUCHING_COLOR: 'sensing.colorTouchingColor',
     SENSING_TIME_YEAR: 'sensing.year',
@@ -287,10 +334,12 @@ const InputOpcode = {
     SENSING_TOUCHING_OBJECT: 'sensing.touching',
     SENSING_USERNAME: 'sensing.username',
 
+    PM_SENSING_HAS_NUMBER: 'sensing.hasNumber',
+    PM_SENSING_IS_TEXT: 'sensing.isText',
+    PM_SENSING_TIME_TIMESTAMP: 'sensing.timestamp',
+
     PROCEDURE_CALL: 'procedures.call',
     PROCEDURE_ARGUMENT: 'procedures.argument',
-
-    CONTROL_COUNTER: 'control.counter',
 
     TW_KEY_LAST_PRESSED: 'tw.lastKeyPressed'
 };

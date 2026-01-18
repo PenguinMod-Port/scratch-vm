@@ -27,6 +27,7 @@ const {serializeSounds, serializeCostumes} = require('./serialization/serialize-
 require('canvas-toBlob');
 const {exportCostume} = require('./serialization/tw-costume-import-export');
 const Base64Util = require('./util/base64-util');
+const SemVer = require('./util/semver');
 
 const RESERVED_NAMES = ['_mouse_', '_stage_', '_edge_', '_myself_', '_random_'];
 
@@ -169,6 +170,15 @@ class VirtualMachine extends EventEmitter {
         this.runtime.on(Runtime.RUNTIME_STOPPED, () => {
             this.emit(Runtime.RUNTIME_STOPPED);
         });
+        this.runtime.on(Runtime.RUNTIME_PAUSED, () => {
+            this.emit(Runtime.RUNTIME_PAUSED);
+        });
+        this.runtime.on(Runtime.RUNTIME_UNPAUSED, () => {
+            this.emit(Runtime.RUNTIME_UNPAUSED);
+        });
+        this.runtime.on(Runtime.RUNTIME_STOPPED, () => {
+            this.emit(Runtime.RUNTIME_STOPPED);
+        });
         this.runtime.on(Runtime.HAS_CLOUD_DATA_UPDATE, hasCloudData => {
             this.emit(Runtime.HAS_CLOUD_DATA_UPDATE, hasCloudData);
         });
@@ -257,6 +267,9 @@ class VirtualMachine extends EventEmitter {
                 };
             }
         };
+
+        // pm
+        this.pmVersion = new SemVer("0.1.0")
     }
 
     /**
@@ -286,6 +299,20 @@ class VirtualMachine extends EventEmitter {
      */
     greenFlag () {
         this.runtime.greenFlag();
+    }
+
+    /**
+     * Pause running scripts
+     */
+    pause () {
+        this.runtime.pause();
+    }
+
+    /**
+     * Unpause running scripts
+     */
+    play () {
+        this.runtime.play();
     }
 
     /**
@@ -820,6 +847,25 @@ class VirtualMachine extends EventEmitter {
             this.runtime.executableTargets.sort((a, b) => a.layerOrder - b.layerOrder);
             targets.forEach(target => {
                 delete target.layerOrder;
+
+                //deserialize custom typed variables Now!
+                for (const varId in target.variables) {
+                    const variable = target.variables[varId];
+                    if (variable.type === Variable.LIST_TYPE) {
+                        for (const idx in variable.value) {
+                            const item = variable.value[idx];
+                            if (item.customType) {
+                                const {deserialize} = this.runtime.serializers[item.typeId];
+                                variable.value[idx] = deserialize(item.serialized, target, variable);
+                            }
+                        }
+                    }
+                    if (variable.value?.customType) {
+                        const customData = variable.value;
+                        const {deserialize} = this.runtime.serializers[customData.typeId];
+                        variable.value = deserialize(customData.serialized, target, variable);
+                    }
+                }
             });
 
             // Select the first target for editing, e.g., the first sprite.
@@ -836,7 +882,7 @@ class VirtualMachine extends EventEmitter {
             if (wholeProject) {
                 this.runtime.parseProjectOptions();
             }
-
+            
             // Update the VM user's knowledge of targets and blocks on the workspace.
             this.emitTargetsUpdate(false /* Don't emit project change */);
             this.emitWorkspaceUpdate();

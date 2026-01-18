@@ -130,6 +130,15 @@ class IntermediateInput {
     }
 
     /**
+     * Checks that type does not have any other types
+     * @param {InputType} type
+     * @returns
+     */
+    isSubtypeOf(type) {
+        return (this.type | type) === type;
+    }
+
+    /**
      * Converts this input to a target type.
      * If this input is a constant the conversion is performed now, at compile time.
      * If the input changes, the conversion is performed at runtime.
@@ -276,6 +285,12 @@ class IntermediateScript {
         this.topBlockId = null;
 
         /**
+         * The ID of the bottom block of this script.
+         * @type {string?}
+         */
+        this.bottomBlockId = null;
+
+        /**
          * List of nodes that make up this script.
          * @type {IntermediateStack?}
          */
@@ -286,6 +301,12 @@ class IntermediateScript {
          * @type {boolean}
          */
         this.isProcedure = false;
+
+        /**
+         * Whether this script was executed through clicking the stack.
+         * @type {boolean}
+         */
+        this.stackClicked = false;
 
         /**
          * This procedure's variant, if any.

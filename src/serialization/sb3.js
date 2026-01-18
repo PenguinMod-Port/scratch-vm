@@ -219,6 +219,9 @@ const serializeBlock = function (block) {
     if (block.comment) {
         obj.comment = block.comment;
     }
+    if (block.collapsed) {
+        obj.collapsed = true;
+    }
     return obj;
 };
 
@@ -488,12 +491,26 @@ const serializeSound = function (sound) {
 const isVariableValueSafeForJSON = value => (
     typeof value === 'number' ||
     typeof value === 'string' ||
-    typeof value === 'boolean'
+    typeof value === 'boolean' ||
+    value === null
 );
-const makeSafeForJSON = value => {
+const makeSafeForJSON = (value, runtime) => {
     if (Array.isArray(value)) {
         let copy = null;
         for (let i = 0; i < value.length; i++) {
+            if (value[i]?.customId) {
+                if (!copy) {
+                    // Only copy the list when needed
+                    copy = value.slice();
+                }
+                const {serialize} = runtime.serializers[copy[i].customId];
+                copy[i] = {
+                    customType: true,
+                    typeId: copy[i].customId,
+                    serialized: serialize(copy[i])
+                };
+                continue;
+            }
             if (!isVariableValueSafeForJSON(value[i])) {
                 if (!copy) {
                     // Only copy the list when needed
@@ -506,6 +523,14 @@ const makeSafeForJSON = value => {
             return copy;
         }
         return value;
+    }
+    if (value.customId) {
+        const {serialize} = runtime.serializers[value.customId];
+        return {
+            customType: true,
+            typeId: value.customId,
+            serialized: serialize(value)
+        };
     }
     if (isVariableValueSafeForJSON(value)) {
         return value;
@@ -520,7 +545,7 @@ const makeSafeForJSON = value => {
  * separated by type to compress the representation of each given variable and
  * reduce duplicate information.
  */
-const serializeVariables = function (variables) {
+const serializeVariables = function (variables, runtime) {
     const obj = Object.create(null);
     // separate out variables into types at the top level so we don't have
     // keep track of a type for each
@@ -534,12 +559,12 @@ const serializeVariables = function (variables) {
             continue;
         }
         if (v.type === Variable.LIST_TYPE) {
-            obj.lists[varId] = [v.name, makeSafeForJSON(v.value)];
+            obj.lists[varId] = [v.name, makeSafeForJSON(v.value, runtime)];
             continue;
         }
 
         // otherwise should be a scalar type
-        obj.variables[varId] = [v.name, makeSafeForJSON(v.value)];
+        obj.variables[varId] = [v.name, makeSafeForJSON(v.value, runtime)];
         // only scalar vars have the potential to be cloud vars
         if (v.isCloud) obj.variables[varId].push(true);
     }
@@ -582,12 +607,12 @@ const serializeComments = function (comments) {
  * @param {Set} extensions A set of extensions to add extension IDs to
  * @return {object} A serialized representation of the given target.
  */
-const serializeTarget = function (target, extensions) {
+const serializeTarget = function (target, extensions, runtime) {
     const obj = Object.create(null);
     let targetExtensions = [];
     obj.isStage = target.isStage;
     obj.name = obj.isStage ? 'Stage' : target.name;
-    const vars = serializeVariables(target.variables);
+    const vars = serializeVariables(target.variables, runtime);
     obj.variables = vars.variables;
     obj.lists = vars.lists;
     obj.broadcasts = vars.broadcasts;
@@ -702,6 +727,28 @@ const serializeMonitors = function (monitors, runtime, extensions) {
         });
 };
 
+const serializeConfig = function (runtime) {
+    const config = Object.create(null);
+
+    if (runtime.frameLoop.framerate !== 30) config.frameRate = runtime.frameLoop.framerate;
+    if (runtime.interpolationEnabled) config.interpolation = true;
+    if (runtime.renderer.useHighQualityRender) config.hqPen = true;
+    if (runtime.compilerOptions.warpTimer) config.warpTimer = true;
+
+    if (runtime.runtimeOptions.maxClones !== runtime.constructor.MAX_CLONES) config.maxClones = (runtime.runtimeOptions.maxClones === Infinity ? -1 : runtime.runtimeOptions.maxClones);
+    if (runtime.runtimeOptions.miscLimits) config.miscLimits = true;
+    if (runtime.runtimeOptions.fencing) config.fencing = true;
+
+    if (runtime.stageHeight !== 360 || runtime.stageWidth !== 480) {
+        config.stageSize = {
+            width: runtime.stageWidth,
+            height: runtime.stageHeight
+        }
+    }
+
+    return config;
+}
+
 /**
  * Serializes the specified VM runtime.
  * @param {!Runtime} runtime VM runtime instance to be serialized.
@@ -730,7 +777,7 @@ const serialize = function (runtime, targetId, {allowOptimization = true} = {}) 
         });
     }
 
-    const serializedTargets = flattenedOriginalTargets.map(t => serializeTarget(t, extensions))
+    const serializedTargets = flattenedOriginalTargets.map(t => serializeTarget(t, extensions, runtime))
         .map((serialized, index) => {
             // can't serialize extensionStorage until the list of used extensions is fully known
             const target = originalTargetsToSerialize[index];
@@ -777,6 +824,8 @@ const serialize = function (runtime, targetId, {allowOptimization = true} = {}) 
     if (fonts) {
         obj.customFonts = fonts;
     }
+
+    obj.config = serializeConfig(runtime);
 
     // Assemble metadata
     const meta = Object.create(null);
@@ -1499,6 +1548,21 @@ const checkPlatformCompatibility = (json, runtime) => {
     });
 };
 
+const deserializeConfig = function (config, runtime) {
+    runtime.setFramerate(config.frameRate ?? 30);
+    runtime.setInterpolation(!!config.interpolation);
+    runtime.renderer.setUseHighQualityRender(!!config.hqPen);
+    runtime.compilerOptions.warpTimer = !!config.warpTimer;
+
+    runtime.setRuntimeOptions({
+        maxClones: (config.maxClones === -1 ? Infinity : config.maxClones) ?? runtime.constructor.MAX_CLONES,
+        miscLimits: !!config.miscLimits,
+        fencing: !!config.fencing
+    });
+    
+    runtime.setStageSize(config.stageSize?.width, config.stageSize?.height);
+}
+
 /**
  * Deserialize the specified representation of a VM runtime and loads it into the provided runtime instance.
  * @param  {object} json - JSON representation of a VM runtime.
@@ -1548,6 +1612,8 @@ const deserialize = async function (json, runtime, zip, isSingleSprite) {
         .sort((a, b) => a.layerOrder - b.layerOrder);
 
     const monitorObjects = json.monitors || [];
+
+    if (json.config) deserializeConfig(json.config, runtime);
 
     return fontPromise.then(() => targetObjects.map(target => parseScratchAssets(target, runtime, zip)))
         // Force this promise to wait for the next loop in the js tick. Let

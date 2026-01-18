@@ -95,7 +95,11 @@ const ArgumentTypeMap = (() => {
         }
     };
     map[ArgumentType.BOOLEAN] = {
-        check: 'Boolean'
+        check: 'Boolean',
+        shadow: {
+            type: 'checkbox',
+            fieldName: 'CHECKBOX'
+        }
     };
     map[ArgumentType.MATRIX] = {
         shadow: {
@@ -531,6 +535,9 @@ class Runtime extends EventEmitter {
          * Total number of finished or errored scratch-storage load() requests since the runtime was created or cleared.
          */
         this.finishedAssetRequests = 0;
+
+        // lists all custom serializers
+        this.serializers = {};
     }
 
     /**
@@ -908,6 +915,47 @@ class Runtime extends EventEmitter {
     }
 
     /**
+     * Event name when _step() has been called.
+     * @const {string}
+     */
+    static get RUNTIME_STEP_START () {
+        return 'RUNTIME_STEP_START';
+    }
+
+    /**
+     * Event name when _step() has finished all processing within the function.
+     * @const {string}
+     */
+    static get RUNTIME_STEP_END () {
+        return 'RUNTIME_STEP_END';
+    }
+
+    /**
+     * Event name when the runtime is paused temporarily.
+     * @const {string}
+     */
+    static get RUNTIME_PAUSED () {
+        return 'RUNTIME_PAUSED';
+    }
+
+    /**
+     * Event name when the runtime is about to be paused temporarily.
+     * Fires before runtime.paused = true.
+     * @const {string}
+     */
+    static get RUNTIME_PRE_PAUSED () {
+        return 'RUNTIME_PRE_PAUSED';
+    }
+
+    /**
+     * Event name when the runtime is unpaused.
+     * @const {string}
+     */
+    static get RUNTIME_UNPAUSED () {
+        return 'RUNTIME_UNPAUSED';
+    }
+
+    /**
      * Event name for reporting that a block was updated and needs to be rerendered.
      * @const {string}
      */
@@ -1014,6 +1062,17 @@ class Runtime extends EventEmitter {
 
     compilerRegisterExtension (name, extensionObject) {
         this[`ext_${name}`] = extensionObject;
+    }
+
+    registerCompiledExtensionBlocks (extensionId, information) {
+        if (!information) return;
+        if (!information.ir) return;
+        if (!information.js) return;
+
+        const OldCompiler = require('../compiler/old-compiler-compatibility');
+
+        OldCompiler.IRGeneratorStub.setExtensionIr(extensionId, information.ir);
+        OldCompiler.JSGeneratorStub.setExtensionJs(extensionId, information.js);
     }
 
     getMonitorState () {
@@ -1337,6 +1396,7 @@ class Runtime extends EventEmitter {
             type: extendedOpcode,
             inputsInline: true,
             category: categoryInfo.name,
+            branches: blockInfo.branches ?? [],
             extensions: [],
             colour: blockInfo.color1 ?? categoryInfo.color1,
             colourSecondary: blockInfo.color2 ?? categoryInfo.color2,
@@ -1426,10 +1486,10 @@ class Runtime extends EventEmitter {
             break;
         }
 
-        // Allow extensiosn to override outputShape
-        if (blockInfo.blockShape) {
-            blockJSON.outputShape = blockInfo.blockShape;
-        }
+        if (blockInfo.blockShape) blockJSON.outputShape = blockInfo.blockShape; // Allow extensions to override outputShape
+        if (blockInfo.forceOutputType !== undefined) blockJSON.output = blockInfo.forceOutputType; // Allow extensions to override output type
+        if (blockInfo.outputCheck !== undefined) blockJSON.output = blockInfo.outputCheck; // ditto for above but i wanted a nicer name
+        if (blockInfo.canDragDuplicate) blockJSON.canDragDuplicate = true;
 
         const blockText = Array.isArray(blockInfo.text) ? blockInfo.text : [blockInfo.text];
         let inTextNum = 0; // text for the next block "arm" is blockText[inTextNum]
@@ -1438,8 +1498,20 @@ class Runtime extends EventEmitter {
         const convertPlaceholders = this._convertPlaceholders.bind(this, context);
         const extensionMessageContext = this.makeMessageContextForTarget();
 
+        // convert branchCount to new branches property
+        if (blockJSON.branches.length === 0 && blockInfo.branchCount > 0) {
+            for (let i = 0; i < blockInfo.branchCount; i++) {
+                blockJSON.branches.push({});
+            }
+        }
+
+        // setup names for branches
+        blockJSON.branches.forEach((branch, i) => {
+            branch.name ??= i > 0 ? i + 1 : '';
+        });
+
         // alternate between a block "arm" with text on it and an open slot for a substack
-        while (inTextNum < blockText.length || inBranchNum < blockInfo.branchCount) {
+        while (inTextNum < blockText.length || inBranchNum < blockJSON.branches.length) {
             if (inTextNum < blockText.length) {
                 context.outLineNum = outLineNum;
                 const lineText = maybeFormatMessage(blockText[inTextNum], extensionMessageContext);
@@ -1452,11 +1524,12 @@ class Runtime extends EventEmitter {
                 ++inTextNum;
                 ++outLineNum;
             }
-            if (inBranchNum < blockInfo.branchCount) {
+            if (inBranchNum < blockJSON.branches.length) {
+                const branch = blockJSON.branches[inBranchNum];
                 blockJSON[`message${outLineNum}`] = '%1';
                 blockJSON[`args${outLineNum}`] = [{
                     type: 'input_statement',
-                    name: `SUBSTACK${inBranchNum > 0 ? inBranchNum + 1 : ''}`
+                    name: `SUBSTACK${branch.name}`
                 }];
                 ++inBranchNum;
                 ++outLineNum;
@@ -1638,12 +1711,8 @@ class Runtime extends EventEmitter {
                 typeof argInfo.defaultValue === 'undefined' ? null :
                     maybeFormatMessage(argInfo.defaultValue, this.makeMessageContextForTarget()).toString();
 
-            if (argTypeInfo.check) {
-                // Right now the only type of 'check' we have specifies that the
-                // input slot on the block accepts Boolean reporters, so it should be
-                // shaped like a hexagon
-                argJSON.check = argTypeInfo.check;
-            }
+            argJSON.check = argInfo.check === undefined ? argTypeInfo.check : argInfo.check;
+            argJSON.shape = argInfo.shape === undefined ? argTypeInfo.shape : argInfo.shape;
 
             let valueName;
             let shadowType;
@@ -1665,6 +1734,10 @@ class Runtime extends EventEmitter {
                 valueName = placeholder;
                 shadowType = (argTypeInfo.shadow && argTypeInfo.shadow.type) || null;
                 fieldName = (argTypeInfo.shadow && argTypeInfo.shadow.fieldName) || null;
+
+                if (argInfo.fillIn || argInfo.fillInGlobal) {
+                    shadowType = argInfo.fillInGlobal || `${context.categoryInfo.id}_${argInfo.fillIn}`;
+                }
             }
 
             // <value> is the ScratchBlocks name for a block input.
@@ -2447,6 +2520,35 @@ class Runtime extends EventEmitter {
     }
 
     /**
+     * Pause running scripts
+     */
+    pause () {
+        if (this.paused) return;
+        this.emit(Runtime.RUNTIME_PRE_PAUSED);
+        this.paused = true;
+
+        this.ioDevices.clock.pause();
+        for (const thread of this.threads) {
+            thread.pause();
+        }
+        this.emit(Runtime.RUNTIME_PAUSED);
+    }
+
+    /**
+     * Unpause running scripts
+     */
+    play () {
+        if (!this.paused) return;
+        this.paused = false;
+
+        this.ioDevices.clock.resume();
+        for (const thread of this.threads) {
+            thread.play();
+        }
+        this.emit(Runtime.RUNTIME_UNPAUSED);
+    }
+
+    /**
      * Stop "everything."
      */
     stopAll () {
@@ -2474,6 +2576,8 @@ class Runtime extends EventEmitter {
         this.threadMap.clear();
 
         this.resetRunId();
+
+        this.startHats('event_whenstopclicked');
     }
 
     _renderInterpolatedPositions () {
@@ -2503,6 +2607,10 @@ class Runtime extends EventEmitter {
      * inactive threads after each iteration.
      */
     _step () {
+        // pm: RUNTIME_STEP_START runs before BEFORE_EXECUTE
+        // this runs before any processing of this new step
+        this.emit(Runtime.RUNTIME_STEP_START);
+
         if (this.interpolationEnabled) {
             interpolate.setupInitialState(this);
         }
@@ -2586,6 +2694,9 @@ class Runtime extends EventEmitter {
         if (this.interpolationEnabled) {
             this._lastStepTime = Date.now();
         }
+
+        // pm: RUNTIME_STEP_END runs after AFTER_EXECUTE
+        this.emit(Runtime.RUNTIME_STEP_END);
     }
 
     /**
@@ -2691,7 +2802,7 @@ class Runtime extends EventEmitter {
      * @param {number} width New stage width
      * @param {number} height New stage height
      */
-    setStageSize (width, height) {
+    setStageSize (width = 480, height = 360) {
         width = Math.round(Math.max(1, width));
         height = Math.round(Math.max(1, height));
         if (this.stageWidth !== width || this.stageHeight !== height) {
@@ -2875,6 +2986,10 @@ class Runtime extends EventEmitter {
         if (storedWidth !== this.stageWidth || storedHeight !== this.stageHeight) {
             this.setStageSize(storedWidth, storedHeight);
         }
+
+        //since this type of storing stuff is deprecated, remove the comment
+        delete this.getTargetForStage().comments[comment.id];
+        this.emitProjectChanged();
     }
 
     _generateAllProjectOptions () {
@@ -2910,18 +3025,7 @@ class Runtime extends EventEmitter {
     }
 
     storeProjectOptions () {
-        const options = this.generateDifferingProjectOptions();
-        // TODO: translate
-        const text = `Configuration for https://turbowarp.org/\nYou can move, resize, and minimize this comment, but don't edit it by hand. This comment can be deleted to remove the stored settings.\n${ExtendedJSON.stringify(options)}${COMMENT_CONFIG_MAGIC}`;
-        const existingComment = this.findProjectOptionsComment();
-        if (existingComment) {
-            existingComment.text = text;
-        } else {
-            const target = this.getTargetForStage();
-            // TODO: smarter position logic
-            target.createComment(uid(), null, text, 50, 50, 350, 170, false);
-        }
-        this.emitProjectChanged();
+        //project options now stored inside project json so this function is useless
     }
 
     /**
@@ -3078,13 +3182,11 @@ class Runtime extends EventEmitter {
      * @param {Target} target The target that the block was run in.
      * @param {string} blockId ID for the block.
      * @param {string} value Value to show associated with the block.
+     * @param {boolean?} error True if the value is an error value.
      */
-    visualReport (target, blockId, value) {
+    visualReport (target, blockId, value, error = false) {
         if (target === this.getEditingTarget()) {
-            this.emit(Runtime.VISUAL_REPORT, {
-                id: blockId,
-                value: safeStringify(value)
-            });
+            this.emit(Runtime.VISUAL_REPORT, {id: blockId, value, error});
         }
     }
 
@@ -3482,6 +3584,25 @@ class Runtime extends EventEmitter {
         };
 
         return callback().then(onSuccess, onError);
+    }
+
+    /**
+     * registers a custom serializer to allow saving custom data into standard variables
+     * @param {string} id custom id of the data that is serialized
+     * @param {Function} serialize the function to be ran on unserialized data in variables
+     * @param {Function} deserialize the function to be ran on serialized data in project file
+     */
+    registerSerializer (id, serialize, deserialize) {
+        if (typeof serialize !== 'function') {
+            throw new TypeError('serialize must be of type function');
+        }
+        if (typeof deserialize !== 'function') {
+            throw new TypeError('deserialize must be of type function');
+        }
+        this.serializers[id] = {
+            serialize,
+            deserialize
+        };
     }
 }
 
