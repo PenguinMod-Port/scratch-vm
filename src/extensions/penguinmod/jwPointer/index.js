@@ -36,6 +36,7 @@ class PointerType {
     }
 
     static toPointer(x) {
+        console.debug(x)
         if (x instanceof PointerType) return x;
 
         let num = Cast.toNumber(x);
@@ -53,20 +54,24 @@ class PointerType {
     }
 
     get value() {
-        let value = pointers.get(this.pointerID);
-        if (value === undefined) {
+        try {
+            let value = pointers.get(this.pointerID);
+            if (value === undefined) {
+                return null;
+            }
+            return value;
+        } catch (e) {
             return null;
         }
-        return value;
     }
 
     set value(value) {
-        if (pointers.get(this.pointerID) === undefined) return;
+        if (!pointers.has(this.pointerID)) return;
         pointers.set(this.pointerID, value);
     }
 
     jwArrayHandler() {
-        if (this.value === undefined) return "Pointer";
+        if (!pointers.has(this.pointerID)) return "Pointer";
         if (this.value === null) return "Pointer&lt;null&gt;";
         if (this.value instanceof PointerType) return "Pointer&lt;...&gt;";
         if (this.value.jwArrayHandler) return `Pointer&lt;${this.value.jwArrayHandler()}&gt;`;
@@ -78,7 +83,7 @@ class PointerType {
     }
 
     toReporterContent() {
-        let destroyed = pointers.get(this.pointerID) === undefined;
+        let destroyed = !pointers.has(this.pointerID);
 
         let root = document.createElement('div')
         root.style.display = "flex";
@@ -88,8 +93,18 @@ class PointerType {
         pointer.style.opacity = "0.5";
         root.appendChild(pointer);
         if (!destroyed) {
-            let value = (this.value !== null && this.value.toReporterContent) ? this.value.toReporterContent() : span(this.value);
-            if (value === null) value = span("null");
+            let value
+            try {
+                if (this.value === null) {
+                    value = span("null")
+                } else if (this.value instanceof PointerType) {
+                    value = span("(Pointer)")
+                } else {
+                    value = this.value.toReporterContent ? this.value.toReporterContent() : span(this.value)
+                }
+            } catch (e) {
+                value = span("(Recursive)")
+            }
             value.style.maxWidth = "100%";
             value.style.overflow = "auto";
             root.appendChild(value);
@@ -103,11 +118,14 @@ const Pointer = {
     Block: {
         blockType: BlockType.REPORTER,
         forceOutputType: "Pointer",
-        disableMonitor: true
+        disableMonitor: true,
     },
     Argument: {
-        check: ["Pointer"]
-    }
+        check: ["Pointer"],
+        exemptFromNormalization: true,
+        neglectTypes: ["jwPointer"]
+    },
+    pointers
 };
 
 class Extension {
@@ -115,7 +133,7 @@ class Extension {
         vm.jwPointer = Pointer
         vm.runtime.registerSerializer(
             "jwPointer", 
-            v => [v.pointerID, pointers.get(v.pointerID) !== undefined], 
+            v => [v.pointerID, pointers.has(v.pointerID)], 
             v => {
                 currentPointerID = Math.max(v[0]+1, currentPointerID);
                 return new Pointer.Type(v[0]);
@@ -173,7 +191,7 @@ class Extension {
                     arguments: {
                         ID: {
                             type: ArgumentType.NUMBER,
-                            defaultValue: 0
+                            defaultValue: 1
                         }
                     },
                     ...Pointer.Block
@@ -250,6 +268,14 @@ class Extension {
                     text: "last pointer ID",
                     blockType: BlockType.REPORTER
                 },
+                {
+                    opcode: "isPointer",
+                    text: "is [INPUT] a pointer?",
+                    blockType: BlockType.BOOLEAN,
+                    arguments: {
+                        INPUT: Pointer.Argument
+                    }
+                },
                 ...(vm.runtime.ext_jwArray ? ["---"] : []),
                 {
                     opcode: "allPointers",
@@ -283,8 +309,8 @@ class Extension {
 
     findID({ID}) {
         ID = Cast.toNumber(ID);
-        if (pointers.get(ID) === undefined) return new Pointer.Type(0);
-        return Pointer.Type.toPointer(ID);
+        if (!pointers.has(ID)) return new Pointer.Type(0);
+        return new Pointer.Type(ID);
     }
 
     getData({POINTER}) {
@@ -299,7 +325,7 @@ class Extension {
 
     isDestroyed({POINTER}) {
         POINTER = Pointer.Type.toPointer(POINTER);
-        return pointers.get(POINTER.pointerID) === undefined;
+        return pointers.has(POINTER.pointerID);
     }
 
     setData({POINTER, DATA}) {
@@ -325,6 +351,10 @@ class Extension {
 
     lastID() {
         return currentPointerID;
+    }
+
+    isPointer({POINTER}) {
+        return POINTER instanceof Pointer.Type
     }
 
     allPointers() {

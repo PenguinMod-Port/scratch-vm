@@ -5,8 +5,6 @@ const Cast = require('../../../util/cast')
 
 let arrayLimit = 2 ** 32 - 1
 
-// credit to sharpool because i stole the for each code from his extension haha im soo evil
-
 /**
 * @param {number} x
 * @returns {string}
@@ -96,10 +94,8 @@ class ArrayType {
         try {
             switch (typeof x) {
                 case "object":
-                    if (x === null) return "null"
-                    if (typeof x.jwArrayHandler == "function") {
-                        return x.jwArrayHandler()
-                    }
+                    if (x === null) return '<i style="opacity: 0.75;">null</i>'
+                    if (typeof x.jwArrayHandler == "function") return x.jwArrayHandler()
                     return "Object"
                 case "undefined":
                     return "null"
@@ -206,7 +202,6 @@ class Extension {
         );
         vm.runtime.registerCompiledExtensionBlocks('jwArray', this.getCompileInfo());
     }
-
     getInfo() {
         return {
             id: "jwArray",
@@ -294,7 +289,7 @@ class Extension {
                         VALUE: {
                             type: ArgumentType.STRING,
                             defaultValue: "foo",
-                            exemptFromNormalization: true,
+                            exemptFromNormalization: true
                         }
                     }
                 },
@@ -556,7 +551,7 @@ class Extension {
             menus: {
                 list: {
                     acceptReporters: false,
-                    items: "getLists",
+                    items: ["deprecated"]
                 },
                 stringifyFormat: {
                     acceptReporters: false,
@@ -654,16 +649,6 @@ class Extension {
                 }
             }
         };
-    }
-    
-    getLists() {
-        const globalLists = Object.values(vm.runtime.getTargetForStage().variables)
-            .filter((x) => x.type == "list");
-        const localLists = Object.values(vm.editingTarget.variables)
-            .filter((x) => x.type == "list");
-        const uniqueLists = [...new Set([...globalLists, ...localLists])];
-        if (uniqueLists.length === 0) return [{ text: "", value: "" }];
-        return uniqueLists.map((v) => ({ text: v.name, value: new jwArray.Type(v.value) }));
     }
 
     blank() {
@@ -828,19 +813,23 @@ class Extension {
     }
 
     forEachI({}, util) {
-        return util.thread._jwArrayForEach ? util.thread._jwArrayForEach[util.thread._jwArrayForEach.length-1][0] : 0
+        return (util.thread._jwArrayForEach && util.thread._jwArrayForEach[util.thread._jwArrayForEach.length-1]) ? util.thread._jwArrayForEach[util.thread._jwArrayForEach.length-1][0] : 0
     }
 
     forEachV({}, util) {
-        return util.thread._jwArrayForEach ? util.thread._jwArrayForEach[util.thread._jwArrayForEach.length-1][1] : ""
+        return (util.thread._jwArrayForEach && util.thread._jwArrayForEach[util.thread._jwArrayForEach.length-1]) ? util.thread._jwArrayForEach[util.thread._jwArrayForEach.length-1][1] : ""
     }
 
-    forEach({ARRAY}, util) {
+    forEach() {
         return 'noop'
     }
 
     forEachBreak({}, util) {
         util.stackFrame.entry = []
+    }
+
+    basicSort() {
+        return 'noop'
     }
 }
 

@@ -46,10 +46,23 @@ const jwScope = {
         return null
     },
 
+    has(array, name) {
+        for (let i = array.length-1; i >= 0; i--) {
+            if (name in array[i]) {
+                return true
+            }
+        }
+        return false
+    },
+
     reset(array) {
         for (let i = array.length-1; i >= 0; i--) {
             array[i] = {}
         }
+    },
+
+    depth(array) {
+        return array.length
     },
 
     current(array) {
@@ -131,11 +144,23 @@ class Extension {
                         }
                     },
                 },
+                "---",
                 {
                     opcode: "get",
                     blockType: BlockType.REPORTER,
                     text: "get [NAME]",
                     allowDropAnywhere: true,
+                    arguments: {
+                        NAME: {
+                            type: ArgumentType.STRING,
+                            defaultValue: "var"
+                        }
+                    },
+                },
+                {
+                    opcode: "has",
+                    blockType: BlockType.BOOLEAN,
+                    text: "is [NAME] defined?",
                     arguments: {
                         NAME: {
                             type: ArgumentType.STRING,
@@ -166,11 +191,17 @@ class Extension {
                         }
                     },
                 },
-                "---",
                 {
                     opcode: "reset",
                     blockType: BlockType.COMMAND,
                     text: "reset scope"
+                },
+                "---",
+                {
+                    opcode: "depth",
+                    blockType: BlockType.REPORTER,
+                    text: "depth of scope",
+                    disableMonitor: true
                 },
                 "---",
                 {
@@ -218,8 +249,15 @@ class Extension {
                     kind: 'input',
                     name: generator.descendInputOfBlock(block, 'NAME')
                 }),
+                has: (generator, block) => ({
+                    kind: 'input',
+                    name: generator.descendInputOfBlock(block, 'NAME')
+                }),
                 reset: (generator, block) => ({
                     kind: 'stack'
+                }),
+                depth: (generator, block) => ({
+                    kind: 'input'
                 }),
                 current: (generator, block) => ({
                     kind: 'input'
@@ -244,8 +282,14 @@ class Extension {
                 get: (node, compiler, imports) => {
                     return new imports.TypedInput(`vm.jwScope.get(jwScope, ${compiler.descendInput(node.name).asString()})`, imports.TYPE_UNKNOWN)
                 },
+                has: (node, compiler, imports) => {
+                    return new imports.TypedInput(`vm.jwScope.has(jwScope, ${compiler.descendInput(node.name).asString()})`, imports.TYPE_BOOLEAN)
+                },
                 reset: (node, compiler, imports) => {
                     compiler.source += `vm.jwScope.reset(jwScope);\n`
+                },
+                depth: (node, compiler, imports) => {
+                    return new imports.TypedInput(`vm.jwScope.depth(jwScope)`, imports.TYPE_NUMBER)
                 },
                 current: (node, compiler, imports) => {
                     return new imports.TypedInput(!!vm.jwArray ? 'vm.jwScope.current(jwScope)' : '0', imports.TYPE_UNKNOWN)
@@ -277,7 +321,15 @@ class Extension {
         return 'noop'
     }
 
+    has() {
+        return 'noop'
+    }
+
     reset() {
+        return 'noop'
+    }
+
+    depth() {
         return 'noop'
     }
 

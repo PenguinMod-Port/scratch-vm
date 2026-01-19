@@ -39,6 +39,7 @@ const defaultBuiltinExtensions = {
     jwLambda: () => require('../extensions/penguinmod/jwLambda'),
     jwPointer: () => require('../extensions/penguinmod/jwPointer'),
     jwScope: () => require('../extensions/penguinmod/jwScope'),
+    jwNum: () => require('../extensions/penguinmod/jwNum'),
 };
 
 /**
