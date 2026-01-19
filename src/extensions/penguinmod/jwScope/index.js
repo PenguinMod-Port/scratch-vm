@@ -110,7 +110,7 @@ class Extension {
             id: "jwScope",
             name: "Scope",
             color1: "#4f85f3",
-            menuIconURI: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCI+CiAgPGVsbGlwc2Ugc3R5bGU9InN0cm9rZS1saW5lam9pbjogcm91bmQ7IHBhaW50LW9yZGVyOiBmaWxsOyBzdHJva2U6IHJnYig3MSwgMTE5LCAyMTkpOyBmaWxsOiByZ2IoNzksIDEzMywgMjQzKTsiIGN4PSIxMCIgY3k9IjEwIiByeD0iOS41IiByeT0iOS41Ij48L2VsbGlwc2U+CiAgPHJlY3Qgc3R5bGU9InBhaW50LW9yZGVyOiBzdHJva2U7IGZpbGw6IG5vbmU7IHN0cm9rZTogcmdiKDI1NSwgMjU1LCAyNTUpOyBzdHJva2UtbGluZWpvaW46IHJvdW5kOyBzdHJva2Utd2lkdGg6IDJweDsiIHg9IjUiIHk9IjUiIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCIgcng9IjMiIHJ5PSIzIj48L3JlY3Q+Cjwvc3ZnPg==",
+            menuIconURI: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCI+CiAgPGVsbGlwc2Ugc3R5bGU9InN0cm9rZS1saW5lam9pbjogcm91bmQ7IHBhaW50LW9yZGVyOiBmaWxsOyBmaWxsOiByZ2IoNzksIDEzMywgMjQzKTsgc3Ryb2tlLXdpZHRoOiAxOyBzdHJva2U6IHJnYig2MywgMTA2LCAxOTQpOyIgY3g9IjEwIiBjeT0iMTAiIHJ4PSI5LjUiIHJ5PSI5LjUiPjwvZWxsaXBzZT4KICA8cmVjdCBzdHlsZT0icGFpbnQtb3JkZXI6IHN0cm9rZTsgZmlsbDogbm9uZTsgc3Ryb2tlOiByZ2IoMjU1LCAyNTUsIDI1NSk7IHN0cm9rZS1saW5lam9pbjogcm91bmQ7IHN0cm9rZS13aWR0aDogMjsiIHg9IjUiIHk9IjUiIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCIgcng9IjMiIHJ5PSIzIj48L3JlY3Q+Cjwvc3ZnPg==",
             docsURI: 'https://docs.penguinmod.com/extensions/jwScope/',
             blocks: [
                 {
