@@ -13,6 +13,15 @@ function span(text) {
     return el
 }
 
+const escapeHTML = unsafe => {
+    return unsafe
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;")
+};
+
 const pointerLimit = Number.MAX_SAFE_INTEGER;
 let currentPointerID = 0;
 
@@ -96,11 +105,11 @@ class PointerType {
             let value
             try {
                 if (this.value === null) {
-                    value = span("null")
+                    value = span('<i opacity="0.75">null</i>')
                 } else if (this.value instanceof PointerType) {
                     value = span("(Pointer)")
                 } else {
-                    value = this.value.toReporterContent ? this.value.toReporterContent() : span(this.value)
+                    value = this.value.toReporterContent ? this.value.toReporterContent() : span(typeof this.value == "string" ? escapeHTML(this.value) : this.value)
                 }
             } catch (e) {
                 value = span("(Recursive)")
