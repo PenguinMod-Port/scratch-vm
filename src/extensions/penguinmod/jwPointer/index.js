@@ -105,7 +105,7 @@ class PointerType {
             let value
             try {
                 if (this.value === null) {
-                    value = span('<i opacity="0.75">null</i>')
+                    value = span('<i style="opacity: 0.75">null</i>')
                 } else if (this.value instanceof PointerType) {
                     value = span("(Pointer)")
                 } else {
