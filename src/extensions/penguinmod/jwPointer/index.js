@@ -281,7 +281,7 @@ class Extension {
                     text: "is [INPUT] a pointer?",
                     blockType: BlockType.BOOLEAN,
                     arguments: {
-                        INPUT: Pointer.Argument
+                        INPUT: {}
                     }
                 },
                 ...(vm.runtime.ext_jwArray ? ["---"] : []),
@@ -361,8 +361,8 @@ class Extension {
         return currentPointerID;
     }
 
-    isPointer({POINTER}) {
-        return POINTER instanceof Pointer.Type
+    isPointer({INPUT}) {
+        return INPUT instanceof Pointer.Type
     }
 
     allPointers() {
