@@ -51,7 +51,13 @@ const ScratchBlocksConstants = {
      * ENUM for output shape: indented (XML / html elements).
      * @const
      */
-    OUTPUT_SHAPE_INDENTED: 8
+    OUTPUT_SHAPE_INDENTED: 8,
+
+    /**
+     * ENUM for output shape: arrow (sets).
+     * @const
+     */
+    OUTPUT_SHAPE_ARROW: 10
 };
 
 module.exports = ScratchBlocksConstants;

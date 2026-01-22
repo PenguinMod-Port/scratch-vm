@@ -44,7 +44,12 @@ const BlockShape = {
     /**
      * Output shape: indented (XML / html elements).
      */
-    INDENTED: ScratchBlocksConstants.OUTPUT_SHAPE_INDENTED
+    INDENTED: ScratchBlocksConstants.OUTPUT_SHAPE_INDENTED,
+
+    /**
+     * Output shape: arrow (arrows).
+     */
+    ARROW: ScratchBlocksConstants.OUTPUT_SHAPE_ARROW
 };
 
 module.exports = BlockShape;
