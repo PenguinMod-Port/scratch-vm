@@ -898,6 +898,14 @@ class ScriptTreeGenerator {
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_ALL_AT_ONCE, {
                 stack: this.descendSubstack(block, 'SUBSTACK')
             });
+        case 'control_case':
+            return new IntermediateStackBlock(StackOpcode.PM_CONTROL_THROW_ERROR, {
+                error: this.createConstantInput('All "case" blocks must be inside of a "switch" block.')
+            });
+        case 'control_case_next':
+            return new IntermediateStackBlock(StackOpcode.PM_CONTROL_THROW_ERROR, {
+                error: this.createConstantInput('All "case" blocks must be inside of a "switch" block.')
+            });
         case 'control_continueLoop':
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_CONTINUE_LOOP);
         case 'control_delete_clones_of':
@@ -913,6 +921,26 @@ class ScriptTreeGenerator {
             }, this.analyzeLoop());
         case 'control_restartproject':
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_RESTART_PROJECT);
+        case 'control_switch':
+        case 'control_switch_default':
+            let cases = this.getSubstackChildren(block, block.opcode === 'control_switch_default' ? 'SUBSTACK1' : 'SUBSTACK');
+            cases = cases.map(v => {
+                switch (v.opcode) {
+                    case 'control_case': return [
+                        this.descendInputOfBlock(v, 'CONDITION').toType(InputType.STRING),
+                        this.descendSubstack(v, 'SUBSTACK')
+                    ];
+                    case 'control_case_next': return [
+                        this.descendInputOfBlock(v, 'CONDITION').toType(InputType.STRING)
+                    ]
+                    default: return undefined;
+                }
+            }).filter(v => v !== undefined);
+            return new IntermediateStackBlock(StackOpcode.PM_CONTROL_SWITCH, {
+                condition: this.descendInputOfBlock(block, 'CONDITION').toType(InputType.STRING),
+                cases,
+                default: block.opcode === 'control_switch_default' ? this.descendSubstack(block, 'SUBSTACK2') : undefined
+            });
         case 'control_throw_error':
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_THROW_ERROR, {
                 error: this.descendInputOfBlock(block, 'ERROR').toType(InputType.STRING)
@@ -1273,6 +1301,28 @@ class ScriptTreeGenerator {
         }
         const stackId = input.block;
         return this.walkStack(stackId);
+    }
+
+    /**
+     * @param {*} parentBlock 
+     * @param {string} substackName 
+     * @returns {Array}
+     */
+    getSubstackChildren(parentBlock, substackName) {
+        const input = parentBlock.inputs[substackName];
+        if (!input) return [];
+
+        let blockId = input.block;
+        const children = [];
+        while (blockId !== null) {
+            const block = this.getBlockById(blockId);
+            if (!block) {
+                break;
+            }
+            children.push(block);
+            blockId = block.next;
+        }
+        return children;
     }
 
     /**

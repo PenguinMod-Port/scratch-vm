@@ -775,6 +775,26 @@ class JSGenerator {
             this.source += `runtime.greenFlag();\n`;
             this.retire();
             break;
+        case StackOpcode.PM_CONTROL_SWITCH:
+            this.source += `switch (${this.descendInput(node.condition)}) {\n`;
+            for (const c of node.cases) {
+                if (c[1]) {
+                    this.source += `case ${this.descendInput(c[0])}: {\n`;
+                    this.descendStack(c[1]);
+                    this.source += `break;\n`;
+                    this.source += `}\n`;
+                } else {
+                    this.source += `case ${this.descendInput(c[0])}:\n`;
+                }
+            }
+            if (node.default && node.default.blocks.length > 0) {
+                this.source += `default: {\n`;
+                this.descendStack(node.default);
+                this.source += `break;\n`;
+                this.source += `}\n`;
+            }
+            this.source += '}\n';
+            break;
         case StackOpcode.PM_CONTROL_THROW_ERROR:
             this.source += `throw ${this.descendInput(node.error)};\n`;
             break;

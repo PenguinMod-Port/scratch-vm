@@ -134,6 +134,7 @@ const StackOpcode = {
     PM_CONTROL_ESCAPE_LOOP: 'control.escapeLoop',
     PM_CONTROL_REPEAT_SECONDS: 'control.repeatSeconds',
     PM_CONTROL_RESTART_PROJECT: 'control.restartProject',
+    PM_CONTROL_SWITCH: 'control.switch',
     PM_CONTROL_THROW_ERROR: 'control.throwError',
     PM_CONTROL_TRY_CATCH: 'control.tryCatch',
     PM_CONTROL_WAIT_OR_UNTIL: 'control.waitOrUntil',
