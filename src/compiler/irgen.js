@@ -914,6 +914,8 @@ class ScriptTreeGenerator {
             });
         case 'control_exitLoop':
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_ESCAPE_LOOP);
+        case 'control_exitCase':
+            return new IntermediateStackBlock(StackOpcode.PM_CONTROL_EXIT_CASE);
         case 'control_repeatForSeconds':
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_REPEAT_SECONDS, {
                 seconds: this.descendInputOfBlock(block, 'TIMES').toType(InputType.NUMBER),

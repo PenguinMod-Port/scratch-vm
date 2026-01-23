@@ -107,8 +107,13 @@ class JSGenerator {
         this.warpTimer = script.warpTimer;
 
         this.allowReturns = false;
-        this.inLoop = false;
         this.isLastBlock = false;
+
+        this.inLoop = false;
+        this.loopName = null;
+
+        this.inCase = false;
+        this.switchName = null;
 
         /**
          * Stack of frames, most recent is last item.
@@ -144,9 +149,10 @@ class JSGenerator {
     pushFrame (frame) {
         this.frames.push(frame);
         this.currentFrame = frame;
-        this.currentFrame._temp = this.inLoop;
+        this.currentFrame._temp = [this.inLoop, this.loopName];
 
         this.inLoop = this.inLoop || frame.isLoop;
+        this.loopName = null;
     }
 
     /**
@@ -154,7 +160,8 @@ class JSGenerator {
      * @deprecated
      */
     popFrame () {
-        this.inLoop = this.currentFrame._temp;
+        this.inLoop = this.currentFrame._temp[0];
+        this.loopName = this.currentFrame._temp[1];
 
         this.frames.pop();
         this.currentFrame = this.frames[this.frames.length - 1];
@@ -660,11 +667,12 @@ class JSGenerator {
             break;
         case StackOpcode.CONTROL_FOR: {
             const index = this.localVariables.next();
+            const loopName = this.localVariables.next();
             this.source += `var ${index} = 0; `;
-            this.source += `while (${index} < ${this.descendInput(node.count)}) { `;
+            this.source += `${loopName}: while (${index} < ${this.descendInput(node.count)}) { `;
             this.source += `${index}++; `;
             this.source += `${this.referenceVariable(node.variable)}.value = ${index};\n`;
-            this.descendStack(node.do, {inLoop: true});
+            this.descendStack(node.do, {inLoop: true, loopName});
             this.yieldLoop();
             this.source += '}\n';
             break;
@@ -682,12 +690,13 @@ class JSGenerator {
             break;
         case StackOpcode.CONTROL_REPEAT: {
             const i = this.localVariables.next();
+            const loopName = this.localVariables.next();
             if (node.times.isAlwaysType(InputType.NUMBER_INT | InputType.NUMBER_INF)) {
-                this.source += `for (var ${i} = ${this.descendInput(node.times)}; ${i} > 0; ${i}--) {\n`;
+                this.source += `${loopName}: for (var ${i} = ${this.descendInput(node.times)}; ${i} > 0; ${i}--) {\n`;
             } else {
                 this.source += `for (var ${i} = ${this.descendInput(node.times)}; ${i} >= 0.5; ${i}--) {\n`;
             }
-            this.descendStack(node.do, {inLoop: true});
+            this.descendStack(node.do, {inLoop: true, loopName});
             this.yieldLoop();
             this.source += `}\n`;
             break;
@@ -722,8 +731,9 @@ class JSGenerator {
             break;
         }
         case StackOpcode.CONTROL_WHILE:
-            this.source += `while (${this.descendInput(node.condition)}) {\n`;
-            this.descendStack(node.do, {inLoop: true});
+            const loopName = this.localVariables.next();
+            this.source += `${loopName}: while (${this.descendInput(node.condition)}) {\n`;
+            this.descendStack(node.do, {inLoop: true, loopName});
             if (node.warpTimer) {
                 this.yieldStuckOrNotWarp();
             } else {
@@ -744,7 +754,7 @@ class JSGenerator {
             break;
         case StackOpcode.PM_CONTROL_CONTINUE_LOOP:
             if (this.inLoop) {
-                this.source += 'continue;\n';
+                this.source += this.loopName ? `continue ${this.loopName};\n` : 'continue;\n';
             } else {
                 this.source += `throw 'All "continue loop" blocks must be inside of a looping block.';\n`;
             }
@@ -754,19 +764,27 @@ class JSGenerator {
             break;
         case StackOpcode.PM_CONTROL_ESCAPE_LOOP:
             if (this.inLoop) {
-                this.source += 'break;\n';
+                this.source += this.loopName ? `break ${this.loopName};\n` : 'break;\n';
             } else {
                 this.source += `throw 'All "escape loop" blocks must be inside of a looping block.';\n`;
+            }
+            break;
+        case StackOpcode.PM_CONTROL_EXIT_CASE:
+            if (this.inCase) {
+                this.source += this.switchName ? `break ${this.switchName};\n` : 'break;\n';
+            } else {
+                this.source += `throw 'All "exit case" blocks must be inside of a "case" block.';\n`;
             }
             break;
         case StackOpcode.PM_CONTROL_REPEAT_SECONDS: {
             const duration = this.localVariables.next();
             const timer = this.localVariables.next();
+            const loopName = this.localVariables.next();
             this.source += `let ${timer} = timer();\n`;
-            this.source += `var ${duration} = Math.max(0, 1000 * ${this.descendInput(node.seconds)});\n`;
+            this.source += `${loopName}: var ${duration} = Math.max(0, 1000 * ${this.descendInput(node.seconds)});\n`;
             this.requestRedraw();
             this.source += `while (${timer}.timeElapsed() < ${duration}) {\n`;
-            this.descendStack(node.do, {inLoop: true});
+            this.descendStack(node.do, {inLoop: true, loopName});
             this.yieldLoop();
             this.source += '}\n';
             break;
@@ -776,11 +794,12 @@ class JSGenerator {
             this.retire();
             break;
         case StackOpcode.PM_CONTROL_SWITCH:
-            this.source += `switch (${this.descendInput(node.condition)}) {\n`;
+            const switchName = this.localVariables.next();
+            this.source += `${switchName}: switch (${this.descendInput(node.condition)}) {\n`;
             for (const c of node.cases) {
                 if (c[1]) {
                     this.source += `case ${this.descendInput(c[0])}: {\n`;
-                    this.descendStack(c[1]);
+                    this.descendStack(c[1], {inCase: true, switchName});
                     this.source += `break;\n`;
                     this.source += `}\n`;
                 } else {
@@ -789,7 +808,7 @@ class JSGenerator {
             }
             if (node.default && node.default.blocks.length > 0) {
                 this.source += `default: {\n`;
-                this.descendStack(node.default);
+                this.descendStack(node.default, {inCase: true, switchName});
                 this.source += `break;\n`;
                 this.source += `}\n`;
             }
