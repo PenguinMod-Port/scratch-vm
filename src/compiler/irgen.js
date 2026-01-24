@@ -552,6 +552,8 @@ class ScriptTreeGenerator {
                     right: this.descendInputOfBlock(block, 'OPERAND2').toType(InputType.BOOLEAN)
                 })
             });
+        case 'operator_newLine':
+            return this.createConstantInput('\n');
         case 'operator_nor':
             return new IntermediateInput(InputOpcode.OP_NOT, InputType.BOOLEAN, {
                 operand: new IntermediateInput(InputOpcode.OP_OR, InputType.BOOLEAN, {
@@ -575,6 +577,8 @@ class ScriptTreeGenerator {
             });
         case 'operator_stringify':
             return this.descendInputOfBlock(block, 'ONE').toType(InputType.STRING);
+        case 'operator_tabCharacter':
+            return this.createConstantInput('\t');
         case 'operator_trueBoolean':
             return this.createConstantInput(true);
         case 'operator_xnor':
