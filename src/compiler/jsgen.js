@@ -784,7 +784,8 @@ class JSGenerator {
             const loopName = this.localVariables.next();
             this.source += `var ${from} = Math.ceil(${this.descendInput(node.from)});\n`;
             this.source += `var ${to} = ${this.descendInput(node.to)};\n`;
-            this.source += `${loopName}: for (let _pmControlFromToIndex = ${from} - 1; _pmControlFromToIndex < ${to}; _pmControlFromToIndex++) {\n`;
+            this.source += `${loopName}: for (var i = ${from}; i <= ${to}; i++) {\n`;
+            this.source += `let _pmControlFromToIndex = i;\n`;
             this.descendStack(node.do, {inLoop: true, loopName});
             this.yieldLoop();
             this.source += '}\n';
