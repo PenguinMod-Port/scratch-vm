@@ -261,6 +261,8 @@ class ScriptTreeGenerator {
         //pm control
         case 'control_error':
             return new IntermediateInput(InputOpcode.PM_CONTROL_TRY_CATCH_ERROR, InputType.STRING);
+        case 'control_from_to_index':
+            return new IntermediateInput(InputOpcode.PM_CONTROL_FROM_TO_INDEX, InputType.NUMBER_INT);
         case 'control_if_return_else_return': {
             let whenTrue = this.descendInputOfBlock(block, 'TEXT1');
             let whenFalse = this.descendInputOfBlock(block, 'TEXT2');
@@ -920,6 +922,12 @@ class ScriptTreeGenerator {
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_ESCAPE_LOOP);
         case 'control_exitCase':
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_EXIT_CASE);
+        case 'control_from_to':
+            return new IntermediateStackBlock(StackOpcode.PM_CONTROL_FROM_TO, {
+                from: this.descendInputOfBlock(block, 'FROM').toType(InputType.NUMBER),
+                to: this.descendInputOfBlock(block, 'TO').toType(InputType.NUMBER),
+                do: this.descendSubstack(block, 'SUBSTACK')
+            });
         case 'control_repeatForSeconds':
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_REPEAT_SECONDS, {
                 seconds: this.descendInputOfBlock(block, 'TIMES').toType(InputType.NUMBER),

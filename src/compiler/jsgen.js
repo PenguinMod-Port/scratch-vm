@@ -244,6 +244,8 @@ class JSGenerator {
             return 'runtime.ext_scratch3_control._counter';
 
         //pm control
+        case InputOpcode.PM_CONTROL_FROM_TO_INDEX:
+            return `(typeof _pmControlFromToIndex !== "undefined" ? _pmControlFromToIndex : 0)`;
         case InputOpcode.PM_CONTROL_IF_ELSE_REPORT:
             return `(${this.descendInput(node.condition)} ? ${this.descendInput(node.whenTrue)} : ${this.descendInput(node.whenFalse)})`
         case InputOpcode.PM_CONTROL_INLINE_BLOCK:
@@ -776,14 +778,26 @@ class JSGenerator {
                 this.source += `throw 'All "exit case" blocks must be inside of a "case" block.';\n`;
             }
             break;
+        case StackOpcode.PM_CONTROL_FROM_TO: {
+            const from = this.localVariables.next();
+            const to = this.localVariables.next();
+            const loopName = this.localVariables.next();
+            this.source += `var ${from} = Math.ceil(${this.descendInput(node.from)});\n`;
+            this.source += `var ${to} = ${this.descendInput(node.to)};\n`;
+            this.source += `${loopName}: for (let _pmControlFromToIndex = ${from} - 1; _pmControlFromToIndex < ${to}; _pmControlFromToIndex++) {\n`;
+            this.descendStack(node.do, {inLoop: true, loopName});
+            this.yieldLoop();
+            this.source += '}\n';
+            break;
+        }
         case StackOpcode.PM_CONTROL_REPEAT_SECONDS: {
             const duration = this.localVariables.next();
             const timer = this.localVariables.next();
             const loopName = this.localVariables.next();
             this.source += `let ${timer} = timer();\n`;
-            this.source += `${loopName}: var ${duration} = Math.max(0, 1000 * ${this.descendInput(node.seconds)});\n`;
+            this.source += `var ${duration} = Math.max(0, 1000 * ${this.descendInput(node.seconds)});\n`;
             this.requestRedraw();
-            this.source += `while (${timer}.timeElapsed() < ${duration}) {\n`;
+            this.source += `${loopName}: while (${timer}.timeElapsed() < ${duration}) {\n`;
             this.descendStack(node.do, {inLoop: true, loopName});
             this.yieldLoop();
             this.source += '}\n';

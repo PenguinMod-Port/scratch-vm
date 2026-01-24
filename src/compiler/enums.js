@@ -133,6 +133,7 @@ const StackOpcode = {
     PM_CONTROL_DELETE_CLONES: 'control.deleteClones',
     PM_CONTROL_ESCAPE_LOOP: 'control.escapeLoop',
     PM_CONTROL_EXIT_CASE: 'control.exitCase',
+    PM_CONTROL_FROM_TO: 'control.fromTo',
     PM_CONTROL_REPEAT_SECONDS: 'control.repeatSeconds',
     PM_CONTROL_RESTART_PROJECT: 'control.restartProject',
     PM_CONTROL_SWITCH: 'control.switch',
@@ -235,6 +236,7 @@ const InputOpcode = {
 
     CONTROL_COUNTER: 'control.counter',
 
+    PM_CONTROL_FROM_TO_INDEX: 'control.fromToIndex',
     PM_CONTROL_IF_ELSE_REPORT: 'control.ifElseReport',
     PM_CONTROL_INLINE_BLOCK: 'control.inlineBlock',
     PM_CONTROL_IS_CLONE: 'control.isClone',
