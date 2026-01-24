@@ -781,10 +781,11 @@ class JSGenerator {
         case StackOpcode.PM_CONTROL_FROM_TO: {
             const from = this.localVariables.next();
             const to = this.localVariables.next();
+            const index = this.localVariables.next();
             const loopName = this.localVariables.next();
             this.source += `var ${from} = Math.ceil(${this.descendInput(node.from)});\n`;
             this.source += `var ${to} = ${this.descendInput(node.to)};\n`;
-            this.source += `${loopName}: for (var i = ${from}; i <= ${to}; i++) {\n`;
+            this.source += `${loopName}: for (var ${index} = ${from}; ${index} <= ${to}; ${index}++) {\n`;
             this.source += `let _pmControlFromToIndex = i;\n`;
             this.descendStack(node.do, {inLoop: true, loopName});
             this.yieldLoop();
@@ -832,14 +833,16 @@ class JSGenerator {
         case StackOpcode.PM_CONTROL_THROW_ERROR:
             this.source += `throw ${this.descendInput(node.error)};\n`;
             break;
-        case StackOpcode.PM_CONTROL_TRY_CATCH:
+        case StackOpcode.PM_CONTROL_TRY_CATCH: {
+            const error = this.localVariables.next();
             this.source += 'try {\n';
             this.descendStack(node.try);
-            this.source += '} catch (e) {\n';
-            this.source += `const _pmControlTryCatchError = String(e);\n`;
+            this.source += `} catch (${error}) {\n`;
+            this.source += `const _pmControlTryCatchError = String(${error});\n`;
             this.descendStack(node.catch);
             this.source += '}\n';
             break;
+        }
         case StackOpcode.PM_CONTROL_WAIT_OR_UNTIL:
             const duration = this.localVariables.next();
             this.source += `thread.timer = timer();\n`;
