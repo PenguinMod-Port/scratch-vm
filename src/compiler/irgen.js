@@ -914,6 +914,8 @@ class ScriptTreeGenerator {
             });
         case 'control_continueLoop':
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_CONTINUE_LOOP);
+        case 'control_decr_counter':
+            return new IntermediateStackBlock(StackOpcode.PM_CONTROL_DECR_COUNTER);
         case 'control_delete_clones_of':
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_DELETE_CLONES, {
                 target: this.descendInputOfBlock(block, 'CLONE_OPTION').toType(InputType.STRING)
@@ -935,6 +937,10 @@ class ScriptTreeGenerator {
             }, this.analyzeLoop());
         case 'control_restartproject':
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_RESTART_PROJECT);
+        case 'control_set_counter':
+            return new IntermediateStackBlock(StackOpcode.PM_CONTROL_SET_COUNTER, {
+                value: this.descendInputOfBlock(block, 'VALUE').toType(InputType.NUMBER)
+            })
         case 'control_switch':
         case 'control_switch_default':
             let cases = this.getSubstackChildren(block, block.opcode === 'control_switch_default' ? 'SUBSTACK1' : 'SUBSTACK');

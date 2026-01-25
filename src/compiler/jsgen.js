@@ -761,6 +761,9 @@ class JSGenerator {
                 this.source += `throw 'All "continue loop" blocks must be inside of a looping block.';\n`;
             }
             break;
+        case StackOpcode.PM_CONTROL_DECR_COUNTER:
+            this.source += 'runtime.ext_scratch3_control._counter--;\n';
+            break;
         case StackOpcode.PM_CONTROL_DELETE_CLONES:
             this.source += `runtime.ext_scratch3_control._deleteClones(${this.descendInput(node.target)}, target);\n`;
             break;
@@ -808,6 +811,9 @@ class JSGenerator {
         case StackOpcode.PM_CONTROL_RESTART_PROJECT:
             this.source += `runtime.greenFlag();\n`;
             this.retire();
+            break;
+        case StackOpcode.PM_CONTROL_SET_COUNTER:
+            this.source += `runtime.ext_scratch3_control._counter = ${this.descendInput(node.value)};\n`;
             break;
         case StackOpcode.PM_CONTROL_SWITCH:
             const switchName = this.localVariables.next();
