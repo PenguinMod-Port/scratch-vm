@@ -730,14 +730,15 @@ const serializeMonitors = function (monitors, runtime, extensions) {
 const serializeConfig = function (runtime) {
     const config = Object.create(null);
 
-    if (runtime.frameLoop.framerate !== 30) config.frameRate = runtime.frameLoop.framerate;
     if (runtime.interpolationEnabled) config.interpolation = true;
     if (runtime.renderer.useHighQualityRender) config.hqPen = true;
     if (runtime.compilerOptions.warpTimer) config.warpTimer = true;
-
-    if (runtime.runtimeOptions.maxClones !== runtime.constructor.MAX_CLONES) config.maxClones = (runtime.runtimeOptions.maxClones === Infinity ? -1 : runtime.runtimeOptions.maxClones);
+    if (runtime.compilerOptions.strictEquality) config.strictEquality = true;
     if (runtime.runtimeOptions.miscLimits) config.miscLimits = true;
     if (runtime.runtimeOptions.fencing) config.fencing = true;
+
+    if (runtime.frameLoop.framerate !== 30) config.frameRate = runtime.frameLoop.framerate;
+    if (runtime.runtimeOptions.maxClones !== runtime.constructor.MAX_CLONES) config.maxClones = (runtime.runtimeOptions.maxClones === Infinity ? -1 : runtime.runtimeOptions.maxClones);
 
     if (runtime.stageHeight !== 360 || runtime.stageWidth !== 480) {
         config.stageSize = {
@@ -1552,7 +1553,11 @@ const deserializeConfig = function (config, runtime) {
     runtime.setFramerate(config.frameRate ?? 30);
     runtime.setInterpolation(!!config.interpolation);
     runtime.renderer.setUseHighQualityRender(!!config.hqPen);
-    runtime.compilerOptions.warpTimer = !!config.warpTimer;
+
+    runtime.setCompilerOptions({
+        warpTimer: !!config.warpTimer,
+        strictEquality: !!config.strictEquality
+    })
 
     runtime.setRuntimeOptions({
         maxClones: (config.maxClones === -1 ? Infinity : config.maxClones) ?? runtime.constructor.MAX_CLONES,

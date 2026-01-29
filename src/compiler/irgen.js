@@ -75,6 +75,7 @@ class ScriptTreeGenerator {
          */
         this.script = new IntermediateScript();
         this.script.warpTimer = this.target.runtime.compilerOptions.warpTimer;
+        this.script.strictEquality = this.target.runtime.compilerOptions.strictEquality;
         this.script.stackClicked = thread.stackClick;
 
         /**

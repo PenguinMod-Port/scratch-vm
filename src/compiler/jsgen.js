@@ -136,6 +136,7 @@ class JSGenerator {
         this.descendedIntoModulo = false;
         this.isInHat = false;
 
+        this.runtime = this.target.runtime;
         this.debug = this.target.runtime.debug;
 
         this.oldCompilerStub = new oldCompilerCompatibility.JSGeneratorStub(this);
@@ -334,6 +335,10 @@ class JSGenerator {
             const left = node.left;
             const right = node.right;
 
+            if (this.runtime.compilerOptions.strictEquality) {
+                return `(${this.descendInput(left)} == ${this.descendInput(right)})`;
+            }
+
             // When either operand is known to never be a number, only use string comparison to avoid all number parsing.
             if (!left.isSometimesType(InputType.NUMBER_INTERPRETABLE) || !right.isSometimesType(InputType.NUMBER_INTERPRETABLE)) {
                 return `(${this.descendInput(left.toType(InputType.STRING))}.toLowerCase() === ${this.descendInput(right.toType(InputType.STRING))}.toLowerCase())`;
@@ -346,7 +351,6 @@ class JSGenerator {
             if (isSafeInputForEqualsOptimization(left, right) || isSafeInputForEqualsOptimization(right, left)) {
                 return `(${this.descendInput(left.toType(InputType.NUMBER))} === ${this.descendInput(right.toType(InputType.NUMBER))})`;
             }
-            // No compile-time optimizations possible - use fallback method.
             return `compareEqual(${this.descendInput(left)}, ${this.descendInput(right)})`;
         }
         case InputOpcode.OP_POW_E:
