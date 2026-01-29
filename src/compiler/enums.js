@@ -209,10 +209,11 @@ const StackOpcode = {
 
     SENSING_TIMER_RESET: 'timer.reset',
 
-    PROCEDURE_RETURN: 'procedures.return',
     PROCEDURE_CALL: 'procedures.call',
+    PROCEDURE_RETURN: 'procedures.return',
 
-    PM_PROCEDURE_COMMANDARG: 'procedures.commandarg'
+    PM_PROCEDURE_COMMANDARG: 'procedures.commandarg',
+    PM_PROCEDURE_SET: 'procedures.set'
 };
 
 /**

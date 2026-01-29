@@ -1251,6 +1251,18 @@ class ScriptTreeGenerator {
                 value: this.descendInputOfBlock(block, 'VALUE')
             });
 
+        case 'procedures_set': {
+            let param = this.descendInputOfBlock(block, 'PARAM');
+            if (param.opcode !== InputOpcode.PROCEDURE_ARGUMENT) {
+                return new IntermediateStackBlock(StackOpcode.NOP);
+            }
+
+            return new IntermediateStackBlock(StackOpcode.PROCEDURE_ARGUMENT_SET, {
+                index: param.inputs.index,
+                value: this.descendInputOfBlock(block, 'VALUE')
+            })
+        }
+
         case 'sensing_resettimer':
             return new IntermediateStackBlock(StackOpcode.SENSING_TIMER_RESET);
 

@@ -1114,6 +1114,10 @@ class JSGenerator {
             this.stopScriptAndReturn(this.descendInput(node.value));
             break;
 
+        case StackOpcode.PM_PROCEDURE_SET:
+            this.source += `p${node.index} = ${this.descendInput(node.value)};\n`;
+            break;
+
         case StackOpcode.SENSING_TIMER_RESET:
             this.source += 'runtime.ioDevices.clock.resetProjectTimer();\n';
             break;
