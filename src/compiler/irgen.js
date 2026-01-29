@@ -1258,7 +1258,7 @@ class ScriptTreeGenerator {
                 return new IntermediateStackBlock(StackOpcode.NOP);
             }
 
-            return new IntermediateStackBlock(StackOpcode.PROCEDURE_ARGUMENT_SET, {
+            return new IntermediateStackBlock(StackOpcode.PM_PROCEDURE_SET, {
                 index: param.inputs.index,
                 value: this.descendInputOfBlock(block, 'VALUE')
             })
