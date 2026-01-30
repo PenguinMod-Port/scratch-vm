@@ -1183,6 +1183,34 @@ class ScriptTreeGenerator {
                 })
             });
 
+        // pm motion
+        case 'motion_changebyxy':
+            return new IntermediateStackBlock(StackOpcode.PM_MOTION_XY_CHANGE, {
+                dx: this.descendInputOfBlock(block, 'DX').toType(InputType.NUMBER),
+                dy: this.descendInputOfBlock(block, 'DY').toType(InputType.NUMBER)
+            })
+        case 'motion_pointinrandomdirection':
+            return new IntermediateStackBlock(StackOpcode.MOTION_DIRECTION_SET, {
+                direction: new IntermediateInput(InputOpcode.OP_RANDOM, InputType.NUMBER, {
+                    low: this.createConstantInput(-179),
+                    high: this.createConstantInput(180),
+                    useInts: true,
+                    useFloats: false
+                })
+            })
+        case 'motion_pointtowardsxy':
+            return new IntermediateStackBlock(StackOpcode.PM_MOTION_POINTTOWARDS_XY, {
+                x: this.descendInputOfBlock(block, 'X').toType(InputType.NUMBER),
+                y: this.descendInputOfBlock(block, 'Y').toType(InputType.NUMBER)
+            })
+        case 'motion_turnaround':
+            return new IntermediateStackBlock(StackOpcode.MOTION_DIRECTION_SET, {
+                direction: new IntermediateInput(InputOpcode.OP_ADD, InputType.NUMBER, {
+                    left: new IntermediateInput(InputOpcode.MOTION_DIRECTION_GET, InputType.NUMBER),
+                    right: this.createConstantInput(180)
+                })
+            });
+
         case 'pen_clear':
             return new IntermediateStackBlock(StackOpcode.PEN_CLEAR);
         case 'pen_changePenColorParamBy':

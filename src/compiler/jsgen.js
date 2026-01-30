@@ -1031,6 +1031,14 @@ class JSGenerator {
             this.source += `runtime.ext_scratch3_motion._moveSteps(${this.descendInput(node.steps)}, target);\n`;
             break;
 
+        //pm motion
+        case StackOpcode.PM_MOTION_POINTTOWARDS_XY:
+            this.source += `runtime.ext_scratch3_motion._pointTowards(target, ${this.descendInput(node.x)}, ${this.descendInput(node.y)});\n`;
+            break;
+        case StackOpcode.PM_MOTION_XY_CHANGE:
+            this.source += `target.setXY(target.x + ${this.descendInput(node.dx)}, target.y + ${this.descendInput(node.dy)});\n`;
+            break;
+
         case StackOpcode.NOP:
             break;
 
