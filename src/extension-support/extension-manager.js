@@ -30,6 +30,9 @@ const defaultBuiltinExtensions = {
 
     // -- penguinmod --
 
+    // expansions
+    pmControlsExpansion: () => require('../extensions/penguinmod/pmControlsExpansion'),
+
     // jwklong
     jwArray: () => require('../extensions/penguinmod/jwArray'),
     jwTargets: () => require('../extensions/penguinmod/jwTargets'),
