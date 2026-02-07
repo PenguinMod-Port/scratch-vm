@@ -21,6 +21,7 @@ const compress = require('./tw-compress-sb3');
 const {loadCostume} = require('../import/load-costume.js');
 const {loadSound} = require('../import/load-sound.js');
 const {deserializeCostume, deserializeSound} = require('./deserialize-assets.js');
+const {compatBlock} = require('./pm-compat.js');
 
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 
@@ -1093,7 +1094,7 @@ const deserializeBlocks = function (blocks) {
         if (!Object.prototype.hasOwnProperty.call(blocks, blockId)) {
             continue;
         }
-        const block = blocks[blockId];
+        let block = blocks[blockId];
         if (Array.isArray(block)) {
             // this is one of the primitives
             // delete the old entry in object.blocks and replace it w/the
@@ -1105,6 +1106,7 @@ const deserializeBlocks = function (blocks) {
         block.id = blockId; // add id back to block since it wasn't serialized
         block.inputs = deserializeInputs(block.inputs, blockId, blocks);
         block.fields = deserializeFields(block.fields);
+        blocks[blockId] = compatBlock(block);
     }
     return blocks;
 };
@@ -1530,7 +1532,7 @@ const checkPlatformCompatibility = (json, runtime) => {
     }
 
     const projectPlatform = json.meta.platform.name;
-    if (projectPlatform === runtime.platform.name) {
+    if (["PenguinMod", "TurboWarp"].includes(projectPlatform)) {
         return;
     }
 
