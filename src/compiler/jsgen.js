@@ -74,13 +74,15 @@ const isSafeInputForEqualsOptimization = (input, other) => {
  * @deprecated
  */
 class Frame {
-    constructor (isLoop) {
+    constructor (isLoop, parent) {
         /**
          * Whether the current stack runs in a loop (while, for)
          * @type {boolean}
          * @readonly
          */
         this.isLoop = isLoop;
+
+        this.parent = parent;
 
         /**
          * Whether the current block is the last block in the stack.
@@ -599,8 +601,10 @@ class JSGenerator {
                 this.source += `${this.generateCompatibilityLayerCall(node, isLastInLoop)};\n`;
             } else if (blockType === BlockType.CONDITIONAL || blockType === BlockType.LOOP) {
                 const branchVariable = this.localVariables.next();
+                const oldLoopName = this.loopName;
+                this.loopName = this.localVariables.next();
                 this.source += `const ${branchVariable} = createBranchInfo(${blockType === BlockType.LOOP});\n`;
-                this.source += `while (${branchVariable}.branch = (${this.generateCompatibilityLayerCall(node, false, branchVariable)})) {\n`;
+                this.source += `${this.loopName}: while (${branchVariable}.branch = (${this.generateCompatibilityLayerCall(node, false, branchVariable)})) {\n`;
                 this.source += `switch ("SUBSTACK" + (${branchVariable}.branch == 1 ? "" : ${branchVariable}.branch)) {\n`;
                 for (const index in node.substacks) {
                     this.source += `case "${sanitize(index.toString())}": {\n`;
@@ -612,6 +616,7 @@ class JSGenerator {
                 this.source += `if (!${branchVariable}.isLoop) break;\n`;
                 this.yieldLoop();
                 this.source += '}\n'; // close while
+                this.loopName = oldLoopName;
             } else {
                 throw new Error(`Unknown block type: ${blockType}`);
             }
@@ -1209,11 +1214,11 @@ class JSGenerator {
         // Entering a stack -- all bets are off.
         // TODO: allow if/else to inherit values
         var frame
-        if (properties instanceof Frame) {
+        if (properties instanceof Frame || properties instanceof oldCompilerCompatibility.JSGeneratorStub.unstable_exports.Frame) {
             frame = properties;
             properties = args[0] ?? {};
         }
-        if (frame) this.pushFrame(frame);
+        this.pushFrame(frame ?? new Frame(properties.inLoop || this.inLoop))
 
         const oldProperties = Object.fromEntries(Object.keys(properties).map(key => [key, this[key]]));
         Object.entries(properties).forEach(([key, value]) => this[key] = value);
@@ -1230,7 +1235,7 @@ class JSGenerator {
 
         // Leaving a stack -- any assumptions made in the current stack do not apply outside of it
         // TODO: in if/else this might create an extra unused object
-        if (frame) this.popFrame();
+        this.popFrame();
     }
 
     /**
