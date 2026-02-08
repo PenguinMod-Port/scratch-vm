@@ -1209,23 +1209,6 @@ class Blocks {
         if (block.mutation) {
             xmlString += this.mutationToXML(block.mutation);
         }
-        // Add any inputs on this block.
-        for (const input in block.inputs) {
-            if (!Object.prototype.hasOwnProperty.call(block.inputs, input)) continue;
-            const blockInput = block.inputs[input];
-            // Only encode a value tag if the value input is occupied.
-            if (blockInput.block || blockInput.shadow) {
-                xmlString += `<value name="${xmlEscape(blockInput.name)}">`;
-                if (blockInput.block) {
-                    xmlString += this.blockToXML(blockInput.block, comments);
-                }
-                if (blockInput.shadow && blockInput.shadow !== blockInput.block) {
-                    // Obscured shadow.
-                    xmlString += this.blockToXML(blockInput.shadow, comments);
-                }
-                xmlString += '</value>';
-            }
-        }
         // Add any fields on this block.
         for (const field in block.fields) {
             if (!Object.prototype.hasOwnProperty.call(block.fields, field)) continue;
@@ -1244,6 +1227,23 @@ class Blocks {
                 value = xmlEscape(blockField.value);
             }
             xmlString += `>${value}</field>`;
+        }
+        // Add any inputs on this block.
+        for (const input in block.inputs) {
+            if (!Object.prototype.hasOwnProperty.call(block.inputs, input)) continue;
+            const blockInput = block.inputs[input];
+            // Only encode a value tag if the value input is occupied.
+            if (blockInput.block || blockInput.shadow) {
+                xmlString += `<value name="${xmlEscape(blockInput.name)}">`;
+                if (blockInput.block) {
+                    xmlString += this.blockToXML(blockInput.block, comments);
+                }
+                if (blockInput.shadow && blockInput.shadow !== blockInput.block) {
+                    // Obscured shadow.
+                    xmlString += this.blockToXML(blockInput.shadow, comments);
+                }
+                xmlString += '</value>';
+            }
         }
         // Add blocks connected to the next connection.
         if (block.next) {
