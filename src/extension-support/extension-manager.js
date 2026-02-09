@@ -47,6 +47,9 @@ const defaultBuiltinExtensions = {
 
     // jeremy
     jgStorage: () => require('../extensions/penguinmod/jgStorage'),
+
+    // old ass extensions that are only included for compatability
+    jwUnite: () => require('../extensions/penguinmod/jwUnite'),
 };
 
 /**
