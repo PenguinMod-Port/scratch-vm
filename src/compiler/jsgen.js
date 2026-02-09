@@ -436,6 +436,12 @@ class JSGenerator {
             return `(10 ** ${this.descendInput(node.value)})`;
 
         //pm operators
+        case InputOpcode.PM_OP_AVERAGE: {
+            let accumulator = this.localVariables.next();
+            let value = this.localVariables.next();
+            let array = this.localVariables.next();
+            return `([${node.inputs.map(input => this.descendInput(input)).join(', ')}].reduce((${accumulator}, ${value}, _, ${array}) => ${accumulator} + ${value} / ${array}.length, 0))`;
+        }
         case InputOpcode.PM_OP_CONSTRAIN:
             return `Math.min(Math.max(${this.descendInput(node.min)}, ${this.descendInput(node.input)}), ${this.descendInput(node.max)})`;
         case InputOpcode.PM_OP_INTERPOLATE:
@@ -450,8 +456,14 @@ class JSGenerator {
             return `String.prototype.concat(${node.inputs.map(input => this.descendInput(input)).join(', ')})`;
         case InputOpcode.PM_OP_LOG_2:
             return `(Math.log(${this.descendInput(node.value)}) / Math.LN2)`;
+        case InputOpcode.PM_OP_MAXIMUM:
+            return `Math.max(${node.inputs.map(input => this.descendInput(input)).join(', ')})`;
+        case InputOpcode.PM_OP_MINIMUM:
+            return `Math.min(${node.inputs.map(input => this.descendInput(input)).join(', ')})`;
         case InputOpcode.PM_OP_POWER:
             return `(${this.descendInput(node.left)} ** ${this.descendInput(node.right)})`;
+        case InputOpcode.PM_OP_RANGE:
+            return `rangeOfNumbers(${node.inputs.map(input => this.descendInput(input)).join(', ')})`;
         case InputOpcode.PM_OP_SIGN:
             return `Math.sign(${this.descendInput(node.value)})`;
         case InputOpcode.PM_OP_XOR:

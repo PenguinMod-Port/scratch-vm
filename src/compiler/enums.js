@@ -303,6 +303,7 @@ const InputOpcode = {
     OP_ROUND: 'op.round',
     OP_SUBTRACT: 'op.subtract',
 
+    PM_OP_AVERAGE: 'op.average',
     PM_OP_CONSTRAIN: 'op.constrain',
     PM_OP_INTERPOLATE: 'op.interpolate',
     PM_OP_IS_BOOLEAN: 'op.isBoolean',
@@ -310,7 +311,10 @@ const InputOpcode = {
     PM_OP_IS_STRING: 'op.isString',
     PM_OP_JOIN_EXPANDABLE: 'op.joinExpandable',
     PM_OP_LOG_2: 'op.log2',
+    PM_OP_MAXIMUM: 'op.maximum',
+    PM_OP_MINIMUM: 'op.minimum',
     PM_OP_POWER: 'op.power',
+    PM_OP_RANGE: 'op.range',
     PM_OP_SIGN: 'op.sign',
     PM_OP_XOR: 'op.xor',
 

@@ -518,7 +518,7 @@ class ScriptTreeGenerator {
                 min: this.descendInputOfBlock(block, 'min').toType(InputType.NUMBER),
                 max: this.descendInputOfBlock(block, 'max').toType(InputType.NUMBER)
             });
-        case 'operator_expandablejoininputs':
+        case 'operator_expandablejoininputs': {
             let amount = Number(block.fields.EXPANDABLE.value);
             let inputs = [];
             for (let i = 0; i < amount; i++) {
@@ -527,6 +527,7 @@ class ScriptTreeGenerator {
             return new IntermediateInput(InputOpcode.PM_OP_JOIN_EXPANDABLE, InputType.STRING, {
                 inputs
             })
+        }
         case 'operator_falseBoolean':
             return this.createConstantInput(true);
         case 'operator_gtorequal':
@@ -587,6 +588,21 @@ class ScriptTreeGenerator {
                 left: this.descendInputOfBlock(block, 'NUM1').toType(InputType.NUMBER),
                 right: this.descendInputOfBlock(block, 'NUM2').toType(InputType.NUMBER)
             });
+        case 'operator_range_expandable': {
+            let amount = Number(block.fields.EXPANDABLE.value);
+            let inputs = [];
+            for (let i = 0; i < amount; i++) {
+                inputs.push(this.descendInputOfBlock(block, 'INPUT' + (i + 1)).toType(InputType.NUMBER));
+            }
+
+            switch (block.fields.RANGE.value) {
+                case 'maximum': return new IntermediateInput(InputOpcode.PM_OP_MAXIMUM, InputType.NUMBER, {inputs});
+                case 'average': return new IntermediateInput(InputOpcode.PM_OP_AVERAGE, InputType.NUMBER, {inputs});
+                case 'minimum': return new IntermediateInput(InputOpcode.PM_OP_MINIMUM, InputType.NUMBER, {inputs});
+                case 'range': return new IntermediateInput(InputOpcode.PM_OP_RANGE, InputType.NUMBER_POS, {inputs});
+                default: return this.createConstantInput(0);
+            }
+        }
         case 'operator_stringify':
             return this.descendInputOfBlock(block, 'ONE').toType(InputType.STRING);
         case 'operator_tabCharacter':

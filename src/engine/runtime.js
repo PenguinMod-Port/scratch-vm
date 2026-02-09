@@ -24,6 +24,7 @@ const fetchWithTimeout = require('../util/fetch-with-timeout');
 const platform = require('./tw-platform.js');
 const safeStringify = require('../util/tw-safe-stringify.js');
 const MonitorState = require('./tw-monitor-state.js');
+const SemVer = require('../util/semver.js')
 
 // Virtual I/O devices.
 const Clock = require('../io/clock');
@@ -539,6 +540,8 @@ class Runtime extends EventEmitter {
 
         // lists all custom serializers
         this.serializers = {};
+
+        this.pmVersion = new SemVer('0.1.0');
     }
 
     /**

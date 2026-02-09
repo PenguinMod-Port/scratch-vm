@@ -17,6 +17,7 @@ const MathUtil = require('../util/math-util');
 const StringUtil = require('../util/string-util');
 const VariableUtil = require('../util/variable-util');
 const compress = require('./tw-compress-sb3');
+const SemVer = require('../util/semver');
 
 const {loadCostume} = require('../import/load-costume.js');
 const {loadSound} = require('../import/load-sound.js');
@@ -832,6 +833,7 @@ const serialize = function (runtime, targetId, {allowOptimization = true} = {}) 
     // Assemble metadata
     const meta = Object.create(null);
     meta.semver = '3.0.0';
+    meta.pmVersion = runtime.pmVersion.toString();
     // TW: There isn't a good reason to put the full version number in the json, so we don't.
     meta.vm = '0.2.0';
     if (runtime.origin) {
@@ -1089,7 +1091,7 @@ const deserializeFields = function (fields) {
  * @param {object} blocks Serialized SB3 "blocks" property of a target. Will be mutated.
  * @return {object} input is modified and returned
  */
-const deserializeBlocks = function (blocks) {
+const deserializeBlocks = function (blocks, pmVersion = new SemVer('0.0.0')) {
     for (const blockId in blocks) {
         if (!Object.prototype.hasOwnProperty.call(blocks, blockId)) {
             continue;
@@ -1106,7 +1108,7 @@ const deserializeBlocks = function (blocks) {
         block.id = blockId; // add id back to block since it wasn't serialized
         block.inputs = deserializeInputs(block.inputs, blockId, blocks);
         block.fields = deserializeFields(block.fields);
-        blocks[blockId] = compatBlock(block);
+        blocks[blockId] = compatBlock(block, pmVersion);
     }
     return blocks;
 };
@@ -1208,7 +1210,7 @@ const parseScratchAssets = function (object, runtime, zip) {
  *   into costumes and sounds
  * @return {!Promise.<Target>} Promise for the target created (stage or sprite), or null for unsupported objects.
  */
-const parseScratchObject = function (object, runtime, extensions, zip, assets) {
+const parseScratchObject = function (object, runtime, pmVersion, extensions, zip, assets) {
     if (!Object.prototype.hasOwnProperty.call(object, 'name')) {
         // Watcher/monitor - skip this object until those are implemented in VM.
         // @todo
@@ -1225,7 +1227,7 @@ const parseScratchObject = function (object, runtime, extensions, zip, assets) {
         sprite.name = object.name;
     }
     if (Object.prototype.hasOwnProperty.call(object, 'blocks')) {
-        deserializeBlocks(object.blocks);
+        deserializeBlocks(object.blocks, pmVersion);
         // Take a second pass to create objects and add extensions
         for (const blockId in object.blocks) {
             if (!Object.prototype.hasOwnProperty.call(object.blocks, blockId)) continue;
@@ -1586,10 +1588,12 @@ const deserialize = async function (json, runtime, zip, isSingleSprite) {
         extensionURLs: new Map()
     };
 
+    let pmVersion = new SemVer('0.0.0');
     // Store the origin field (e.g. project originated at CSFirst) so that we can save it again.
-    if (json.meta && json.meta.origin) {
+    if (json.meta) {
         // eslint-disable-next-line require-atomic-updates
-        runtime.origin = json.meta.origin;
+        if (json.meta.origin) runtime.origin = json.meta.origin;
+        if (json.meta.pmVersion) pmVersion = new SemVer(json.pmVersion);
     } else {
         // eslint-disable-next-line require-atomic-updates
         runtime.origin = null;
@@ -1628,7 +1632,7 @@ const deserialize = async function (json, runtime, zip, isSingleSprite) {
         .then(assets => Promise.resolve(assets))
         .then(assets => Promise.all(targetObjects
             .map((target, index) =>
-                parseScratchObject(target, runtime, extensions, zip, assets[index]))))
+                parseScratchObject(target, runtime, pmVersion, extensions, zip, assets[index]))))
         .then(targets => targets // Re-sort targets back into original sprite-pane ordering
             .map((t, i) => {
                 // Add layer order property to deserialized targets.
