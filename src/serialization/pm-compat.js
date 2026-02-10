@@ -19,6 +19,15 @@ export function compatBlock(block, pmVersion) {
             block.fields.EXPANDABLE = {name: "EXPANDABLE", value: block.mutation.inputcount};
             delete block.mutation;
         }
+
+        //control_expandableIf
+        if (block.opcode == "control_expandableIf" && block.mutation) {
+            let value = Number(block.mutation.branches) * 2 - 2;
+            if (!block.mutation['ends-in-else']) value += 1;
+
+            block.fields.EXPANDABLE = {name: "EXPANDABLE", value};
+            delete block.mutation;
+        }
     }
 
     return block;

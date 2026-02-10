@@ -133,6 +133,7 @@ const StackOpcode = {
     PM_CONTROL_DECR_COUNTER: 'control.counterDecr',
     PM_CONTROL_DELETE_CLONES: 'control.deleteClones',
     PM_CONTROL_ESCAPE_LOOP: 'control.escapeLoop',
+    PM_CONTROL_EXPANDABLE_IF: 'control.expandableIf',
     PM_CONTROL_EXIT_CASE: 'control.exitCase',
     PM_CONTROL_FROM_TO: 'control.fromTo',
     PM_CONTROL_REPEAT_SECONDS: 'control.repeatSeconds',

@@ -797,6 +797,11 @@ class JSGenerator {
                 this.source += `throw 'All "escape loop" blocks must be inside of a looping block.';\n`;
             }
             break;
+        case StackOpcode.PM_CONTROL_EXPANDABLE_IF:
+            this.source += node.ifs.map(v => `if (${this.descendInput(v.condition)}) {\n${this.descendStackInline(v.do)}\n}`).join(' else ');
+            if (node.elseDo) this.source += `else {\n${this.descendStackInline(node.elseDo)}\n}`;
+            this.source += '\n';
+            break;
         case StackOpcode.PM_CONTROL_EXIT_CASE:
             if (this.inCase) {
                 this.source += this.switchName ? `break ${this.switchName};\n` : 'break;\n';

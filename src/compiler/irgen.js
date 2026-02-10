@@ -946,6 +946,24 @@ class ScriptTreeGenerator {
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_DELETE_CLONES, {
                 target: this.descendInputOfBlock(block, 'CLONE_OPTION').toType(InputType.STRING)
             });
+        case 'control_expandableIf': {
+            const EXPANDABLE = Number(block.fields.EXPANDABLE.value);
+            let ifCount = Math.ceil(EXPANDABLE / 2);
+            let elseDo = EXPANDABLE % 2 === 0 ? this.descendSubstack(block, 'SUBSTACK' + (ifCount + 1)) : null;
+
+            let ifs = [];
+            for (let i = 0; i < ifCount; i++) {
+                ifs.push({
+                    condition: this.descendInputOfBlock(block, 'BOOL' + (i + 1)).toType(InputType.BOOLEAN),
+                    do: this.descendSubstack(block, 'SUBSTACK' + (i + 1))
+                });
+            }
+
+            return new IntermediateStackBlock(StackOpcode.PM_CONTROL_EXPANDABLE_IF, {
+                ifs,
+                elseDo
+            });
+        }
         case 'control_exitLoop':
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_ESCAPE_LOOP);
         case 'control_exitCase':
