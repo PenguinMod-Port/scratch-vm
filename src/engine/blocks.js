@@ -667,128 +667,140 @@ class Blocks {
      */
     changeBlock (args) {
         // Validate
-        if (['field', 'mutation', 'checkbox', 'collapsed'].indexOf(args.element) === -1) return;
         let block = this._blocks[args.id];
         if (typeof block === 'undefined') return;
         switch (args.element) {
-        case 'field':
-            // TODO when the field of a monitored block changes,
-            // update the checkbox in the flyout based on whether
-            // a monitor for that current combination of selected parameters exists
-            // e.g.
-            // 1. check (current [v year])
-            // 2. switch dropdown in flyout block to (current [v minute])
-            // 3. the checkbox should become unchecked if we're not already
-            //    monitoring current minute
+            case 'field':
+                // TODO when the field of a monitored block changes,
+                // update the checkbox in the flyout based on whether
+                // a monitor for that current combination of selected parameters exists
+                // e.g.
+                // 1. check (current [v year])
+                // 2. switch dropdown in flyout block to (current [v minute])
+                // 3. the checkbox should become unchecked if we're not already
+                //    monitoring current minute
 
 
-            // Update block value
-            if (!block.fields[args.name]) return;
-            if (args.name === 'VARIABLE' || args.name === 'LIST' ||
-                args.name === 'BROADCAST_OPTION') {
-                // Get variable name using the id in args.value.
-                const variable = this.runtime.getEditingTarget().lookupVariableById(args.value);
-                if (variable) {
-                    block.fields[args.name].value = variable.name;
-                    block.fields[args.name].id = args.value;
-                }
-            } else {
-                // Changing the value in a dropdown
-                block.fields[args.name].value = args.value;
+                if (!block.fields[args.name]) {
+                    // make field i dont care
+                    block.fields[args.name] = {
+                        name: args.name,
+                        id: undefined,
+                        value: args.value
+                    };
+                };
 
-                // The selected item in the sensing of block menu needs to change based on the
-                // selected target.  Set it to the first item in the menu list.
-                // TODO: (#1787)
-                if (block.opcode === 'sensing_of_object_menu') {
-                    if (block.fields.OBJECT.value === '_stage_') {
-                        this._blocks[block.parent].fields.PROPERTY.value = 'backdrop #';
-                    } else {
-                        this._blocks[block.parent].fields.PROPERTY.value = 'x position';
+                // Update block value
+                if (args.name === 'VARIABLE' || args.name === 'LIST' ||
+                    args.name === 'BROADCAST_OPTION') {
+                    // Get variable name using the id in args.value.
+                    const variable = this.runtime.getEditingTarget().lookupVariableById(args.value);
+                    if (variable) {
+                        block.fields[args.name].value = variable.name;
+                        block.fields[args.name].id = args.value;
                     }
-                    this.runtime.requestBlocksUpdate();
+                } else {
+                    // Changing the value in a dropdown
+                    block.fields[args.name].value = args.value;
+
+                    // The selected item in the sensing of block menu needs to change based on the
+                    // selected target.  Set it to the first item in the menu list.
+                    // TODO: (#1787)
+                    if (block.opcode === 'sensing_of_object_menu') {
+                        if (block.fields.OBJECT.value === '_stage_') {
+                            this._blocks[block.parent].fields.PROPERTY.value = 'backdrop #';
+                        } else {
+                            this._blocks[block.parent].fields.PROPERTY.value = 'x position';
+                        }
+                        this.runtime.requestBlocksUpdate();
+                    }
+
+                    const flyoutBlock = block.shadow && block.parent ? this._blocks[block.parent] : block;
+                    if (flyoutBlock.isMonitored) {
+                        this.runtime.requestUpdateMonitor({
+                            id: flyoutBlock.id,
+                            params: this._getBlockParams(flyoutBlock)
+                        });
+                    }
+                }
+                break;
+            case 'mutation':
+                block.mutation = mutationAdapter(args.value);
+                break;
+            case 'checkbox': {
+                // A checkbox usually has a one to one correspondence with the monitor
+                // block but in the case of monitored reporters that have arguments,
+                // map the old id to a new id, creating a new monitor block if necessary
+                if (block.fields && Object.keys(block.fields).length > 0 &&
+                    block.opcode !== 'data_variable' && block.opcode !== 'data_listcontents') {
+
+                    // This block has an argument which needs to get separated out into
+                    // multiple monitor blocks with ids based on the selected argument
+                    const newId = getMonitorIdForBlockWithArgs(block.id, block.fields);
+                    // Note: we're not just constantly creating a longer and longer id everytime we check
+                    // the checkbox because we're using the id of the block in the flyout as the base
+
+                    // check if a block with the new id already exists, otherwise create
+                    let newBlock = this.runtime.monitorBlocks.getBlock(newId);
+                    if (!newBlock) {
+                        newBlock = JSON.parse(JSON.stringify(block));
+                        newBlock.id = newId;
+                        this.runtime.monitorBlocks.createBlock(newBlock);
+                    }
+
+                    block = newBlock; // Carry on through the rest of this code with newBlock
                 }
 
-                const flyoutBlock = block.shadow && block.parent ? this._blocks[block.parent] : block;
-                if (flyoutBlock.isMonitored) {
-                    this.runtime.requestUpdateMonitor({
-                        id: flyoutBlock.id,
-                        params: this._getBlockParams(flyoutBlock)
-                    });
-                }
-            }
-            break;
-        case 'mutation':
-            block.mutation = mutationAdapter(args.value);
-            break;
-        case 'checkbox': {
-            // A checkbox usually has a one to one correspondence with the monitor
-            // block but in the case of monitored reporters that have arguments,
-            // map the old id to a new id, creating a new monitor block if necessary
-            if (block.fields && Object.keys(block.fields).length > 0 &&
-                block.opcode !== 'data_variable' && block.opcode !== 'data_listcontents') {
+                const wasMonitored = block.isMonitored;
+                block.isMonitored = args.value;
 
-                // This block has an argument which needs to get separated out into
-                // multiple monitor blocks with ids based on the selected argument
-                const newId = getMonitorIdForBlockWithArgs(block.id, block.fields);
-                // Note: we're not just constantly creating a longer and longer id everytime we check
-                // the checkbox because we're using the id of the block in the flyout as the base
-
-                // check if a block with the new id already exists, otherwise create
-                let newBlock = this.runtime.monitorBlocks.getBlock(newId);
-                if (!newBlock) {
-                    newBlock = JSON.parse(JSON.stringify(block));
-                    newBlock.id = newId;
-                    this.runtime.monitorBlocks.createBlock(newBlock);
+                // Variable blocks may be sprite specific depending on the owner of the variable
+                let isSpriteLocalVariable = false;
+                if (block.opcode === 'data_variable') {
+                    isSpriteLocalVariable = !(this.runtime.getTargetForStage().variables[block.fields.VARIABLE.id]);
+                } else if (block.opcode === 'data_listcontents') {
+                    isSpriteLocalVariable = !(this.runtime.getTargetForStage().variables[block.fields.LIST.id]);
                 }
 
-                block = newBlock; // Carry on through the rest of this code with newBlock
-            }
-
-            const wasMonitored = block.isMonitored;
-            block.isMonitored = args.value;
-
-            // Variable blocks may be sprite specific depending on the owner of the variable
-            let isSpriteLocalVariable = false;
-            if (block.opcode === 'data_variable') {
-                isSpriteLocalVariable = !(this.runtime.getTargetForStage().variables[block.fields.VARIABLE.id]);
-            } else if (block.opcode === 'data_listcontents') {
-                isSpriteLocalVariable = !(this.runtime.getTargetForStage().variables[block.fields.LIST.id]);
-            }
-
-            const isSpriteSpecific = isSpriteLocalVariable ||
-                (Object.prototype.hasOwnProperty.call(this.runtime.monitorBlockInfo, block.opcode) &&
-                this.runtime.monitorBlockInfo[block.opcode].isSpriteSpecific);
-            if (isSpriteSpecific) {
-                // If creating a new sprite specific monitor, the only possible target is
-                // the current editing one b/c you cannot dynamically create monitors.
-                // Also, do not change the targetId if it has already been assigned
-                block.targetId = block.targetId || this.runtime.getEditingTarget().id;
-            } else {
-                block.targetId = null;
-            }
-
-            if (wasMonitored && !block.isMonitored) {
-                this.runtime.requestHideMonitor(block.id);
-            } else if (!wasMonitored && block.isMonitored) {
-                // Tries to show the monitor for specified block. If it doesn't exist, add the monitor.
-                if (!this.runtime.requestShowMonitor(block.id)) {
-                    this.runtime.requestAddMonitor(new MonitorRecord({
-                        id: block.id,
-                        targetId: block.targetId,
-                        spriteName: block.targetId ? this.runtime.getTargetById(block.targetId).getName() : null,
-                        opcode: block.opcode,
-                        params: this._getBlockParams(block),
-                        // @todo(vm#565) for numerical values with decimals, some countries use comma
-                        value: '',
-                        mode: block.opcode === 'data_listcontents' ? 'list' : 'default'
-                    }));
+                const isSpriteSpecific = isSpriteLocalVariable ||
+                    (Object.prototype.hasOwnProperty.call(this.runtime.monitorBlockInfo, block.opcode) &&
+                    this.runtime.monitorBlockInfo[block.opcode].isSpriteSpecific);
+                if (isSpriteSpecific) {
+                    // If creating a new sprite specific monitor, the only possible target is
+                    // the current editing one b/c you cannot dynamically create monitors.
+                    // Also, do not change the targetId if it has already been assigned
+                    block.targetId = block.targetId || this.runtime.getEditingTarget().id;
+                } else {
+                    block.targetId = null;
                 }
+
+                if (wasMonitored && !block.isMonitored) {
+                    this.runtime.requestHideMonitor(block.id);
+                } else if (!wasMonitored && block.isMonitored) {
+                    // Tries to show the monitor for specified block. If it doesn't exist, add the monitor.
+                    if (!this.runtime.requestShowMonitor(block.id)) {
+                        this.runtime.requestAddMonitor(new MonitorRecord({
+                            id: block.id,
+                            targetId: block.targetId,
+                            spriteName: block.targetId ? this.runtime.getTargetById(block.targetId).getName() : null,
+                            opcode: block.opcode,
+                            params: this._getBlockParams(block),
+                            // @todo(vm#565) for numerical values with decimals, some countries use comma
+                            value: '',
+                            mode: block.opcode === 'data_listcontents' ? 'list' : 'default'
+                        }));
+                    }
+                }
+                break;
             }
-            break;
-        }
-        case 'collapsed':
-            block.collapsed = args.value;
-            break;
+            case 'collapsed':
+                block.collapsed = args.value;
+                break;
+            case 'shadow':
+                block.shadow = args.value;
+                break;
+            default:
+                return;
         }
 
         this.emitProjectChanged();

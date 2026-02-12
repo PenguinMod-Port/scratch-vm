@@ -456,6 +456,30 @@ class JSGenerator {
             return `String.prototype.concat(${node.inputs.map(input => this.descendInput(input)).join(', ')})`;
         case InputOpcode.PM_OP_LOG_2:
             return `(Math.log(${this.descendInput(node.value)}) / Math.LN2)`;
+        case InputOpcode.PM_OP_MATH_EXPANDABLE: {
+            const opMap = {
+                "+": " + ",
+                "-": " - ",
+                "*": " * ",
+                "/": " / ",
+                "^": " ** "
+            };
+
+            let output = "("
+
+            for (let i in node.inputs) {
+                if (Number(i) > 0) {
+                    let operation = opMap[node.operations[i]];
+                    if (!operation) continue;
+                    output += operation;
+                }
+                let input = node.inputs[i];
+                output += this.descendInput(input);
+            }
+
+            output += ")";
+            return output;
+        }
         case InputOpcode.PM_OP_MAXIMUM:
             return `Math.max(${node.inputs.map(input => this.descendInput(input)).join(', ')})`;
         case InputOpcode.PM_OP_MINIMUM:

@@ -518,6 +518,19 @@ class ScriptTreeGenerator {
                 min: this.descendInputOfBlock(block, 'min').toType(InputType.NUMBER),
                 max: this.descendInputOfBlock(block, 'max').toType(InputType.NUMBER)
             });
+        case 'operator_expandableMath': {
+            let amount = Number(block.fields.EXPANDABLE.value);
+            let inputs = [];
+            let operations = [];
+            for (let i = 1; i <= amount; i++) {
+                inputs.push(this.descendInputOfBlock(block, 'NUM' + i).toType(InputType.NUMBER));
+                if (i >= 2) operations.push(block.fields['OP' + i].value);
+            }
+            return new IntermediateInput(InputOpcode.PM_OP_MATH_EXPANDABLE, InputType.NUMBER, {
+                inputs,
+                operations
+            });
+        }
         case 'operator_expandablejoininputs': {
             let amount = Number(block.fields.EXPANDABLE.value);
             let inputs = [];

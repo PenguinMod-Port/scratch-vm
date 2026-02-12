@@ -312,6 +312,7 @@ const InputOpcode = {
     PM_OP_IS_STRING: 'op.isString',
     PM_OP_JOIN_EXPANDABLE: 'op.joinExpandable',
     PM_OP_LOG_2: 'op.log2',
+    PM_OP_MATH_EXPANDABLE: 'op.mathExpandable',
     PM_OP_MAXIMUM: 'op.maximum',
     PM_OP_MINIMUM: 'op.minimum',
     PM_OP_POWER: 'op.power',
