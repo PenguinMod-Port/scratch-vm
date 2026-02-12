@@ -47,7 +47,12 @@ const BlockShape = {
     INDENTED: ScratchBlocksConstants.OUTPUT_SHAPE_INDENTED,
 
     /**
-     * Output shape: arrow (arrows).
+     * Output shape: scrapped (maps)
+     */
+    SCRAPPED: ScratchBlocksConstants.OUTPUT_SHAPE_SCRAPPED,
+
+    /**
+     * Output shape: arrow (sets).
      */
     ARROW: ScratchBlocksConstants.OUTPUT_SHAPE_ARROW
 };
