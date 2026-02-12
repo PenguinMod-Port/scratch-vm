@@ -469,7 +469,7 @@ class JSGenerator {
 
             for (let i in node.inputs) {
                 if (Number(i) > 0) {
-                    let operation = opMap[node.operations[i]];
+                    let operation = opMap[node.operations[Number(i) - 1]];
                     if (!operation) continue;
                     output += operation;
                 }
