@@ -568,7 +568,6 @@ class ExtensionManager {
             const func = blockInfo.func ?? blockInfo.opcode;
             console.log(func);
             blockInfo.callFunc = () => {
-                debugger;
                 dispatch.call(serviceName, func);
             };
             break;
