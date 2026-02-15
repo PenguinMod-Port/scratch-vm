@@ -131,6 +131,9 @@ const ArgumentTypeMap = (() => {
             fieldName: 'SOUND_MENU'
         }
     };
+    map[ArgumentType.CUSTOM] = {
+        fieldType: 'field_custom'
+    };
     return map;
 })();
 
@@ -211,8 +214,10 @@ let rendererDrawProfilerId = -1;
  * @constructor
  */
 class Runtime extends EventEmitter {
-    constructor () {
+    constructor (vm) {
         super();
+
+        this.vm = vm;
 
         /**
          * Target management and storage.
@@ -669,6 +674,7 @@ class Runtime extends EventEmitter {
 
     /**
      * Event called before any block is executed.
+     * @const {string}
      */
     static get BEFORE_EXECUTE () {
         return 'BEFORE_EXECUTE';
@@ -676,9 +682,26 @@ class Runtime extends EventEmitter {
 
     /**
      * Event called after every block in the project has been executed.
+     * @const {string}
      */
     static get AFTER_EXECUTE () {
         return 'AFTER_EXECUTE';
+    }
+
+    /**
+     * Event name for thread initialization.
+     * @const {string}
+     */
+    static get THREAD_STARTED () {
+        return 'THREAD_STARTED'
+    }
+
+    /**
+     * Event name for thread finishing.
+     * @const {string}
+     */
+    static get THREAD_FINISHED () {
+        return 'THREAD_FINISHED'
     }
 
     /**
@@ -1131,6 +1154,9 @@ class Runtime extends EventEmitter {
             categoryInfo.color3 = defaultExtensionColors[2];
         }
 
+        // undefined will default to the regular text color
+        categoryInfo.blockText = extensionInfo.blockText;
+
         this._blockInfo.push(categoryInfo);
 
         this._fillExtensionCategory(categoryInfo, extensionInfo);
@@ -1401,10 +1427,11 @@ class Runtime extends EventEmitter {
             inputsInline: true,
             category: categoryInfo.name,
             branches: blockInfo.branches ?? [],
-            extensions: [],
+            extensions: blockInfo.extensions ?? [],
             colour: blockInfo.color1 ?? categoryInfo.color1,
             colourSecondary: blockInfo.color2 ?? categoryInfo.color2,
-            colourTertiary: blockInfo.color3 ?? categoryInfo.color3
+            colourTertiary: blockInfo.color3 ?? categoryInfo.color3,
+            blockText: blockInfo.blockText ?? categoryInfo.blockText
         };
         const context = {
             // TODO: store this somewhere so that we can map args appropriately after translation.
@@ -1629,7 +1656,7 @@ class Runtime extends EventEmitter {
             };
         }
         // Callbacks with data will be forwarded from GUI
-        const id = `${categoryInfo.id}_${buttonInfo.func}`;
+        const id = `${categoryInfo.id}_${buttonInfo.func ?? buttonInfo.opcode}`;
         // callFunc is set by extension manager
         this.extensionButtons.set(id, buttonInfo.callFunc);
         return {
@@ -1702,6 +1729,13 @@ class Runtime extends EventEmitter {
         // check if this is not one of those cases. E.g. an inline image on a block.
         if (argTypeInfo.fieldType === 'field_image') {
             argJSON = this._constructInlineImageJson(argInfo);
+        } else if (argTypeInfo.fieldType === 'field_custom') {
+            argJSON = {
+                type: 'field_custom',
+                name: placeholder,
+                id: argInfo.id,
+                value: argInfo.defaultValue
+            };
         } else {
             // Construct input value
 
@@ -2092,6 +2126,7 @@ class Runtime extends EventEmitter {
             thread.tryCompile();
         }
 
+        this.emit(Runtime.THREAD_STARTED, thread);
         return thread;
     }
 
@@ -2576,6 +2611,7 @@ class Runtime extends EventEmitter {
             this._stopThread(this.sequencer.activeThread);
         }
         // Remove all remaining threads from executing in the next tick.
+        this.threads.forEach(v => v.status !== Thread.STATUS_DONE && this.emit(Runtime.THREAD_FINISHED, v))
         this.threads = [];
         this.threadMap.clear();
 

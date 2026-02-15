@@ -49,6 +49,9 @@ const defaultBuiltinExtensions = {
     // jeremy
     jgStorage: () => require('../extensions/penguinmod/jgStorage'),
 
+    // sharkpool
+    SPjavascriptV2: () => require('../extensions/penguinmod/SPjavascriptV2'),
+
     // old ass extensions that are only included for compatability
     jwUnite: () => require('../extensions/penguinmod/jwUnite'),
 };
@@ -562,11 +565,11 @@ class ExtensionManager {
             }
             break;
         case BlockType.BUTTON:
-            if (blockInfo.opcode) {
-                log.warn(`Ignoring opcode "${blockInfo.opcode}" for button with text: ${blockInfo.text}`);
-            }
+            const func = blockInfo.func ?? blockInfo.opcode;
+            console.log(func);
             blockInfo.callFunc = () => {
-                dispatch.call(serviceName, blockInfo.func);
+                debugger;
+                dispatch.call(serviceName, func);
             };
             break;
         case BlockType.LABEL:

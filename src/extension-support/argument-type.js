@@ -51,7 +51,12 @@ const ArgumentType = {
     /**
      * Name of sound in the current target
      */
-    SOUND: 'sound'
+    SOUND: 'sound',
+
+    /**
+     * pm: custom fields
+     */
+    CUSTOM: 'custom'
 };
 
 module.exports = ArgumentType;
