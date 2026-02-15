@@ -151,7 +151,10 @@ class ScriptTreeGenerator {
 
     createConstantInput (constant, preserveStrings = false) {
         if (constant === null) {
-            return new IntermediateInput(InputOpcode.CONSTANT, InputType.NULL)
+            return new IntermediateInput(InputOpcode.CONSTANT, InputType.NULL);
+        }
+        if (typeof constant === "boolean") {
+            return new IntermediateInput(InputOpcode.CONSTANT, InputType.BOOLEAN, {value: constant});
         }
 
         constant += '';
