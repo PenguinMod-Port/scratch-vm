@@ -45,6 +45,7 @@ const defaultBuiltinExtensions = {
     jwScope: () => require('../extensions/penguinmod/jwScope'),
     jwNum: () => require('../extensions/penguinmod/jwNum'),
     jwInt: () => require('../extensions/penguinmod/jwInt'),
+    jwFragment: () => require('../extensions/penguinmod/jwFragment'),
 
     // jeremy
     jgStorage: () => require('../extensions/penguinmod/jgStorage'),
@@ -687,6 +688,22 @@ class ExtensionManager {
             callback();
             v[1] = () => {};
         }
+    }
+
+    extendCompiler(extensionId, information) {
+        const important = {
+            VariablePool: require('../compiler/variable-pool'),
+            ...require('../compiler/enums.js'),
+            ...require('../compiler/intermediate.js')
+        };
+
+        let {ir, js} = information(important);
+
+        const IRGenerator = require('../compiler/irgen').IRGenerator;
+        const JSGenerator = require('../compiler/jsgen');
+
+        IRGenerator.compilerExtensions[extensionId] = ir ?? {};
+        JSGenerator.compilerExtensions[extensionId] = js ?? {};
     }
 }
 

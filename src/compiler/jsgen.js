@@ -144,6 +144,9 @@ class JSGenerator {
         this.oldCompilerStub = new oldCompilerCompatibility.JSGeneratorStub(this);
     }
 
+    /** @type {Object.<string, Object.<string, Function>>} */
+    static compilerExtensions = {};
+
     /**
      * Enter a new frame
      * @param {Frame} frame New frame.
@@ -613,6 +616,14 @@ class JSGenerator {
         }
 
         default:
+            for (let extensionId in JSGenerator.compilerExtensions) {
+                let extension = JSGenerator.compilerExtensions[extensionId]
+                if (extension.reporter) {
+                    let returns = extension.reporter.call(this, block);
+                    if (returns) return returns;
+                }
+            }
+
             log.warn(`JS: Unknown input: ${block.opcode}`, node);
             throw new Error(`JS: Unknown input: ${block.opcode}`);
         }
@@ -1216,6 +1227,13 @@ class JSGenerator {
         }
 
         default:
+            for (let extensionId in JSGenerator.compilerExtensions) {
+                let extension = JSGenerator.compilerExtensions[extensionId]
+                if (extension.command) {
+                    let returns = extension.command.call(this, block);
+                    if (returns) return;
+                }
+            }
             log.warn(`JS: Unknown stacked block: ${block.opcode}`, node);
             throw new Error(`JS: Unknown stacked block: ${block.opcode}`);
         }

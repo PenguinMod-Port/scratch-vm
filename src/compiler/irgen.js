@@ -220,6 +220,15 @@ class ScriptTreeGenerator {
             }
         }
 
+        for (let extensionId in IRGenerator.compilerExtensions) {
+            let extension = IRGenerator.compilerExtensions[extensionId]
+            if (extension.reporter && block.opcode.startsWith(extensionId + "_")) {
+                let returns = extension.reporter.call(this, block, preserveStrings);
+                if (returns) return returns;
+                break;
+            }
+        }
+
         switch (block.opcode) {
         case 'colour_picker':
             return this.createConstantInput(block.fields.COLOUR.value, true);
@@ -850,6 +859,15 @@ class ScriptTreeGenerator {
             const oldCompilerResult = this.oldCompilerStub.descendStackedBlockFromNewCompiler(block);
             if (oldCompilerResult) {
                 return oldCompilerResult;
+            }
+        }
+
+        for (let extensionId in IRGenerator.compilerExtensions) {
+            let extension = IRGenerator.compilerExtensions[extensionId]
+            if (extension.command && block.opcode.startsWith(extensionId + "_")) {
+                let returns = extension.command.call(this, block);
+                if (returns) return returns;
+                break;
             }
         }
 
@@ -1911,6 +1929,9 @@ class IRGenerator {
 
         this.analyzedProcedures = [];
     }
+
+    /** @type {Object.<string, Object.<string, Function>>} */
+    static compilerExtensions = {};
 
     addProcedureDependencies (dependencies) {
         for (const procedureVariant of dependencies) {
