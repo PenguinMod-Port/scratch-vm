@@ -1605,7 +1605,7 @@ class Runtime extends EventEmitter {
             xml: `<label text="${xmlEscape(blockInfo.text)}"></label>`
         };
     }
-    
+
     /**
      * Convert a button for scratch-blocks. A button has no opcode but specifies a callback name in the `func` field.
      * @param {ExtensionBlockMetadata} buttonInfo - the button to convert
@@ -3396,6 +3396,7 @@ class Runtime extends EventEmitter {
      * @property {string} category - the category for this opcode
      * @property {Function} [labelFn] - function to generate the label for this opcode
      * @property {string} [label] - the label for this opcode if `labelFn` is absent
+     * @property {string} [monitorColor] - the color of the monitor
      */
     getLabelForOpcode (extendedOpcode) {
         const [category, opcode] = StringUtil.splitFirst(extendedOpcode, '_');
@@ -3407,10 +3408,14 @@ class Runtime extends EventEmitter {
         const block = categoryInfo.blocks.find(b => b.info.opcode === opcode);
         if (!block) return;
 
+        const labelFn = block.info.labelFn ? this[`ext_${category}`][block.info.labelFn] : undefined;
+        const label = block.info.label ?? `${categoryInfo.name}: ${block.info.text}`;
+        const monitorColor = block.info.color1 ?? categoryInfo.color1;
+
         // TODO: we may want to format the label in a locale-specific way.
         return {
-            category: 'extension', // This assumes that all extensions have the same monitor color.
-            label: `${categoryInfo.name}: ${block.info.text}`
+            category: 'extension',
+            labelFn, label, monitorColor,
         };
     }
 
