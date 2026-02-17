@@ -80,29 +80,9 @@ const jwScope = {
 
 class Extension {
     constructor() {
-        if (!vm.jwScope) {
-            const exports = vm.exports.these_broke_before_and_will_break_again()
-
-            const oldCompile = exports.JSGenerator.prototype.compile
-            exports.JSGenerator.prototype.compile = function() {
-                this.source += "let jwScope = [];\n"
-                return oldCompile.call(this)
-            }
-
-            const oldDescendStack = exports.JSGenerator.prototype.descendStack
-            exports.JSGenerator.prototype.descendStack = function(...args) {
-                //if (frame.parent == 'control.switch') return oldDescendStack.call(this, nodes, frame)
-                this.source += "var jwScopeT = [...jwScope, {}];\n"
-                this.source += "{\n" //create scope
-                this.source += "let jwScope = jwScopeT;\n"
-                const result = oldDescendStack.call(this, ...args)
-                this.source += "};\n"
-                return result
-            }
-        }
         vm.jwScope = jwScope
 
-        vm.runtime.registerCompiledExtensionBlocks('jwScope', this.getCompileInfo());
+        vm.extensionManager.extendCompiler("jwScope", this.extendCompiler.bind(this));
     }
 
     getInfo() {
@@ -224,121 +204,102 @@ class Extension {
         };
     }
 
-    getCompileInfo() {
+    extendCompiler({IntermediateStackBlock, IntermediateInput, InputType, InputOpcode}) {
+        const opcodes = {
+            ALL: 'jwScope.all',
+            CHANGE: 'jwScope.change',
+            CREATE: 'jwScope.create',
+            CURRENT: 'jwScope.current',
+            DELETE: 'jwScope.delete',
+            DEPTH: 'jwScope.depth',
+            GET: 'jwScope.get',
+            HAS: 'jwScope.has',
+            RESET: 'jwScope.reset',
+            SET: 'jwScope.set',
+        };
+
         return {
             ir: {
-                create: (generator, block) => ({
-                    kind: 'stack',
-                    name: generator.descendInputOfBlock(block, 'NAME')
-                }),
-                delete: (generator, block) => ({
-                    kind: 'stack',
-                    name: generator.descendInputOfBlock(block, 'NAME')
-                }),
-                set: (generator, block) => ({
-                    kind: 'stack',
-                    name: generator.descendInputOfBlock(block, 'NAME'),
-                    value: generator.descendInputOfBlock(block, 'VALUE')
-                }),
-                change: (generator, block) => ({
-                    kind: 'stack',
-                    name: generator.descendInputOfBlock(block, 'NAME'),
-                    value: generator.descendInputOfBlock(block, 'VALUE')
-                }),
-                get: (generator, block) => ({
-                    kind: 'input',
-                    name: generator.descendInputOfBlock(block, 'NAME')
-                }),
-                has: (generator, block) => ({
-                    kind: 'input',
-                    name: generator.descendInputOfBlock(block, 'NAME')
-                }),
-                reset: (generator, block) => ({
-                    kind: 'stack'
-                }),
-                depth: (generator, block) => ({
-                    kind: 'input'
-                }),
-                current: (generator, block) => ({
-                    kind: 'input'
-                }),
-                all: (generator, block) => ({
-                    kind: 'input'
-                })
+                reporter(block) {
+                    const generate = (opcode, type, name = false, array = false) => {
+                        if (array && !vm.jwArray) return this.createConstantInput(null);
+                        return new IntermediateInput(opcode, type, {
+                            ...(name ? {name: this.descendInputOfBlock(block, 'NAME').toType(InputType.STRING)} : {})
+                        });
+                    };
+
+                    switch (block.opcode) {
+                        case 'jwScope_all': return generate(opcodes.ALL, InputType.CUSTOM_TYPE, false, true);
+                        case 'jwScope_current': return generate(opcodes.CURRENT, InputType.CUSTOM_TYPE, false, true);
+                        case 'jwScope_depth': return generate(opcodes.DEPTH, InputType.NUMBER_POS_INT);
+                        case 'jwScope_get': return generate(opcodes.GET, InputType.ANY, true);
+                        case 'jwScope_has': return generate(opcodes.HAS, InputType.BOOLEAN, true);
+                    }
+                },
+                command(block) {
+                    const generate = (opcode, name = false, value = false, valueNumber = false) => {
+                        value = value ? this.descendInputOfBlock(block, 'VALUE') : null;
+                        if (valueNumber) value = value.toType(InputType.NUMBER);
+                        return new IntermediateStackBlock(opcode, {
+                            ...(name ? {name: this.descendInputOfBlock(block, 'NAME').toType(InputType.STRING)} : {}),
+                            value
+                        });
+                    };
+
+                    switch (block.opcode) {
+                        case 'jwScope_change': return generate(opcodes.CHANGE, true, true, true);
+                        case 'jwScope_create': return generate(opcodes.CREATE, true);
+                        case 'jwScope_delete': return generate(opcodes.DELETE, true);
+                        case 'jwScope_reset': return generate(opcodes.RESET);
+                        case 'jwScope_set': return generate(opcodes.SET, true, true);
+                    }
+                }
             },
             js: {
-                create: (node, compiler, imports) => {
-                    compiler.source += `vm.jwScope.create(jwScope, ${compiler.descendInput(node.name).asString()});\n`
+                scriptStart() {
+                    this.source += "let jwScope = [];\n"
                 },
-                delete: (node, compiler, imports) => {
-                    compiler.source += `vm.jwScope.delete(jwScope, ${compiler.descendInput(node.name).asString()});\n`
+                stackStart() {
+                    this.source += "var jwScopeT = [...jwScope, {}];\n"
+                    this.source += "{\n" // create scope
+                    this.source += "let jwScope = jwScopeT;\n"
                 },
-                set: (node, compiler, imports) => {
-                    compiler.source += `vm.jwScope.set(jwScope, ${compiler.descendInput(node.name).asString()}, ${compiler.descendInput(node.value).asUnknown()});\n`
+                stackEnd() {
+                    this.source += "}\n" // end scope
                 },
-                change: (node, compiler, imports) => {
-                    compiler.source += `vm.jwScope.change(jwScope, ${compiler.descendInput(node.name).asString()}, ${compiler.descendInput(node.value).asNumber()});\n`
+                reporter(block) {
+                    const node = block.inputs;
+
+                    const generate = (funcName, name = false) => {
+                        return `vm.jwScope.${funcName}(jwScope${name ? `, ${this.descendInput(node.name)}` : ''})`;
+                    }
+
+                    switch (block.opcode) {
+                        case opcodes.ALL: return generate('all');
+                        case opcodes.CURRENT: return generate('current');
+                        case opcodes.DEPTH: return generate('depth');
+                        case opcodes.GET: return generate('get', true);
+                        case opcodes.HAS: return generate('has', true);
+                    }
                 },
-                get: (node, compiler, imports) => {
-                    return new imports.TypedInput(`vm.jwScope.get(jwScope, ${compiler.descendInput(node.name).asString()})`, imports.TYPE_UNKNOWN)
-                },
-                has: (node, compiler, imports) => {
-                    return new imports.TypedInput(`vm.jwScope.has(jwScope, ${compiler.descendInput(node.name).asString()})`, imports.TYPE_BOOLEAN)
-                },
-                reset: (node, compiler, imports) => {
-                    compiler.source += `vm.jwScope.reset(jwScope);\n`
-                },
-                depth: (node, compiler, imports) => {
-                    return new imports.TypedInput(`vm.jwScope.depth(jwScope)`, imports.TYPE_NUMBER)
-                },
-                current: (node, compiler, imports) => {
-                    return new imports.TypedInput(!!vm.jwArray ? 'vm.jwScope.current(jwScope)' : '0', imports.TYPE_UNKNOWN)
-                },
-                all: (node, compiler, imports) => {
-                    return new imports.TypedInput(!!vm.jwArray ? 'vm.jwScope.all(jwScope)': '0', imports.TYPE_UNKNOWN)
+                command(block) {
+                    const node = block.inputs;
+
+                    const generate = (funcName, name = false, value = false) => {
+                        this.source += `vm.jwScope.${funcName}(jwScope${name ? `, ${this.descendInput(node.name)}` : ''}${value ? `, ${this.descendInput(node.value)}` : ''});\n`;
+                        return true;
+                    }
+
+                    switch (block.opcode) {
+                        case opcodes.CHANGE: return generate('change', true, true);
+                        case opcodes.CREATE: return generate('create', true);
+                        case opcodes.DELETE: return generate('delete', true);
+                        case opcodes.RESET: return generate('reset');
+                        case opcodes.SET: return generate('set', true, true);
+                    }
                 }
             }
         }
-    }
-
-    create() {
-        return 'noop'
-    }
-
-    delete() {
-        return 'noop'
-    }
-
-    set() {
-        return 'noop'
-    }
-
-    change() {
-        return 'noop'
-    }
-
-    get() {
-        return 'noop'
-    }
-
-    has() {
-        return 'noop'
-    }
-
-    reset() {
-        return 'noop'
-    }
-
-    depth() {
-        return 'noop'
-    }
-
-    current() {
-        return 'noop'
-    }
-
-    all() {
-        return 'noop'
     }
 }
 

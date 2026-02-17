@@ -1551,8 +1551,10 @@ class JSGenerator {
      */
     compile () {
         if (this.script.stack) {
-            for (let extensionId in JSGenerator.compilerExtensions) {
-                let extension = JSGenerator.compilerExtensions[extensionId]
+            let extensionIds = Object.keys(JSGenerator.compilerExtensions);
+
+            for (let extensionId of extensionIds) {
+                let extension = JSGenerator.compilerExtensions[extensionId];
                 if (extension.scriptStart) {
                     extension.scriptStart.call(this);
                 }
@@ -1560,8 +1562,9 @@ class JSGenerator {
 
             this.descendStack(this.script.stack);
             
-            for (let extensionId in JSGenerator.compilerExtensions) {
-                let extension = JSGenerator.compilerExtensions[extensionId]
+            extensionIds.reverse();
+            for (let extensionId of extensionIds) {
+                let extension = JSGenerator.compilerExtensions[extensionId];
                 if (extension.scriptEnd) {
                     extension.scriptEnd.call(this);
                 }

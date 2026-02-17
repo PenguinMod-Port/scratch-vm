@@ -84,13 +84,13 @@ const InputType = {
     /** Any input that can be interperated as a boolean. Equal to BOOLEAN | STRING_BOOLEAN */
     BOOLEAN_INTERPRETABLE: 0x1800,
 
-    /** An instance of a class (for cuatom types in extensions) */
+    /** An instance of a class (for custom types in extensions) */
     CUSTOM_TYPE: 0x2000,
 
     /** The value 'null' */
     NULL: 0x4000,
 
-    /** Any value type (a type a scratch variable can hold). Equal to NUMBER_OR_NAN | STRING | BOOLEAN */
+    /** Any value type (a type a scratch variable can hold). Equal to NUMBER_OR_NAN | STRING | BOOLEAN | CUSTOM_TYPE | NULL */
     ANY: 0x7FFF,
 
     /** An array of values in the form [R, G, B] */
