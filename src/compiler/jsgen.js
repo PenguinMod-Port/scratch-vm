@@ -1285,10 +1285,24 @@ class JSGenerator {
         Object.entries(properties).forEach(([key, value]) => this[key] = value);
         const oldIsLastBlock = this.isLastBlock;
 
+        for (let extensionId in JSGenerator.compilerExtensions) {
+            let extension = JSGenerator.compilerExtensions[extensionId]
+            if (extension.stackStart) {
+                extension.stackStart.call(this, stack, properties, frame);
+            }
+        }
+
         for (let i = 0; i < stack.blocks.length; i++) {
             this.isLastBlock = i === stack.blocks.length - 1;
             if (frame) frame.isLastBlock = this.isLastBlock;
             this.descendStackedBlock(stack.blocks[i]);
+        }
+
+        for (let extensionId in JSGenerator.compilerExtensions) {
+            let extension = JSGenerator.compilerExtensions[extensionId]
+            if (extension.stackEnd) {
+                extension.stackEnd.call(this, stack, properties, frame);
+            }
         }
 
         this.isLastBlock = oldIsLastBlock;
@@ -1510,7 +1524,21 @@ class JSGenerator {
             script += `let returns = ${this.script.yields ? `yield* (function*()` : `(function()`} {\n`;
         }
         
+        for (let extensionId in JSGenerator.compilerExtensions) {
+            let extension = JSGenerator.compilerExtensions[extensionId]
+            if (extension.scriptStart) {
+                extension.scriptStart.call(this, stack, properties, frame);
+            }
+        }
+
         script += this.source;
+        
+        for (let extensionId in JSGenerator.compilerExtensions) {
+            let extension = JSGenerator.compilerExtensions[extensionId]
+            if (extension.scriptEnd) {
+                extension.scriptEnd.call(this, stack, properties, frame);
+            }
+        }
 
         if (allowBubble) {
             script += `})();\n`;

@@ -1434,11 +1434,23 @@ class ScriptTreeGenerator {
      */
     descendSubstack (parentBlock, substackName) {
         const input = parentBlock.inputs[substackName];
+        let output;
         if (!input) {
-            return new IntermediateStack();
+            output = new IntermediateStack();
+        } else {
+            const stackId = input.block;
+            output = this.walkStack(stackId);
         }
-        const stackId = input.block;
-        return this.walkStack(stackId);
+
+        for (let extensionId in IRGenerator.compilerExtensions) {
+            let extension = IRGenerator.compilerExtensions[extensionId]
+            if (extension.stack) {
+                let returns = extension.stack.call(this, output, parentBlock, substackName);
+                if (returns) output = returns;
+            }
+        }
+
+        return output;
     }
 
     /**
