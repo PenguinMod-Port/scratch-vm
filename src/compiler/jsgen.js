@@ -1523,22 +1523,8 @@ class JSGenerator {
         if (allowBubble) {
             script += `let returns = ${this.script.yields ? `yield* (function*()` : `(function()`} {\n`;
         }
-        
-        for (let extensionId in JSGenerator.compilerExtensions) {
-            let extension = JSGenerator.compilerExtensions[extensionId]
-            if (extension.scriptStart) {
-                extension.scriptStart.call(this, stack, properties, frame);
-            }
-        }
 
         script += this.source;
-        
-        for (let extensionId in JSGenerator.compilerExtensions) {
-            let extension = JSGenerator.compilerExtensions[extensionId]
-            if (extension.scriptEnd) {
-                extension.scriptEnd.call(this, stack, properties, frame);
-            }
-        }
 
         if (allowBubble) {
             script += `})();\n`;
@@ -1565,7 +1551,21 @@ class JSGenerator {
      */
     compile () {
         if (this.script.stack) {
+            for (let extensionId in JSGenerator.compilerExtensions) {
+                let extension = JSGenerator.compilerExtensions[extensionId]
+                if (extension.scriptStart) {
+                    extension.scriptStart.call(this);
+                }
+            }
+
             this.descendStack(this.script.stack);
+            
+            for (let extensionId in JSGenerator.compilerExtensions) {
+                let extension = JSGenerator.compilerExtensions[extensionId]
+                if (extension.scriptEnd) {
+                    extension.scriptEnd.call(this);
+                }
+            }
         }
         this.stopScript();
 
