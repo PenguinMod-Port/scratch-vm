@@ -68,7 +68,7 @@ class Extension {
             util.sequencer.runtime._pushThread(
                 util.thread.target.blocks.getBranch(util.thread.peekStack(), 0),
                 util.target,
-                {}
+                {fromThread: util.thread}
             );
         }
     }
@@ -79,7 +79,7 @@ class Extension {
             const thread = util.sequencer.runtime._pushThread(
                 util.thread.target.blocks.getBranch(util.thread.peekStack(), 0),
                 util.target,
-                {}
+                {fromThread: util.thread}
             );
 
             thread._pmControlsExpansionThreadData = data;
