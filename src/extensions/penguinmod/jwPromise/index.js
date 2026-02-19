@@ -12,8 +12,13 @@ const PromiseStatus = {
 class PromiseType {
     customId = "jwPromise"
 
-    constructor(promise = new Promise(resolve=>resolve())) {
-        this.promise = promise;
+    constructor(promise = new Promise(_=>0)) {
+        this.promise = new Promise((resolve, reject) => {
+            this.resolve = resolve;
+            this.reject = reject;
+
+            promise.then(resolve, reject)
+        });
         this.status = PromiseStatus.PENDING;
         this.result = null;
         
@@ -37,9 +42,28 @@ class PromiseType {
             thread.target
         );
 
-        return new jwPromise.Type(new Promise((resolve, reject) => {
+        const x = new jwPromise.Type(new Promise((resolve, reject) => {
             newThread._jwPromise = {resolve, reject};
         }));
+        newThread._jwPromise.type = x;
+
+        return x;
+    }
+
+    static fromThread(blockID, thread, func = function* () {}) {
+        let newThread = vm.runtime._pushThread(
+            blockID,
+            thread.target
+        );
+
+        const x = new jwPromise.Type(new Promise((resolve, reject) => {
+            newThread._jwPromise = {resolve, reject};
+        }));
+        newThread._jwPromise.type = x;
+
+        newThread.generator = func(thread, newThread._jwPromise);
+
+        return x;
     }
 
     toString() {
@@ -88,15 +112,6 @@ const jwPromise = {
 
 class Extension {
     constructor() {
-        if (!vm.jwPromise) {
-            const oldPushThread = Object.getPrototypeOf(vm.runtime)._pushThread;
-            Object.getPrototypeOf(vm.runtime)._pushThread = function(id, target, opts = {}) {
-                let thread = oldPushThread.call(this, id, target, opts);
-                if (opts.fromThread) thread._jwPromise = opts.fromThread._jwPromise;
-                return thread;
-            };
-        }
-
         vm.jwPromise = jwPromise;
         vm.runtime.registerSerializer(
             "jwPromise", 
@@ -115,8 +130,20 @@ class Extension {
             blocks: [
                 {
                     opcode: "newPromise",
-                    text: "new promise",
+                    text: "new promise [THIS]",
+                    arguments: {
+                        THIS: {
+                            fillIn: "thisPromise"
+                        }
+                    },
                     branches: [{}],
+                    ...jwPromise.Block
+                },
+                {
+                    opcode: "thisPromise",
+                    text: "this promise",
+                    hideFromPalette: true,
+                    canDragDuplicate: true,
                     ...jwPromise.Block
                 },
                 {
@@ -158,16 +185,43 @@ class Extension {
                     arguments: {
                         PROMISE: jwPromise.Argument
                     }
-                }
+                },
+                "---",
+                {
+                    opcode: "resolveExternal",
+                    text: "resolve [PROMISE] with [DATA]",
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        PROMISE: jwPromise.Argument,
+                        DATA: {
+                            type: ArgumentType.STRING,
+                            defaultValue: "foo"
+                        }
+                    }
+                },
+                {
+                    opcode: "rejectExternal",
+                    text: "reject [PROMISE] with [DATA]",
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        PROMISE: jwPromise.Argument,
+                        DATA: {
+                            type: ArgumentType.STRING,
+                            defaultValue: "foo"
+                        }
+                    }
+                },
             ]
         };
     }
 
     extendCompiler({IntermediateStackBlock, IntermediateInput, InputType, InputOpcode}) {
         const opcodes = {
-            NEW: 'jwPromise.new',
             AWAIT: 'jwPromise.await',
-            AWAIT_R: 'jwPromise.awaitR'
+            AWAIT_R: 'jwPromise.awaitR',
+            NEW: 'jwPromise.new',
+            REJECT: 'jwPromise.reject',
+            RESOLVE: 'jwPromise.resolve'
         };
 
         return {
@@ -176,12 +230,13 @@ class Extension {
                     switch (block.opcode) {
                         case 'jwPromise_newPromise':
                             return new IntermediateInput(opcodes.NEW, InputType.CUSTOM_TYPE, {
-                                blockID: block.inputs.SUBSTACK?.block
+                                blockID: block.inputs.SUBSTACK?.block,
+                                substack: this.descendSubstack(block, 'SUBSTACK')
                             });
                         case 'jwPromise_awaitR':
                             return new IntermediateInput(opcodes.AWAIT_R, InputType.ANY, {
                                 promise: this.descendInputOfBlock(block, 'PROMISE')
-                            }, true)
+                            }, true);
                     }
                 },
                 command(block) {
@@ -189,7 +244,15 @@ class Extension {
                         case 'jwPromise_await':
                             return new IntermediateStackBlock(opcodes.AWAIT, {
                                 promise: this.descendInputOfBlock(block, 'PROMISE')
-                            }, true)
+                            }, true);
+                        case 'jwPromise_reject':
+                            return new IntermediateStackBlock(opcodes.REJECT, {
+                                data: this.descendInputOfBlock(block, 'DATA')
+                            })
+                        case 'jwPromise_resolve':
+                            return new IntermediateStackBlock(opcodes.RESOLVE, {
+                                data: this.descendInputOfBlock(block, 'DATA')
+                            })
                     }
                 }
             },
@@ -198,12 +261,14 @@ class Extension {
                     const node = block.inputs;
 
                     switch (block.opcode) {
-                        case opcodes.NEW:
+                        case opcodes.NEW: {
                             if (!node.blockID) {
                                 return "(new vm.jwPromise.Type())";
                             } else {
-                                return `vm.jwPromise.Type.fromBlockID("${node.blockID}", thread)`;
+                                let stack = this.descendStackInline(node.substack, {allowReturns: false, jwPromise: true});
+                                return `vm.jwPromise.Type.fromThread("${node.blockID}", thread, function*(thread, _jwPromise) {\n${stack}\nruntime.sequencer.retireThread(thread);\n})`;
                             }
+                        }
                         case opcodes.AWAIT_R:
                             return `(yield* (vm.jwPromise.Type.toPromise(${this.descendInput(node.promise)})).await())`;
                     }
@@ -215,18 +280,38 @@ class Extension {
                         case opcodes.AWAIT:
                             this.source += `yield* (vm.jwPromise.toPromise(${this.descendInput(node.promise)}).await();\n`;
                             return true;
+                        case opcodes.REJECT:
+                            if (this.jwPromise) {
+                                this.source += `_jwPromise.reject(${this.descendInput(node.data)});\n`;
+                            } else {
+                                this.source += `if (thread._jwPromise) thread._jwPromise.reject(${this.descendInput(node.data)});\n`;
+                            }
+                            return true;
+                        case opcodes.RESOLVE:
+                            if (this.jwPromise) {
+                                this.source += `_jwPromise.resolve(${this.descendInput(node.data)});\n`;
+                            } else {
+                                this.source += `if (thread._jwPromise) thread._jwPromise.resolve(${this.descendInput(node.data)});\n`;
+                            }
+                            return true;
                     }
                 }
             }
         }
     }
 
-    resolve({DATA}, util) {
-        if (util.thread._jwPromise) util.thread._jwPromise.resolve(DATA);
+    thisPromise({}, util) {
+        return util.thread._jwPromise ? util.thread._jwPromise.type : new jwPromise.Type();
     }
 
-    reject({DATA}, util) {
-        if (util.thread._jwPromise) util.thread._jwPromise.reject(DATA);
+    resolveExternal({DATA, PROMISE}) {
+        PROMISE = jwPromise.Type.toPromise(PROMISE);
+        PROMISE.resolve(DATA);
+    }
+
+    rejectExternal({DATA, PROMISE}) {
+        PROMISE = jwPromise.Type.toPromise(PROMISE);
+        PROMISE.reject(DATA);
     }
 }
 
