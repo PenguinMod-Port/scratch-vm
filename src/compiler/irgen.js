@@ -352,6 +352,8 @@ class ScriptTreeGenerator {
             return new IntermediateInput(InputOpcode.PM_LOOKS_STRETCH_X, InputType.NUMBER);
         case 'looks_stretchGetY':
             return new IntermediateInput(InputOpcode.PM_LOOKS_STRETCH_Y, InputType.NUMBER);
+        case 'looks_tintColor':
+            return new IntermediateInput(InputOpcode.PM_LOOKS_GET_TINT, InputType.STRING);
 
         case 'motion_direction':
             return new IntermediateInput(InputOpcode.MOTION_DIRECTION_GET, InputType.NUMBER_REAL);
@@ -1206,6 +1208,10 @@ class ScriptTreeGenerator {
             return new IntermediateStackBlock(StackOpcode.PM_LOOKS_SET_STRETCH, {
                 x: this.descendInputOfBlock(block, 'X').toType(InputType.NUMBER),
                 y: this.descendInputOfBlock(block, 'Y').toType(InputType.NUMBER)
+            });
+        case 'looks_setTintColor':
+            return new IntermediateStackBlock(StackOpcode.PM_LOOKS_SET_TINT, {
+                tint: this.descendInputOfBlock(block, 'color').toType(InputType.STRING)
             });
         case 'looks_stoptalking':
             return new IntermediateStackBlock(StackOpcode.PM_LOOKS_STOP_SPEAKING, {});

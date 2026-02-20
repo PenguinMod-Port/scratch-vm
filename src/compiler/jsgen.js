@@ -301,6 +301,8 @@ class JSGenerator {
             return 'target.stretch[0]';
         case InputOpcode.PM_LOOKS_STRETCH_Y:
             return 'target.stretch[1]';
+        case InputOpcode.PM_LOOKS_GET_TINT:
+            return 'runtime.ext_scratch3_looks._getTintColor(target)';
 
         case InputOpcode.MOTION_DIRECTION_GET:
             return 'target.direction';
@@ -1054,6 +1056,9 @@ class JSGenerator {
             break;
         case StackOpcode.PM_LOOKS_SET_STRETCH:
             this.source += `target.setStretch(${this.descendInput(node.x)}, ${this.descendInput(node.y)});\n`;
+            break;
+        case StackOpcode.PM_LOOKS_SET_TINT:
+            this.source += `runtime.ext_scratch3_looks._setTintColor(${this.descendInput(node.tint)}, target);\n`;
             break;
         case StackOpcode.PM_LOOKS_STOP_SPEAKING:
             this.source += `runtime.ext_scratch3_looks._say('', target);\n`;
