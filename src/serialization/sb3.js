@@ -1593,7 +1593,7 @@ const deserialize = async function (json, runtime, zip, isSingleSprite) {
     if (json.meta) {
         // eslint-disable-next-line require-atomic-updates
         if (json.meta.origin) runtime.origin = json.meta.origin;
-        if (json.meta.pmVersion) pmVersion = new SemVer(json.pmVersion);
+        if (json.meta.pmVersion) pmVersion = new SemVer(json.meta.pmVersion);
     } else {
         // eslint-disable-next-line require-atomic-updates
         runtime.origin = null;

@@ -2,6 +2,16 @@ const BlockType = require('../../../extension-support/block-type');
 const BlockShape = require('../../../extension-support/block-shape');
 const ArgumentType = require('../../../extension-support/argument-type');
 const Cast = require('../../../util/cast');
+const Timer = require('../../../util/timer');
+
+function span(text) {
+    let el = document.createElement('span')
+    el.innerHTML = text
+    el.style.whiteSpace = 'nowrap'
+    el.style.width = '100%'
+    el.style.textAlign = 'center'
+    return el
+}
 
 const PromiseStatus = {
     REJECTED: -1,
@@ -17,18 +27,23 @@ class PromiseType {
             this.resolve = resolve;
             this.reject = reject;
 
-            promise.then(resolve, reject)
+            promise.then(resolve, reject);
         });
         this.status = PromiseStatus.PENDING;
         this.result = null;
+
+        this.timer = new Timer();
+        this.timer.start();
         
         this.promise.then(v => {
             this.status = PromiseStatus.FUFILLED;
+            this.timer = this.timer.timeElapsed();
             this.result = v;
         }, v => {
             this.status = PromiseStatus.REJECTED;
+            this.timer = this.timer.timeElapsed();
             this.result = v;
-        })
+        });
     }
 
     static toPromise(x) {
@@ -61,7 +76,7 @@ class PromiseType {
         }));
         newThread._jwPromise.type = x;
 
-        newThread.generator = func(thread, newThread._jwPromise);
+        newThread.generator = func(newThread, newThread._jwPromise);
 
         return x;
     }
@@ -72,6 +87,24 @@ class PromiseType {
             case PromiseStatus.PENDING: return 'pending';
             case PromiseStatus.FUFILLED: return 'fufilled';
         }
+    }
+
+    toReporterContent() {
+        let text;
+
+        switch (this.status) {
+            case PromiseStatus.REJECTED:
+                text = '<span style="color: #d32;">&lt;Rejected&gt;</span>';
+                break;
+            case PromiseStatus.PENDING:
+                text = '<span style="opacity: 0.75;">&lt;Pending&gt;</span>';
+                break;
+            case PromiseStatus.FUFILLED:
+                text = '<span style="color: #2d3;">&lt;Fufilled&gt;</span>';
+                break;
+        }
+
+        return span(`Promise${text}`);
     }
 
     await = function*() {
@@ -128,6 +161,11 @@ class Extension {
             name: "Promise",
             color1: "#25d8c0",
             blocks: [
+                {
+                    opcode: "simplePromise",
+                    text: "new promise",
+                    ...jwPromise.Block
+                },
                 {
                     opcode: "newPromise",
                     text: "new promise [THIS]",
@@ -211,6 +249,23 @@ class Extension {
                         }
                     }
                 },
+                "---",
+                {
+                    opcode: "getStatus",
+                    text: "status of [PROMISE]",
+                    blockType: BlockType.REPORTER,
+                    arguments: {
+                        PROMISE: jwPromise.Argument
+                    }
+                },
+                {
+                    opcode: "getTimer",
+                    text: "time pending on [PROMISE]",
+                    blockType: BlockType.REPORTER,
+                    arguments: {
+                        PROMISE: jwPromise.Argument
+                    }
+                }
             ]
         };
     }
@@ -278,7 +333,7 @@ class Extension {
 
                     switch (block.opcode) {
                         case opcodes.AWAIT:
-                            this.source += `yield* (vm.jwPromise.toPromise(${this.descendInput(node.promise)}).await();\n`;
+                            this.source += `yield* (vm.jwPromise.Type.toPromise(${this.descendInput(node.promise)})).await();\n`;
                             return true;
                         case opcodes.REJECT:
                             if (this.jwPromise) {
@@ -300,6 +355,10 @@ class Extension {
         }
     }
 
+    simplePromise() {
+        return new jwPromise.Type();
+    }
+
     thisPromise({}, util) {
         return util.thread._jwPromise ? util.thread._jwPromise.type : new jwPromise.Type();
     }
@@ -312,6 +371,16 @@ class Extension {
     rejectExternal({DATA, PROMISE}) {
         PROMISE = jwPromise.Type.toPromise(PROMISE);
         PROMISE.reject(DATA);
+    }
+
+    getStatus({PROMISE}) {
+        PROMISE = jwPromise.Type.toPromise(PROMISE);
+        return PROMISE.toString();
+    }
+
+    getTimer({PROMISE}) {
+        PROMISE = jwPromise.Type.toPromise(PROMISE);
+        return Cast.toNumber(PROMISE.timer) / 1000;
     }
 }
 
