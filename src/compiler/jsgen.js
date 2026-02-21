@@ -297,6 +297,8 @@ class JSGenerator {
             return '(target.currentCostume + 1)';
 
         //pm looks
+        case InputOpcode.PM_LOOKS_GET_EFFECT:
+            return `target.getEffect("${sanitize(node.effect)}")`;
         case InputOpcode.PM_LOOKS_STRETCH_X:
             return 'target.stretch[0]';
         case InputOpcode.PM_LOOKS_STRETCH_Y:

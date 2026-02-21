@@ -256,6 +256,7 @@ const InputOpcode = {
     LOOKS_COSTUME_NAME: 'looks.costumeName',
     LOOKS_SIZE_GET: 'looks.size',
 
+    PM_LOOKS_GET_EFFECT: 'looks.getEffect',
     PM_LOOKS_GET_TINT: 'looks.getTint',
     PM_LOOKS_STRETCH_X: 'looks.stretchX',
     PM_LOOKS_STRETCH_Y: 'looks.stretchY',

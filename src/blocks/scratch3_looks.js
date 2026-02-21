@@ -314,6 +314,7 @@ class Scratch3LooksBlocks {
             looks_stretchGetX: ({}, {target}) => target.stretch[0],
             looks_stretchGetY: ({}, {target}) => target.stretch[1], 
             looks_tintColor: ({}, {target}) => this._getTintColor(target),
+            looks_getEffectValue: ({EFFECT}, {target}) => target.getEffect(Cast.toString(EFFECT).toLowerCase()),
         };
     }
 
@@ -341,6 +342,10 @@ class Scratch3LooksBlocks {
             looks_tintColor: {
                 isSpriteSpecific: true,
                 getId: targetId => `${targetId}_tintColor`
+            },
+            looks_getEffectValue: {
+                isSpriteSpecific: true,
+                getId: (targetId, fields) => getMonitorIdForBlockWithArgs(`${targetId}_getEffectValue`, fields)
             },
         };
     }

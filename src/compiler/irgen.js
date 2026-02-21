@@ -348,6 +348,10 @@ class ScriptTreeGenerator {
             return new IntermediateInput(InputOpcode.LOOKS_SIZE_GET, InputType.NUMBER_POS | InputType.NUMBER_ZERO);
         
         //pm looks
+        case 'looks_getEffectValue':
+            return new IntermediateInput(InputOpcode.PM_LOOKS_GET_EFFECT, InputType.NUMBER, {
+                effect: block.fields.EFFECT.value.toLowerCase()
+            });
         case 'looks_stretchGetX':
             return new IntermediateInput(InputOpcode.PM_LOOKS_STRETCH_X, InputType.NUMBER);
         case 'looks_stretchGetY':
