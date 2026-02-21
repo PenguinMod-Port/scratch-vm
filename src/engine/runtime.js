@@ -529,6 +529,13 @@ class Runtime extends EventEmitter {
         this.extensionButtons = new Map();
 
         /**
+         * Contains the audio context and gain node for each extension that registers them.
+         * Used to make sure the extensions respect addons or the pause button.
+         * @type {Map<string, {audioContext: AudioContext, gainNode: GainNode}>}
+         */
+        this._extensionAudioObjects = new Map();
+
+        /**
          * Responsible for managing custom fonts.
          */
         this.fontManager = new FontManager(this);
@@ -1106,6 +1113,28 @@ class Runtime extends EventEmitter {
 
         OldCompiler.IRGeneratorStub.setExtensionIr(extensionId, information.ir);
         OldCompiler.JSGeneratorStub.setExtensionJs(extensionId, information.js);
+    }
+    
+    /**
+     * Allows AudioContexts and GainNodes from an extension to respect addons and runtime pausing by default.
+     * If audioContext is not supplied, recording addon + pause button will not work with the extension this way.
+     * If gainNode is not supplied, recording addon + volume slider will not work with the extension this way.
+     * @param {string} extensionId The extension's ID. May be used internally in the future, or by other extensions.
+     * @param {AudioContext} audioContext The AudioContext being used in the extension.
+     * @param {GainNode} gainNode The GainNode that is connected to the AudioContext. All other nodes in the extension should be connected to this GainNode, and this GainNode should be connected to the destination of the AudioContext.
+     */
+    registerExtensionAudioContext(extensionId, audioContext, gainNode) {
+        if (typeof extensionId !== "string") throw new TypeError('Extension ID must be string');
+        if (!extensionId) throw new Error('No extension ID specified'); // empty string
+
+        const obj = {};
+        if (audioContext) {
+            obj.audioContext = audioContext;
+        }
+        if (gainNode) {
+            obj.gainNode = gainNode;
+        }
+        this._extensionAudioObjects.set(extensionId, obj);
     }
 
     getMonitorState () {
@@ -2572,6 +2601,14 @@ class Runtime extends EventEmitter {
         this.emit(Runtime.RUNTIME_PRE_PAUSED);
         this.paused = true;
 
+        // pause all audio contexts (that includes exts with their own AC or gain node)
+        this.audioEngine.audioContext.suspend();
+        for (const audioData of this._extensionAudioObjects.values()) {
+            if (audioData.audioContext) {
+                audioData.audioContext.suspend();
+            }
+        }
+
         this.ioDevices.clock.pause();
         for (const thread of this.threads) {
             thread.pause();
@@ -2585,6 +2622,14 @@ class Runtime extends EventEmitter {
     play () {
         if (!this.paused) return;
         this.paused = false;
+
+        // resume all audio contexts (that includes exts with their own AC or gain node)
+        this.audioEngine.audioContext.resume();
+        for (const audioData of this._extensionAudioObjects.values()) {
+            if (audioData.audioContext) {
+                audioData.audioContext.resume();
+            }
+        }
 
         this.ioDevices.clock.resume();
         for (const thread of this.threads) {

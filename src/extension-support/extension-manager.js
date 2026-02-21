@@ -51,6 +51,10 @@ const defaultBuiltinExtensions = {
     // jeremy
     jgStorage: () => require('../extensions/penguinmod/jgStorage'),
     jgTween: () => require('../extensions/penguinmod/jgTween'),
+    jgExtendedAudio: () => require('../extensions/penguinmod/jgExtendedAudio'),
+
+    // gsa
+    tempVars: () => require('../extensions/penguinmod/tempVars'),
 
     // sharkpool
     SPjavascriptV2: () => require('../extensions/penguinmod/SPjavascriptV2'),
