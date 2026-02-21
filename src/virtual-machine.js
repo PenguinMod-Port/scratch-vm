@@ -832,6 +832,16 @@ class VirtualMachine extends EventEmitter {
         targets = targets.filter(target => !!target);
 
         return this._loadExtensions(extensions.extensionIDs, extensions.extensionURLs).then(() => {
+            for (const extension of extensions.extensionIDs) {
+                if (!this.runtime.extensionStorage[extension]) continue;
+                if (
+                    `ext_${extension}` in this.runtime &&
+                    typeof this.runtime[`ext_${extension}`].deserialize === 'function'
+                ) {
+                    this.runtime[`ext_${extension}`].deserialize(this.runtime.extensionStorage[extension]);
+                }
+            }
+
             targets.forEach(target => {
                 this.runtime.addTarget(target);
                 (/** @type RenderedTarget */ target).updateAllDrawableProperties();
@@ -843,6 +853,16 @@ class VirtualMachine extends EventEmitter {
             this.runtime.executableTargets.sort((a, b) => a.layerOrder - b.layerOrder);
             targets.forEach(target => {
                 delete target.layerOrder;
+
+                for (const extension of extensions.extensionIDs) {
+                    if (!target.extensionStorage[extension]) continue;
+                    if (
+                        `ext_${extension}` in this.runtime &&
+                        typeof this.runtime[`ext_${extension}`].deserialize === 'function'
+                    ) {
+                        this.runtime[`ext_${extension}`].deserializeForTarget(target.extensionStorage[extension], target);
+                    }
+                }
 
                 //deserialize custom typed variables Now!
                 for (const varId in target.variables) {

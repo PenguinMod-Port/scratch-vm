@@ -667,13 +667,26 @@ const serializeTarget = function (target, extensions, runtime) {
  * @param {Set<string>} extensions extension IDs
  * @returns {Record<string, unknown>|null}
  */
-const serializeExtensionStorage = (extensionStorage, extensions) => {
+const serializeExtensionStorage = (extensionStorage, extensions, target) => {
     const result = {};
     let isEmpty = true;
     for (const [key, value] of Object.entries(extensionStorage)) {
         if (extensions.has(key) && value !== null && typeof value !== 'undefined') {
             isEmpty = false;
             result[key] = extensionStorage[key];
+        }
+    }
+    for (const key of extensions) {
+        if (target) {
+            if (`ext_${extension}` in runtime && (typeof runtime[`ext_${extension}`].serializeForTarget === 'function')) {
+                isEmpty = false;
+                result[key] = runtime[`ext_${extension}`].serializeForTarget(target);
+            }
+        } else {
+            if (`ext_${extension}` in runtime && (typeof runtime[`ext_${extension}`].serialize === 'function')) {
+                isEmpty = false;
+                result[key] = runtime[`ext_${extension}`].serialize();
+            }
         }
     }
     if (isEmpty) {
@@ -784,7 +797,7 @@ const serialize = function (runtime, targetId, {allowOptimization = true} = {}) 
         .map((serialized, index) => {
             // can't serialize extensionStorage until the list of used extensions is fully known
             const target = originalTargetsToSerialize[index];
-            const targetExtensionStorage = serializeExtensionStorage(target.extensionStorage, extensions);
+            const targetExtensionStorage = serializeExtensionStorage(target.extensionStorage, extensions, target);
             if (targetExtensionStorage) {
                 serialized.extensionStorage = targetExtensionStorage;
             }
@@ -1364,6 +1377,9 @@ const parseScratchObject = function (object, runtime, pmVersion, extensions, zip
     if (Object.prototype.hasOwnProperty.call(object, 'draggable')) {
         target.draggable = object.draggable;
     }
+    if (Object.prototype.hasOwnProperty.call(object, 'extensionData')) {
+        target.extensionStorage = object.extensionData;
+    }
     if (Object.prototype.hasOwnProperty.call(object, 'extensionStorage')) {
         target.extensionStorage = object.extensionStorage;
     }
@@ -1651,6 +1667,9 @@ const deserialize = async function (json, runtime, zip, isSingleSprite) {
         .then(targets => replaceUnsafeCharsInVariableIds(targets))
         .then(targets => {
             monitorObjects.map(monitorDesc => deserializeMonitor(monitorDesc, runtime, targets, extensions));
+            if (Object.prototype.hasOwnProperty.call(json, 'extensionData')) {
+                runtime.extensionStorage = json.extensionData;
+            }
             if (Object.prototype.hasOwnProperty.call(json, 'extensionStorage')) {
                 runtime.extensionStorage = json.extensionStorage;
             }
