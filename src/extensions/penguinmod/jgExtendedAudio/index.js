@@ -417,6 +417,7 @@ class AudioExtension {
     }
     audioSourceDeleteAll(args) {
         const audioGroup = Helper.GetAudioGroup(args.AUDIOGROUP);
+        if (!audioGroup) return;
 
         for (const sourceName in audioGroup.sources) {
             switch (args.DELETEOPTION) {
