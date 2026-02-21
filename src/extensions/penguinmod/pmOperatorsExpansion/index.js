@@ -2,9 +2,22 @@ const BlockType = require('../../../extension-support/block-type');
 const ArgumentType = require('../../../extension-support/argument-type');
 const Cast = require('../../../util/cast');
 
+function generateJoin(inputs) {
+    return {
+        opcode: `join${inputs}`,
+        func: 'joinMultiple',
+        text: `join${Array(inputs).fill().map((_, i) => ` [STRING${i+1}]`).join("")}`,
+        blockType: BlockType.REPORTER,
+        arguments: Object.fromEntries(Array(inputs).fill().map((_, i) => [`STRING${i+1}`, {
+            type: ArgumentType.STRING
+        }])),
+        hideFromPalette: true
+    };
+}
+
 const template = {
     extensions: ["colours_operators"]
-}
+};
 
 class Extension {
     getInfo() {
@@ -15,6 +28,14 @@ class Extension {
             color2: "#46b946",
             color3: "#389438",
             blocks: [
+                //legacy joins
+                generateJoin(4),
+                generateJoin(5),
+                generateJoin(6),
+                generateJoin(7),
+                generateJoin(8),
+                generateJoin(9),
+
                 {
                     opcode: "typeOfValue",
                     text: "type of [INPUT]",
@@ -29,6 +50,10 @@ class Extension {
                 }
             ]
         };
+    }
+
+    joinMultiple(args) {
+        return Object.values(args).map(Cast.toString).join("");
     }
 
     typeOfValue({INPUT}) {
