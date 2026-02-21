@@ -634,6 +634,14 @@ class ScriptTreeGenerator {
             return this.descendInputOfBlock(block, 'ONE').toType(InputType.STRING);
         case 'operator_tabCharacter':
             return this.createConstantInput('\t');
+        case 'operator_toUpperLowerCase': {
+            let text = this.descendInputOfBlock(block, 'TEXT').toType(InputType.STRING);
+            switch (block.fields.OPTION.value) {
+                case 'lower': return new IntermediateInput(InputOpcode.PM_OP_LOWER_CASE, InputType.STRING, {text});
+                case 'upper': return new IntermediateInput(InputOpcode.PM_OP_UPPER_CASE, InputType.STRING, {text});
+                default: return text;
+            }
+        }
         case 'operator_trueBoolean':
             return this.createConstantInput(true);
         case 'operator_xnor':

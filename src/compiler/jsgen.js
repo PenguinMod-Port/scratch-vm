@@ -452,7 +452,7 @@ class JSGenerator {
         case InputOpcode.PM_OP_INTERPOLATE:
             return `((a, b, c) => (b - a) * c + a)(${this.descendInput(node.from)}, ${this.descendInput(node.to)}, ${this.descendInput(node.amount)})`;
         case InputOpcode.PM_OP_IS_BOOLEAN:
-            return `(["0", "1", "false", "true"].includes(String(${this.descendInput(node.value)})))`;
+            return `(["false", "true"].includes(String(${this.descendInput(node.value)})))`;
         case InputOpcode.PM_OP_IS_NUMBER:
             return `(!isNaN(Number(${this.descendInput(node.value)})))`;
         case InputOpcode.PM_OP_IS_STRING:
@@ -461,6 +461,8 @@ class JSGenerator {
             return `String.prototype.concat(${node.inputs.map(input => this.descendInput(input)).join(', ')})`;
         case InputOpcode.PM_OP_LOG_2:
             return `(Math.log(${this.descendInput(node.value)}) / Math.LN2)`;
+        case InputOpcode.PM_OP_LOWER_CASE:
+            return `String.prototype.toLowerCase(${this.descendInput(node.text)})`;
         case InputOpcode.PM_OP_MATH_EXPANDABLE: {
             const opMap = {
                 "+": " + ",
@@ -495,6 +497,8 @@ class JSGenerator {
             return `rangeOfNumbers(${node.inputs.map(input => this.descendInput(input)).join(', ')})`;
         case InputOpcode.PM_OP_SIGN:
             return `Math.sign(${this.descendInput(node.value)})`;
+        case InputOpcode.PM_OP_UPPER_CASE:
+            return `String.prototype.toUpperCase(${this.descendInput(node.text)})`;
         case InputOpcode.PM_OP_XOR:
             return `(${this.descendInput(node.left)} !== ${this.descendInput(node.right)})`;
         

@@ -362,11 +362,13 @@ class AudioExtension {
 
     audioGroupGet(args) {
         const audioGroup = Helper.GetAudioGroup(args.AUDIOGROUP);
+        if (!audioGroup) return;
         return JSON.stringify(Object.getOwnPropertyNames(audioGroup.sources));
     }
 
     audioGroupSetVolumeSpeedPitchPan(args) {
         const audioGroup = Helper.GetAudioGroup(args.AUDIOGROUP);
+        if (!audioGroup) return;
         switch (args.VSPP) {
             case "volume":
                 audioGroup.globalVolume = Helper.Clamp(Cast.toNumber(args.VALUE) / 100, 0, 1);
@@ -387,6 +389,7 @@ class AudioExtension {
 
     audioSourceCreate(args) {
         const audioGroup = Helper.GetAudioGroup(args.AUDIOGROUP);
+        if (!audioGroup) return;
         switch (args.CREATEOPTION) {
             case "create":
                 Helper.RemoveAudioSource(audioGroup, args.NAME);
@@ -570,6 +573,7 @@ class AudioExtension {
 
     audioGroupGetModifications(args) {
         const audioGroup = Helper.GetAudioGroup(args.AUDIOGROUP);
+        if (!audioGroup) return;
         switch (args.OPTION) {
             case "volume":
                 return audioGroup.globalVolume * 100;
