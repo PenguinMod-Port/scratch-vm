@@ -358,6 +358,7 @@ const InputOpcode = {
 
     PM_SENSING_HAS_NUMBER: 'sensing.hasNumber',
     PM_SENSING_IS_TEXT: 'sensing.isText',
+    PM_SENSING_MOUSE_SCROLLING: 'sensing.mouseScrolling',
     PM_SENSING_TIME_TIMESTAMP: 'sensing.timestamp',
 
     PROCEDURE_CALL: 'procedures.call',

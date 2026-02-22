@@ -313,13 +313,6 @@ class JSGenerator {
         case InputOpcode.MOTION_Y_GET:
             return 'limitPrecision(target.y)';
 
-        case InputOpcode.SENSING_MOUSE_DOWN:
-            return 'runtime.ioDevices.mouse.getIsDown()';
-        case InputOpcode.SENSING_MOUSE_X:
-            return 'runtime.ioDevices.mouse.getScratchX()';
-        case InputOpcode.SENSING_MOUSE_Y:
-            return 'runtime.ioDevices.mouse.getScratchY()';
-
         case InputOpcode.OP_ABS:
             return `Math.abs(${this.descendInput(node.value)})`;
         case InputOpcode.OP_ACOS:
@@ -566,12 +559,20 @@ class JSGenerator {
             return `(new Date().getFullYear())`;
         case InputOpcode.SENSING_TIMER_GET:
             return 'runtime.ioDevices.clock.projectTimer()';
+        case InputOpcode.SENSING_MOUSE_DOWN:
+            return 'runtime.ioDevices.mouse.getIsDown()';
+        case InputOpcode.SENSING_MOUSE_X:
+            return 'runtime.ioDevices.mouse.getScratchX()';
+        case InputOpcode.SENSING_MOUSE_Y:
+            return 'runtime.ioDevices.mouse.getScratchY()';
 
         //pm sensing
         case InputOpcode.PM_SENSING_HAS_NUMBER:
             return `/\d/.test(Cast.toString(${this.descendInput(node.text)}))`;
         case InputOpcode.PM_SENSING_IS_TEXT:
             return `isNaN(Number(${this.descendInput(node.text)}))`;
+        case InputOpcode.PM_SENSING_MOUSE_SCROLLING:
+            return `runtime.ext_scratch3_sensing._mouseScrolling(${this.descendInput(node.option)}, runtime.ioDevices.mouseWheel.scrollDelta)`
         case InputOpcode.PM_SENSING_TIME_TIMESTAMP:
             return `Date.now()`;
 

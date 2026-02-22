@@ -796,6 +796,10 @@ class ScriptTreeGenerator {
                 text
             });
         }
+        case 'sensing_mousescrolling':
+            return new IntermediateInput(InputOpcode.PM_SENSING_MOUSE_SCROLLING, InputType.BOOLEAN, {
+                option: this.descendInputOfBlock(block, 'SCROLL_OPTION')
+            });
 
         case 'sound_sounds_menu':
             // This menu is special compared to other menus -- it actually has an opcode function.
