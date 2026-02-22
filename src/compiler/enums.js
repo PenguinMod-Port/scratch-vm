@@ -356,6 +356,7 @@ const InputOpcode = {
     SENSING_TOUCHING_OBJECT: 'sensing.touching',
     SENSING_USERNAME: 'sensing.username',
 
+    PM_SENSING_DISTANCE_COORDINATES: 'sensing.distance.coordinates',
     PM_SENSING_HAS_NUMBER: 'sensing.hasNumber',
     PM_SENSING_IS_TEXT: 'sensing.isText',
     PM_SENSING_MOUSE_SCROLLING: 'sensing.mouseScrolling',

@@ -770,6 +770,13 @@ class ScriptTreeGenerator {
             return new IntermediateInput(InputOpcode.SENSING_USERNAME, InputType.STRING);
 
         //pm sensing
+        case 'sensing_distanceTo':
+            return new IntermediateInput(InputOpcode.PM_SENSING_DISTANCE_COORDINATES, InputType.NUMBER_POS | InputType.NUMBER_ZERO, {
+                x1: this.descendInputOfBlock(block, 'x1'),
+                y1: this.descendInputOfBlock(block, 'y1'),
+                x2: this.descendInputOfBlock(block, 'x2'),
+                y2: this.descendInputOfBlock(block, 'y2')
+            });
         case 'sensing_thing_has_number': {
             let text = this.descendInputOfBlock(block, 'TEXT1');
             if (text.isSubtypeOf(InputType.NUMBER)) return this.createConstantInput(true);
@@ -1287,6 +1294,13 @@ class ScriptTreeGenerator {
             return new IntermediateStackBlock(StackOpcode.PM_MOTION_XY_CHANGE, {
                 dx: this.descendInputOfBlock(block, 'DX').toType(InputType.NUMBER),
                 dy: this.descendInputOfBlock(block, 'DY').toType(InputType.NUMBER)
+            });
+        case 'motion_movebacksteps':
+            return new IntermediateStackBlock(StackOpcode.MOTION_STEP, {
+                steps: new IntermediateInput(InputOpcode.OP_SUBTRACT, InputType.NUMBER, {
+                    left: this.createConstantInput(0),
+                    right: this.descendInputOfBlock(block, 'STEPS').toType(InputType.NUMBER)
+                })
             })
         case 'motion_pointinrandomdirection':
             return new IntermediateStackBlock(StackOpcode.MOTION_DIRECTION_SET, {
@@ -1296,12 +1310,12 @@ class ScriptTreeGenerator {
                     useInts: true,
                     useFloats: false
                 })
-            })
+            });
         case 'motion_pointtowardsxy':
             return new IntermediateStackBlock(StackOpcode.PM_MOTION_POINTTOWARDS_XY, {
                 x: this.descendInputOfBlock(block, 'X').toType(InputType.NUMBER),
                 y: this.descendInputOfBlock(block, 'Y').toType(InputType.NUMBER)
-            })
+            });
         case 'motion_turnaround':
             return new IntermediateStackBlock(StackOpcode.MOTION_DIRECTION_SET, {
                 direction: new IntermediateInput(InputOpcode.OP_ADD, InputType.NUMBER, {

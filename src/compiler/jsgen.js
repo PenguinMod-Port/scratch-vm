@@ -567,6 +567,8 @@ class JSGenerator {
             return 'runtime.ioDevices.mouse.getScratchY()';
 
         //pm sensing
+        case InputOpcode.PM_SENSING_DISTANCE_COORDINATES:
+            return `Math.hypot(${this.descendInput(node.x2)} - ${this.descendInput(node.x1)}, ${this.descendInput(node.y2)} - ${this.descendInput(node.y1)})`;
         case InputOpcode.PM_SENSING_HAS_NUMBER:
             return `/\d/.test(Cast.toString(${this.descendInput(node.text)}))`;
         case InputOpcode.PM_SENSING_IS_TEXT:
