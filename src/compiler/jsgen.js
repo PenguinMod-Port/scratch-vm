@@ -464,7 +464,7 @@ class JSGenerator {
         case InputOpcode.PM_OP_LOG_2:
             return `(Math.log(${this.descendInput(node.value)}) / Math.LN2)`;
         case InputOpcode.PM_OP_LOWER_CASE:
-            return `String.prototype.toLowerCase(${this.descendInput(node.text)})`;
+            return `String.prototype.toLowerCase.call(${this.descendInput(node.text)})`;
         case InputOpcode.PM_OP_MATH_EXPANDABLE: {
             const opMap = {
                 "+": " + ",
@@ -500,7 +500,7 @@ class JSGenerator {
         case InputOpcode.PM_OP_SIGN:
             return `Math.sign(${this.descendInput(node.value)})`;
         case InputOpcode.PM_OP_UPPER_CASE:
-            return `String.prototype.toUpperCase(${this.descendInput(node.text)})`;
+            return `String.prototype.toUpperCase.call(${this.descendInput(node.text)})`;
         case InputOpcode.PM_OP_XOR:
             return `(${this.descendInput(node.left)} !== ${this.descendInput(node.right)})`;
         
