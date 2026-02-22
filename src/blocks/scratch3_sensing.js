@@ -73,7 +73,10 @@ class Scratch3SensingBlocks {
             sensing_answer: this.getAnswer,
             sensing_username: this.getUsername,
             sensing_userid: () => {}, // legacy no-op block
-            sensing_online: this.isOnline
+            sensing_online: this.isOnline,
+
+            //pm
+            sensing_mousescrolling: this.mouseScrolling,
         };
     }
 
@@ -356,6 +359,20 @@ class Scratch3SensingBlocks {
         }
         // We're running in some non-browser environment. We probably have internet.
         return true;
+    }
+
+    
+    mouseScrolling (args, util) {
+        const delta = util.ioQuery('mouseWheel', 'getScrollDelta');
+        const option = args.SCROLL_OPTION;
+        switch (option) {
+            case "up":
+                return delta < 0;
+            case "down":
+                return delta > 0;
+            default:
+                return false;
+        }
     }
 }
 
