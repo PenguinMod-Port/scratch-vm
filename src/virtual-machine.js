@@ -27,7 +27,6 @@ const {serializeSounds, serializeCostumes} = require('./serialization/serialize-
 require('canvas-toBlob');
 const {exportCostume} = require('./serialization/tw-costume-import-export');
 const Base64Util = require('./util/base64-util');
-const SemVer = require('./util/semver');
 
 const RESERVED_NAMES = ['_mouse_', '_stage_', '_edge_', '_myself_', '_random_'];
 
@@ -67,7 +66,7 @@ class VirtualMachine extends EventEmitter {
          * VM runtime, to store blocks, I/O devices, sprites/targets, etc.
          * @type {!Runtime}
          */
-        this.runtime = new Runtime();
+        this.runtime = new Runtime(this);
         centralDispatch.setService('runtime', createRuntimeService(this.runtime)).catch(e => {
             log.error(`Failed to register runtime service: ${JSON.stringify(e)}`);
         });
@@ -267,9 +266,6 @@ class VirtualMachine extends EventEmitter {
                 };
             }
         };
-
-        // pm
-        this.pmVersion = new SemVer("0.1.0")
     }
 
     /**
@@ -836,6 +832,16 @@ class VirtualMachine extends EventEmitter {
         targets = targets.filter(target => !!target);
 
         return this._loadExtensions(extensions.extensionIDs, extensions.extensionURLs).then(() => {
+            for (const extension of extensions.extensionIDs) {
+                if (!this.runtime.extensionStorage[extension]) continue;
+                if (
+                    `ext_${extension}` in this.runtime &&
+                    typeof this.runtime[`ext_${extension}`].deserialize === 'function'
+                ) {
+                    this.runtime[`ext_${extension}`].deserialize(this.runtime.extensionStorage[extension]);
+                }
+            }
+
             targets.forEach(target => {
                 this.runtime.addTarget(target);
                 (/** @type RenderedTarget */ target).updateAllDrawableProperties();
@@ -847,6 +853,16 @@ class VirtualMachine extends EventEmitter {
             this.runtime.executableTargets.sort((a, b) => a.layerOrder - b.layerOrder);
             targets.forEach(target => {
                 delete target.layerOrder;
+
+                for (const extension of extensions.extensionIDs) {
+                    if (!target.extensionStorage[extension]) continue;
+                    if (
+                        `ext_${extension}` in this.runtime &&
+                        typeof this.runtime[`ext_${extension}`].deserialize === 'function'
+                    ) {
+                        this.runtime[`ext_${extension}`].deserializeForTarget(target.extensionStorage[extension], target);
+                    }
+                }
 
                 //deserialize custom typed variables Now!
                 for (const varId in target.variables) {

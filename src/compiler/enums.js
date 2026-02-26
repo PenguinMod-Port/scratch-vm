@@ -84,13 +84,13 @@ const InputType = {
     /** Any input that can be interperated as a boolean. Equal to BOOLEAN | STRING_BOOLEAN */
     BOOLEAN_INTERPRETABLE: 0x1800,
 
-    /** An instance of a class (for cuatom types in extensions) */
+    /** An instance of a class (for custom types in extensions) */
     CUSTOM_TYPE: 0x2000,
 
     /** The value 'null' */
     NULL: 0x4000,
 
-    /** Any value type (a type a scratch variable can hold). Equal to NUMBER_OR_NAN | STRING | BOOLEAN */
+    /** Any value type (a type a scratch variable can hold). Equal to NUMBER_OR_NAN | STRING | BOOLEAN | CUSTOM_TYPE | NULL */
     ANY: 0x7FFF,
 
     /** An array of values in the form [R, G, B] */
@@ -133,6 +133,7 @@ const StackOpcode = {
     PM_CONTROL_DECR_COUNTER: 'control.counterDecr',
     PM_CONTROL_DELETE_CLONES: 'control.deleteClones',
     PM_CONTROL_ESCAPE_LOOP: 'control.escapeLoop',
+    PM_CONTROL_EXPANDABLE_IF: 'control.expandableIf',
     PM_CONTROL_EXIT_CASE: 'control.exitCase',
     PM_CONTROL_FROM_TO: 'control.fromTo',
     PM_CONTROL_REPEAT_SECONDS: 'control.repeatSeconds',
@@ -181,6 +182,7 @@ const StackOpcode = {
 
     PM_LOOKS_CHANGE_STRETCH: 'looks.changeStretch',
     PM_LOOKS_SET_STRETCH: 'looks.setStretch',
+    PM_LOOKS_SET_TINT: 'looks.setTint',
     PM_LOOKS_STOP_SPEAKING: 'looks.stopSpeaking',
 
     MOTION_X_SET: 'motion.setX',
@@ -192,6 +194,9 @@ const StackOpcode = {
     MOTION_STEP: 'motion.step',
     MOTION_ROTATION_STYLE_SET: 'motion.setRotationStyle',
     MOTION_DIRECTION_SET: 'motion.setDirection',
+
+    PM_MOTION_XY_CHANGE: 'motion.changeXY',
+    PM_MOTION_POINTTOWARDS_XY: 'motion.pointTowardsXY',
 
     PEN_UP: 'pen.up',
     PEN_DOWN: 'pen.down',
@@ -251,6 +256,8 @@ const InputOpcode = {
     LOOKS_COSTUME_NAME: 'looks.costumeName',
     LOOKS_SIZE_GET: 'looks.size',
 
+    PM_LOOKS_GET_EFFECT: 'looks.getEffect',
+    PM_LOOKS_GET_TINT: 'looks.getTint',
     PM_LOOKS_STRETCH_X: 'looks.stretchX',
     PM_LOOKS_STRETCH_Y: 'looks.stretchY',
 
@@ -300,14 +307,22 @@ const InputOpcode = {
     OP_ROUND: 'op.round',
     OP_SUBTRACT: 'op.subtract',
 
+    PM_OP_AVERAGE: 'op.average',
     PM_OP_CONSTRAIN: 'op.constrain',
     PM_OP_INTERPOLATE: 'op.interpolate',
     PM_OP_IS_BOOLEAN: 'op.isBoolean',
     PM_OP_IS_NUMBER: 'op.isNumber',
     PM_OP_IS_STRING: 'op.isString',
+    PM_OP_JOIN_EXPANDABLE: 'op.joinExpandable',
     PM_OP_LOG_2: 'op.log2',
+    PM_OP_LOWER_CASE: 'op.lowerCase',
+    PM_OP_MATH_EXPANDABLE: 'op.mathExpandable',
+    PM_OP_MAXIMUM: 'op.maximum',
+    PM_OP_MINIMUM: 'op.minimum',
     PM_OP_POWER: 'op.power',
+    PM_OP_RANGE: 'op.range',
     PM_OP_SIGN: 'op.sign',
+    PM_OP_UPPER_CASE: 'op.upperCase',
     PM_OP_XOR: 'op.xor',
 
     SENSING_ANSWER: 'sensing.answer',
@@ -341,8 +356,10 @@ const InputOpcode = {
     SENSING_TOUCHING_OBJECT: 'sensing.touching',
     SENSING_USERNAME: 'sensing.username',
 
+    PM_SENSING_DISTANCE_COORDINATES: 'sensing.distance.coordinates',
     PM_SENSING_HAS_NUMBER: 'sensing.hasNumber',
     PM_SENSING_IS_TEXT: 'sensing.isText',
+    PM_SENSING_MOUSE_SCROLLING: 'sensing.mouseScrolling',
     PM_SENSING_TIME_TIMESTAMP: 'sensing.timestamp',
 
     PROCEDURE_CALL: 'procedures.call',

@@ -351,6 +351,7 @@ class Thread {
             // Clean up!
             this.requestScriptGlowInFrame = false;
             this.status = Thread.STATUS_DONE;
+            this.target.runtime.emit('THREAD_FINISHED', this);
         }
     }
 

@@ -74,13 +74,15 @@ const isSafeInputForEqualsOptimization = (input, other) => {
  * @deprecated
  */
 class Frame {
-    constructor (isLoop) {
+    constructor (isLoop, parent) {
         /**
          * Whether the current stack runs in a loop (while, for)
          * @type {boolean}
          * @readonly
          */
         this.isLoop = isLoop;
+
+        this.parent = parent;
 
         /**
          * Whether the current block is the last block in the stack.
@@ -136,10 +138,14 @@ class JSGenerator {
         this.descendedIntoModulo = false;
         this.isInHat = false;
 
+        this.runtime = this.target.runtime;
         this.debug = this.target.runtime.debug;
 
         this.oldCompilerStub = new oldCompilerCompatibility.JSGeneratorStub(this);
     }
+
+    /** @type {Object.<string, Object.<string, Function>>} */
+    static compilerExtensions = {};
 
     /**
      * Enter a new frame
@@ -291,10 +297,14 @@ class JSGenerator {
             return '(target.currentCostume + 1)';
 
         //pm looks
+        case InputOpcode.PM_LOOKS_GET_EFFECT:
+            return `target.getEffect("${sanitize(node.effect)}")`;
         case InputOpcode.PM_LOOKS_STRETCH_X:
             return 'target.stretch[0]';
         case InputOpcode.PM_LOOKS_STRETCH_Y:
             return 'target.stretch[1]';
+        case InputOpcode.PM_LOOKS_GET_TINT:
+            return 'runtime.ext_scratch3_looks._getTintColor(target)';
 
         case InputOpcode.MOTION_DIRECTION_GET:
             return 'target.direction';
@@ -302,13 +312,6 @@ class JSGenerator {
             return 'limitPrecision(target.x)';
         case InputOpcode.MOTION_Y_GET:
             return 'limitPrecision(target.y)';
-
-        case InputOpcode.SENSING_MOUSE_DOWN:
-            return 'runtime.ioDevices.mouse.getIsDown()';
-        case InputOpcode.SENSING_MOUSE_X:
-            return 'runtime.ioDevices.mouse.getScratchX()';
-        case InputOpcode.SENSING_MOUSE_Y:
-            return 'runtime.ioDevices.mouse.getScratchY()';
 
         case InputOpcode.OP_ABS:
             return `Math.abs(${this.descendInput(node.value)})`;
@@ -334,6 +337,10 @@ class JSGenerator {
             const left = node.left;
             const right = node.right;
 
+            if (this.runtime.compilerOptions.strictEquality) {
+                return `(${this.descendInput(left)} == ${this.descendInput(right)})`;
+            }
+
             // When either operand is known to never be a number, only use string comparison to avoid all number parsing.
             if (!left.isSometimesType(InputType.NUMBER_INTERPRETABLE) || !right.isSometimesType(InputType.NUMBER_INTERPRETABLE)) {
                 return `(${this.descendInput(left.toType(InputType.STRING))}.toLowerCase() === ${this.descendInput(right.toType(InputType.STRING))}.toLowerCase())`;
@@ -346,7 +353,6 @@ class JSGenerator {
             if (isSafeInputForEqualsOptimization(left, right) || isSafeInputForEqualsOptimization(right, left)) {
                 return `(${this.descendInput(left.toType(InputType.NUMBER))} === ${this.descendInput(right.toType(InputType.NUMBER))})`;
             }
-            // No compile-time optimizations possible - use fallback method.
             return `compareEqual(${this.descendInput(left)}, ${this.descendInput(right)})`;
         }
         case InputOpcode.OP_POW_E:
@@ -430,22 +436,64 @@ class JSGenerator {
             return `(10 ** ${this.descendInput(node.value)})`;
 
         //pm operators
+        case InputOpcode.PM_OP_AVERAGE: {
+            let accumulator = this.localVariables.next();
+            let value = this.localVariables.next();
+            let array = this.localVariables.next();
+            return `([${node.inputs.map(input => this.descendInput(input)).join(', ')}].reduce((${accumulator}, ${value}, _, ${array}) => ${accumulator} + ${value} / ${array}.length, 0))`;
+        }
         case InputOpcode.PM_OP_CONSTRAIN:
             return `Math.min(Math.max(${this.descendInput(node.min)}, ${this.descendInput(node.input)}), ${this.descendInput(node.max)})`;
         case InputOpcode.PM_OP_INTERPOLATE:
             return `((a, b, c) => (b - a) * c + a)(${this.descendInput(node.from)}, ${this.descendInput(node.to)}, ${this.descendInput(node.amount)})`;
         case InputOpcode.PM_OP_IS_BOOLEAN:
-            return `(["0", "1", "false", "true"].includes(String(${this.descendInput(node.value)})))`;
+            return `(["false", "true"].includes(String(${this.descendInput(node.value)})))`;
         case InputOpcode.PM_OP_IS_NUMBER:
             return `(!isNaN(Number(${this.descendInput(node.value)})))`;
         case InputOpcode.PM_OP_IS_STRING:
             return `(${this.descendInput(node.value)} !== null)`;
+        case InputOpcode.PM_OP_JOIN_EXPANDABLE:
+            return `String.prototype.concat(${node.inputs.map(input => this.descendInput(input)).join(', ')})`;
         case InputOpcode.PM_OP_LOG_2:
             return `(Math.log(${this.descendInput(node.value)}) / Math.LN2)`;
+        case InputOpcode.PM_OP_LOWER_CASE:
+            return `String.prototype.toLowerCase.call(${this.descendInput(node.text)})`;
+        case InputOpcode.PM_OP_MATH_EXPANDABLE: {
+            const opMap = {
+                "+": " + ",
+                "-": " - ",
+                "*": " * ",
+                "/": " / ",
+                "^": " ** "
+            };
+
+            let output = "("
+
+            for (let i in node.inputs) {
+                if (Number(i) > 0) {
+                    let operation = opMap[node.operations[Number(i) - 1]];
+                    if (!operation) continue;
+                    output += operation;
+                }
+                let input = node.inputs[i];
+                output += this.descendInput(input);
+            }
+
+            output += ")";
+            return output;
+        }
+        case InputOpcode.PM_OP_MAXIMUM:
+            return `Math.max(${node.inputs.map(input => this.descendInput(input)).join(', ')})`;
+        case InputOpcode.PM_OP_MINIMUM:
+            return `Math.min(${node.inputs.map(input => this.descendInput(input)).join(', ')})`;
         case InputOpcode.PM_OP_POWER:
             return `(${this.descendInput(node.left)} ** ${this.descendInput(node.right)})`;
+        case InputOpcode.PM_OP_RANGE:
+            return `rangeOfNumbers(${node.inputs.map(input => this.descendInput(input)).join(', ')})`;
         case InputOpcode.PM_OP_SIGN:
             return `Math.sign(${this.descendInput(node.value)})`;
+        case InputOpcode.PM_OP_UPPER_CASE:
+            return `String.prototype.toUpperCase.call(${this.descendInput(node.text)})`;
         case InputOpcode.PM_OP_XOR:
             return `(${this.descendInput(node.left)} !== ${this.descendInput(node.right)})`;
         
@@ -511,12 +559,22 @@ class JSGenerator {
             return `(new Date().getFullYear())`;
         case InputOpcode.SENSING_TIMER_GET:
             return 'runtime.ioDevices.clock.projectTimer()';
+        case InputOpcode.SENSING_MOUSE_DOWN:
+            return 'runtime.ioDevices.mouse.getIsDown()';
+        case InputOpcode.SENSING_MOUSE_X:
+            return 'runtime.ioDevices.mouse.getScratchX()';
+        case InputOpcode.SENSING_MOUSE_Y:
+            return 'runtime.ioDevices.mouse.getScratchY()';
 
         //pm sensing
+        case InputOpcode.PM_SENSING_DISTANCE_COORDINATES:
+            return `Math.hypot(${this.descendInput(node.x2)} - ${this.descendInput(node.x1)}, ${this.descendInput(node.y2)} - ${this.descendInput(node.y1)})`;
         case InputOpcode.PM_SENSING_HAS_NUMBER:
             return `/\d/.test(Cast.toString(${this.descendInput(node.text)}))`;
         case InputOpcode.PM_SENSING_IS_TEXT:
             return `isNaN(Number(${this.descendInput(node.text)}))`;
+        case InputOpcode.PM_SENSING_MOUSE_SCROLLING:
+            return `runtime.ext_scratch3_sensing._mouseScrolling(${this.descendInput(node.option)}, runtime.ioDevices.mouseWheel.scrollDelta)`
         case InputOpcode.PM_SENSING_TIME_TIMESTAMP:
             return `Date.now()`;
 
@@ -569,6 +627,14 @@ class JSGenerator {
         }
 
         default:
+            for (let extensionId in JSGenerator.compilerExtensions) {
+                let extension = JSGenerator.compilerExtensions[extensionId]
+                if (extension.reporter) {
+                    let returns = extension.reporter.call(this, block);
+                    if (returns) return returns;
+                }
+            }
+
             log.warn(`JS: Unknown input: ${block.opcode}`, node);
             throw new Error(`JS: Unknown input: ${block.opcode}`);
         }
@@ -595,8 +661,10 @@ class JSGenerator {
                 this.source += `${this.generateCompatibilityLayerCall(node, isLastInLoop)};\n`;
             } else if (blockType === BlockType.CONDITIONAL || blockType === BlockType.LOOP) {
                 const branchVariable = this.localVariables.next();
+                const oldLoopName = this.loopName;
+                this.loopName = this.localVariables.next();
                 this.source += `const ${branchVariable} = createBranchInfo(${blockType === BlockType.LOOP});\n`;
-                this.source += `while (${branchVariable}.branch = (${this.generateCompatibilityLayerCall(node, false, branchVariable)})) {\n`;
+                this.source += `${this.loopName}: while (${branchVariable}.branch = (${this.generateCompatibilityLayerCall(node, false, branchVariable)})) {\n`;
                 this.source += `switch ("SUBSTACK" + (${branchVariable}.branch == 1 ? "" : ${branchVariable}.branch)) {\n`;
                 for (const index in node.substacks) {
                     this.source += `case "${sanitize(index.toString())}": {\n`;
@@ -608,6 +676,7 @@ class JSGenerator {
                 this.source += `if (!${branchVariable}.isLoop) break;\n`;
                 this.yieldLoop();
                 this.source += '}\n'; // close while
+                this.loopName = oldLoopName;
             } else {
                 throw new Error(`Unknown block type: ${blockType}`);
             }
@@ -773,6 +842,11 @@ class JSGenerator {
             } else {
                 this.source += `throw 'All "escape loop" blocks must be inside of a looping block.';\n`;
             }
+            break;
+        case StackOpcode.PM_CONTROL_EXPANDABLE_IF:
+            this.source += node.ifs.map(v => `if (${this.descendInput(v.condition)}) {\n${this.descendStackInline(v.do)}\n}`).join(' else ');
+            if (node.elseDo) this.source += `else {\n${this.descendStackInline(node.elseDo)}\n}`;
+            this.source += '\n';
             break;
         case StackOpcode.PM_CONTROL_EXIT_CASE:
             if (this.inCase) {
@@ -992,6 +1066,9 @@ class JSGenerator {
         case StackOpcode.PM_LOOKS_SET_STRETCH:
             this.source += `target.setStretch(${this.descendInput(node.x)}, ${this.descendInput(node.y)});\n`;
             break;
+        case StackOpcode.PM_LOOKS_SET_TINT:
+            this.source += `runtime.ext_scratch3_looks._setTintColor(${this.descendInput(node.tint)}, target);\n`;
+            break;
         case StackOpcode.PM_LOOKS_STOP_SPEAKING:
             this.source += `runtime.ext_scratch3_looks._say('', target);\n`;
             break;
@@ -1025,6 +1102,14 @@ class JSGenerator {
         }
         case StackOpcode.MOTION_STEP:
             this.source += `runtime.ext_scratch3_motion._moveSteps(${this.descendInput(node.steps)}, target);\n`;
+            break;
+
+        //pm motion
+        case StackOpcode.PM_MOTION_POINTTOWARDS_XY:
+            this.source += `runtime.ext_scratch3_motion._pointTowards(target, ${this.descendInput(node.x)}, ${this.descendInput(node.y)});\n`;
+            break;
+        case StackOpcode.PM_MOTION_XY_CHANGE:
+            this.source += `target.setXY(target.x + ${this.descendInput(node.dx)}, target.y + ${this.descendInput(node.dy)});\n`;
             break;
 
         case StackOpcode.NOP:
@@ -1156,6 +1241,13 @@ class JSGenerator {
         }
 
         default:
+            for (let extensionId in JSGenerator.compilerExtensions) {
+                let extension = JSGenerator.compilerExtensions[extensionId]
+                if (extension.command) {
+                    let returns = extension.command.call(this, block);
+                    if (returns) return;
+                }
+            }
             log.warn(`JS: Unknown stacked block: ${block.opcode}`, node);
             throw new Error(`JS: Unknown stacked block: ${block.opcode}`);
         }
@@ -1197,15 +1289,22 @@ class JSGenerator {
         // Entering a stack -- all bets are off.
         // TODO: allow if/else to inherit values
         var frame
-        if (properties instanceof Frame) {
+        if (properties instanceof Frame || properties instanceof oldCompilerCompatibility.JSGeneratorStub.unstable_exports.Frame) {
             frame = properties;
             properties = args[0] ?? {};
         }
-        if (frame) this.pushFrame(frame);
+        this.pushFrame(frame ?? new Frame(properties.inLoop || this.inLoop))
 
         const oldProperties = Object.fromEntries(Object.keys(properties).map(key => [key, this[key]]));
         Object.entries(properties).forEach(([key, value]) => this[key] = value);
         const oldIsLastBlock = this.isLastBlock;
+
+        for (let extensionId in JSGenerator.compilerExtensions) {
+            let extension = JSGenerator.compilerExtensions[extensionId]
+            if (extension.stackStart) {
+                extension.stackStart.call(this, stack, properties, frame);
+            }
+        }
 
         for (let i = 0; i < stack.blocks.length; i++) {
             this.isLastBlock = i === stack.blocks.length - 1;
@@ -1213,12 +1312,19 @@ class JSGenerator {
             this.descendStackedBlock(stack.blocks[i]);
         }
 
+        for (let extensionId in JSGenerator.compilerExtensions) {
+            let extension = JSGenerator.compilerExtensions[extensionId]
+            if (extension.stackEnd) {
+                extension.stackEnd.call(this, stack, properties, frame);
+            }
+        }
+
         this.isLastBlock = oldIsLastBlock;
         Object.entries(oldProperties).forEach(([key, value]) => this[key] = value);
 
         // Leaving a stack -- any assumptions made in the current stack do not apply outside of it
         // TODO: in if/else this might create an extra unused object
-        if (frame) this.popFrame();
+        this.popFrame();
     }
 
     /**
@@ -1431,7 +1537,7 @@ class JSGenerator {
         if (allowBubble) {
             script += `let returns = ${this.script.yields ? `yield* (function*()` : `(function()`} {\n`;
         }
-        
+
         script += this.source;
 
         if (allowBubble) {
@@ -1459,7 +1565,24 @@ class JSGenerator {
      */
     compile () {
         if (this.script.stack) {
+            let extensionIds = Object.keys(JSGenerator.compilerExtensions);
+
+            for (let extensionId of extensionIds) {
+                let extension = JSGenerator.compilerExtensions[extensionId];
+                if (extension.scriptStart) {
+                    extension.scriptStart.call(this);
+                }
+            }
+
             this.descendStack(this.script.stack);
+            
+            extensionIds.reverse();
+            for (let extensionId of extensionIds) {
+                let extension = JSGenerator.compilerExtensions[extensionId];
+                if (extension.scriptEnd) {
+                    extension.scriptEnd.call(this);
+                }
+            }
         }
         this.stopScript();
 

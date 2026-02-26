@@ -75,6 +75,7 @@ class ScriptTreeGenerator {
          */
         this.script = new IntermediateScript();
         this.script.warpTimer = this.target.runtime.compilerOptions.warpTimer;
+        this.script.strictEquality = this.target.runtime.compilerOptions.strictEquality;
         this.script.stackClicked = thread.stackClick;
 
         /**
@@ -150,7 +151,10 @@ class ScriptTreeGenerator {
 
     createConstantInput (constant, preserveStrings = false) {
         if (constant === null) {
-            return new IntermediateInput(InputOpcode.CONSTANT, InputType.NULL)
+            return new IntermediateInput(InputOpcode.CONSTANT, InputType.NULL);
+        }
+        if (typeof constant === "boolean") {
+            return new IntermediateInput(InputOpcode.CONSTANT, InputType.BOOLEAN, {value: constant});
         }
 
         constant += '';
@@ -213,6 +217,15 @@ class ScriptTreeGenerator {
             const oldCompilerResult = this.oldCompilerStub.descendInputFromNewCompiler(block);
             if (oldCompilerResult) {
                 return oldCompilerResult;
+            }
+        }
+
+        for (let extensionId in IRGenerator.compilerExtensions) {
+            let extension = IRGenerator.compilerExtensions[extensionId]
+            if (extension.reporter && block.opcode.startsWith(extensionId + "_")) {
+                let returns = extension.reporter.call(this, block, preserveStrings);
+                if (returns) return returns;
+                break;
             }
         }
 
@@ -335,10 +348,16 @@ class ScriptTreeGenerator {
             return new IntermediateInput(InputOpcode.LOOKS_SIZE_GET, InputType.NUMBER_POS | InputType.NUMBER_ZERO);
         
         //pm looks
+        case 'looks_getEffectValue':
+            return new IntermediateInput(InputOpcode.PM_LOOKS_GET_EFFECT, InputType.NUMBER, {
+                effect: block.fields.EFFECT.value.toLowerCase()
+            });
         case 'looks_stretchGetX':
             return new IntermediateInput(InputOpcode.PM_LOOKS_STRETCH_X, InputType.NUMBER);
         case 'looks_stretchGetY':
             return new IntermediateInput(InputOpcode.PM_LOOKS_STRETCH_Y, InputType.NUMBER);
+        case 'looks_tintColor':
+            return new IntermediateInput(InputOpcode.PM_LOOKS_GET_TINT, InputType.STRING);
 
         case 'motion_direction':
             return new IntermediateInput(InputOpcode.MOTION_DIRECTION_GET, InputType.NUMBER_REAL);
@@ -517,6 +536,29 @@ class ScriptTreeGenerator {
                 min: this.descendInputOfBlock(block, 'min').toType(InputType.NUMBER),
                 max: this.descendInputOfBlock(block, 'max').toType(InputType.NUMBER)
             });
+        case 'operator_expandableMath': {
+            let amount = Number(block.fields.EXPANDABLE.value);
+            let inputs = [];
+            let operations = [];
+            for (let i = 1; i <= amount; i++) {
+                inputs.push(this.descendInputOfBlock(block, 'NUM' + i).toType(InputType.NUMBER));
+                if (i >= 2) operations.push(block.fields['OP' + i].value);
+            }
+            return new IntermediateInput(InputOpcode.PM_OP_MATH_EXPANDABLE, InputType.NUMBER, {
+                inputs,
+                operations
+            });
+        }
+        case 'operator_expandablejoininputs': {
+            let amount = Number(block.fields.EXPANDABLE.value);
+            let inputs = [];
+            for (let i = 0; i < amount; i++) {
+                inputs.push(this.descendInputOfBlock(block, 'INPUT' + (i + 1)).toType(InputType.STRING));
+            }
+            return new IntermediateInput(InputOpcode.PM_OP_JOIN_EXPANDABLE, InputType.STRING, {
+                inputs
+            })
+        }
         case 'operator_falseBoolean':
             return this.createConstantInput(true);
         case 'operator_gtorequal':
@@ -577,10 +619,33 @@ class ScriptTreeGenerator {
                 left: this.descendInputOfBlock(block, 'NUM1').toType(InputType.NUMBER),
                 right: this.descendInputOfBlock(block, 'NUM2').toType(InputType.NUMBER)
             });
+        case 'operator_range_expandable': {
+            let amount = Number(block.fields.EXPANDABLE.value);
+            let inputs = [];
+            for (let i = 0; i < amount; i++) {
+                inputs.push(this.descendInputOfBlock(block, 'INPUT' + (i + 1)).toType(InputType.NUMBER));
+            }
+
+            switch (block.fields.RANGE.value) {
+                case 'maximum': return new IntermediateInput(InputOpcode.PM_OP_MAXIMUM, InputType.NUMBER, {inputs});
+                case 'average': return new IntermediateInput(InputOpcode.PM_OP_AVERAGE, InputType.NUMBER, {inputs});
+                case 'minimum': return new IntermediateInput(InputOpcode.PM_OP_MINIMUM, InputType.NUMBER, {inputs});
+                case 'range': return new IntermediateInput(InputOpcode.PM_OP_RANGE, InputType.NUMBER_POS, {inputs});
+                default: return this.createConstantInput(0);
+            }
+        }
         case 'operator_stringify':
             return this.descendInputOfBlock(block, 'ONE').toType(InputType.STRING);
         case 'operator_tabCharacter':
             return this.createConstantInput('\t');
+        case 'operator_toUpperLowerCase': {
+            let text = this.descendInputOfBlock(block, 'TEXT').toType(InputType.STRING);
+            switch (block.fields.OPTION.value) {
+                case 'lower': return new IntermediateInput(InputOpcode.PM_OP_LOWER_CASE, InputType.STRING, {text});
+                case 'upper': return new IntermediateInput(InputOpcode.PM_OP_UPPER_CASE, InputType.STRING, {text});
+                default: return text;
+            }
+        }
         case 'operator_trueBoolean':
             return this.createConstantInput(true);
         case 'operator_xnor':
@@ -705,6 +770,13 @@ class ScriptTreeGenerator {
             return new IntermediateInput(InputOpcode.SENSING_USERNAME, InputType.STRING);
 
         //pm sensing
+        case 'sensing_distanceTo':
+            return new IntermediateInput(InputOpcode.PM_SENSING_DISTANCE_COORDINATES, InputType.NUMBER_POS | InputType.NUMBER_ZERO, {
+                x1: this.descendInputOfBlock(block, 'x1'),
+                y1: this.descendInputOfBlock(block, 'y1'),
+                x2: this.descendInputOfBlock(block, 'x2'),
+                y2: this.descendInputOfBlock(block, 'y2')
+            });
         case 'sensing_thing_has_number': {
             let text = this.descendInputOfBlock(block, 'TEXT1');
             if (text.isSubtypeOf(InputType.NUMBER)) return this.createConstantInput(true);
@@ -731,6 +803,10 @@ class ScriptTreeGenerator {
                 text
             });
         }
+        case 'sensing_mousescrolling':
+            return new IntermediateInput(InputOpcode.PM_SENSING_MOUSE_SCROLLING, InputType.BOOLEAN, {
+                option: this.descendInputOfBlock(block, 'SCROLL_OPTION')
+            });
 
         case 'sound_sounds_menu':
             // This menu is special compared to other menus -- it actually has an opcode function.
@@ -808,6 +884,15 @@ class ScriptTreeGenerator {
             const oldCompilerResult = this.oldCompilerStub.descendStackedBlockFromNewCompiler(block);
             if (oldCompilerResult) {
                 return oldCompilerResult;
+            }
+        }
+
+        for (let extensionId in IRGenerator.compilerExtensions) {
+            let extension = IRGenerator.compilerExtensions[extensionId]
+            if (extension.command && block.opcode.startsWith(extensionId + "_")) {
+                let returns = extension.command.call(this, block);
+                if (returns) return returns;
+                break;
             }
         }
 
@@ -920,6 +1005,24 @@ class ScriptTreeGenerator {
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_DELETE_CLONES, {
                 target: this.descendInputOfBlock(block, 'CLONE_OPTION').toType(InputType.STRING)
             });
+        case 'control_expandableIf': {
+            const EXPANDABLE = Number(block.fields.EXPANDABLE.value);
+            let ifCount = Math.ceil(EXPANDABLE / 2);
+            let elseDo = EXPANDABLE % 2 === 0 ? this.descendSubstack(block, 'SUBSTACK' + (ifCount + 1)) : null;
+
+            let ifs = [];
+            for (let i = 0; i < ifCount; i++) {
+                ifs.push({
+                    condition: this.descendInputOfBlock(block, 'BOOL' + (i + 1)).toType(InputType.BOOLEAN),
+                    do: this.descendSubstack(block, 'SUBSTACK' + (i + 1))
+                });
+            }
+
+            return new IntermediateStackBlock(StackOpcode.PM_CONTROL_EXPANDABLE_IF, {
+                ifs,
+                elseDo
+            });
+        }
         case 'control_exitLoop':
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_ESCAPE_LOOP);
         case 'control_exitCase':
@@ -1129,6 +1232,10 @@ class ScriptTreeGenerator {
                 x: this.descendInputOfBlock(block, 'X').toType(InputType.NUMBER),
                 y: this.descendInputOfBlock(block, 'Y').toType(InputType.NUMBER)
             });
+        case 'looks_setTintColor':
+            return new IntermediateStackBlock(StackOpcode.PM_LOOKS_SET_TINT, {
+                tint: this.descendInputOfBlock(block, 'color').toType(InputType.STRING)
+            });
         case 'looks_stoptalking':
             return new IntermediateStackBlock(StackOpcode.PM_LOOKS_STOP_SPEAKING, {});
 
@@ -1179,6 +1286,41 @@ class ScriptTreeGenerator {
                 direction: new IntermediateInput(InputOpcode.OP_ADD, InputType.NUMBER, {
                     left: new IntermediateInput(InputOpcode.MOTION_DIRECTION_GET, InputType.NUMBER),
                     right: this.descendInputOfBlock(block, 'DEGREES').toType(InputType.NUMBER)
+                })
+            });
+
+        // pm motion
+        case 'motion_changebyxy':
+            return new IntermediateStackBlock(StackOpcode.PM_MOTION_XY_CHANGE, {
+                dx: this.descendInputOfBlock(block, 'DX').toType(InputType.NUMBER),
+                dy: this.descendInputOfBlock(block, 'DY').toType(InputType.NUMBER)
+            });
+        case 'motion_movebacksteps':
+            return new IntermediateStackBlock(StackOpcode.MOTION_STEP, {
+                steps: new IntermediateInput(InputOpcode.OP_SUBTRACT, InputType.NUMBER, {
+                    left: this.createConstantInput(0),
+                    right: this.descendInputOfBlock(block, 'STEPS').toType(InputType.NUMBER)
+                })
+            })
+        case 'motion_pointinrandomdirection':
+            return new IntermediateStackBlock(StackOpcode.MOTION_DIRECTION_SET, {
+                direction: new IntermediateInput(InputOpcode.OP_RANDOM, InputType.NUMBER, {
+                    low: this.createConstantInput(-179),
+                    high: this.createConstantInput(180),
+                    useInts: true,
+                    useFloats: false
+                })
+            });
+        case 'motion_pointtowardsxy':
+            return new IntermediateStackBlock(StackOpcode.PM_MOTION_POINTTOWARDS_XY, {
+                x: this.descendInputOfBlock(block, 'X').toType(InputType.NUMBER),
+                y: this.descendInputOfBlock(block, 'Y').toType(InputType.NUMBER)
+            });
+        case 'motion_turnaround':
+            return new IntermediateStackBlock(StackOpcode.MOTION_DIRECTION_SET, {
+                direction: new IntermediateInput(InputOpcode.OP_ADD, InputType.NUMBER, {
+                    left: new IntermediateInput(InputOpcode.MOTION_DIRECTION_GET, InputType.NUMBER),
+                    right: this.createConstantInput(180)
                 })
             });
 
@@ -1257,7 +1399,7 @@ class ScriptTreeGenerator {
                 return new IntermediateStackBlock(StackOpcode.NOP);
             }
 
-            return new IntermediateStackBlock(StackOpcode.PROCEDURE_ARGUMENT_SET, {
+            return new IntermediateStackBlock(StackOpcode.PM_PROCEDURE_SET, {
                 index: param.inputs.index,
                 value: this.descendInputOfBlock(block, 'VALUE')
             })
@@ -1328,11 +1470,23 @@ class ScriptTreeGenerator {
      */
     descendSubstack (parentBlock, substackName) {
         const input = parentBlock.inputs[substackName];
+        let output;
         if (!input) {
-            return new IntermediateStack();
+            output = new IntermediateStack();
+        } else {
+            const stackId = input.block;
+            output = this.walkStack(stackId);
         }
-        const stackId = input.block;
-        return this.walkStack(stackId);
+
+        for (let extensionId in IRGenerator.compilerExtensions) {
+            let extension = IRGenerator.compilerExtensions[extensionId]
+            if (extension.stack) {
+                let returns = extension.stack.call(this, output, parentBlock, substackName);
+                if (returns) output = returns;
+            }
+        }
+
+        return output;
     }
 
     /**
@@ -1823,6 +1977,9 @@ class IRGenerator {
 
         this.analyzedProcedures = [];
     }
+
+    /** @type {Object.<string, Object.<string, Function>>} */
+    static compilerExtensions = {};
 
     addProcedureDependencies (dependencies) {
         for (const procedureVariant of dependencies) {

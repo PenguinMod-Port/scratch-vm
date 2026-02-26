@@ -282,7 +282,8 @@ class Extension {
                     blockType: BlockType.BOOLEAN,
                     arguments: {
                         INPUT: {}
-                    }
+                    },
+                    hideFromPalette: true
                 },
                 ...(vm.runtime.ext_jwArray ? ["---"] : []),
                 {

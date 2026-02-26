@@ -54,6 +54,11 @@ const ScratchBlocksConstants = {
     OUTPUT_SHAPE_INDENTED: 8,
 
     /**
+     * ENUM for output shape: scrapped (maps).
+     */
+    OUTPUT_SHAPE_SCRAPPED: 9,
+
+    /**
      * ENUM for output shape: arrow (sets).
      * @const
      */

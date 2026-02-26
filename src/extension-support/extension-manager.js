@@ -30,6 +30,10 @@ const defaultBuiltinExtensions = {
 
     // -- penguinmod --
 
+    // expansions
+    pmControlsExpansion: () => require('../extensions/penguinmod/pmControlsExpansion'),
+    pmOperatorsExpansion: () => require('../extensions/penguinmod/pmOperatorsExpansion'),
+
     // jwklong
     jwArray: () => require('../extensions/penguinmod/jwArray'),
     jwTargets: () => require('../extensions/penguinmod/jwTargets'),
@@ -41,7 +45,23 @@ const defaultBuiltinExtensions = {
     jwScope: () => require('../extensions/penguinmod/jwScope'),
     jwNum: () => require('../extensions/penguinmod/jwNum'),
     jwInt: () => require('../extensions/penguinmod/jwInt'),
-    jwPolygon: () => require('../extensions/penguinmod/jwPolygon')
+    jwPolygon: () => require('../extensions/penguinmod/jwPolygon'),
+    jwFragment: () => require('../extensions/penguinmod/jwFragment'),
+    jwPromise: () => require('../extensions/penguinmod/jwPromise'),
+
+    // jeremy
+    jgStorage: () => require('../extensions/penguinmod/jgStorage'),
+    jgTween: () => require('../extensions/penguinmod/jgTween'),
+    jgExtendedAudio: () => require('../extensions/penguinmod/jgExtendedAudio'),
+
+    // gsa
+    tempVars: () => require('../extensions/penguinmod/tempVars'),
+
+    // sharkpool
+    SPjavascriptV2: () => require('../extensions/penguinmod/SPjavascriptV2'),
+
+    // old ass extensions that are only included for compatability
+    jwUnite: () => require('../extensions/penguinmod/jwUnite'),
 };
 
 /**
@@ -553,11 +573,10 @@ class ExtensionManager {
             }
             break;
         case BlockType.BUTTON:
-            if (blockInfo.opcode) {
-                log.warn(`Ignoring opcode "${blockInfo.opcode}" for button with text: ${blockInfo.text}`);
-            }
+            const func = blockInfo.func ?? blockInfo.opcode;
+            console.log(func);
             blockInfo.callFunc = () => {
-                dispatch.call(serviceName, blockInfo.func);
+                dispatch.call(serviceName, func);
             };
             break;
         case BlockType.LABEL:
@@ -676,6 +695,22 @@ class ExtensionManager {
             callback();
             v[1] = () => {};
         }
+    }
+
+    extendCompiler(extensionId, information) {
+        const important = {
+            VariablePool: require('../compiler/variable-pool'),
+            ...require('../compiler/enums.js'),
+            ...require('../compiler/intermediate.js')
+        };
+
+        let {ir, js} = information(important);
+
+        const IRGenerator = require('../compiler/irgen').IRGenerator;
+        const JSGenerator = require('../compiler/jsgen');
+
+        IRGenerator.compilerExtensions[extensionId] = ir ?? {};
+        JSGenerator.compilerExtensions[extensionId] = js ?? {};
     }
 }
 

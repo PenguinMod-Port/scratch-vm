@@ -257,6 +257,7 @@ class Scratch3SensingBlocks {
         case 'hour': return date.getHours();
         case 'minute': return date.getMinutes();
         case 'second': return date.getSeconds();
+        case 'timestamp': return Date.now();
         }
         return 0;
     }
@@ -355,6 +356,17 @@ class Scratch3SensingBlocks {
         }
         // We're running in some non-browser environment. We probably have internet.
         return true;
+    }
+
+    _mouseScrolling (option, delta) {
+        switch (option) {
+            case "up":
+                return delta < 0;
+            case "down":
+                return delta > 0;
+            default:
+                return false;
+        }
     }
 }
 

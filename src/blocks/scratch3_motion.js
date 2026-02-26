@@ -144,6 +144,13 @@ class Scratch3MotionBlocks {
         util.target.setDirection(direction);
     }
 
+    _pointTowards(target, x, y) {
+        const dx = x - target.x;
+        const dy = y - target.y;
+        const direction = 90 - MathUtil.radToDeg(Math.atan2(dy, dx));
+        target.setDirection(direction);
+    }
+
     glide (args, util) {
         if (util.stackFrame.timer) {
             const timeElapsed = util.stackFrame.timer.timeElapsed();

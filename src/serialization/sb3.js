@@ -17,10 +17,12 @@ const MathUtil = require('../util/math-util');
 const StringUtil = require('../util/string-util');
 const VariableUtil = require('../util/variable-util');
 const compress = require('./tw-compress-sb3');
+const SemVer = require('../util/semver');
 
 const {loadCostume} = require('../import/load-costume.js');
 const {loadSound} = require('../import/load-sound.js');
 const {deserializeCostume, deserializeSound} = require('./deserialize-assets.js');
+const {compatBlock} = require('./pm-compat.js');
 
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 
@@ -665,13 +667,26 @@ const serializeTarget = function (target, extensions, runtime) {
  * @param {Set<string>} extensions extension IDs
  * @returns {Record<string, unknown>|null}
  */
-const serializeExtensionStorage = (extensionStorage, extensions) => {
+const serializeExtensionStorage = (extensionStorage, extensions, target) => {
     const result = {};
     let isEmpty = true;
     for (const [key, value] of Object.entries(extensionStorage)) {
         if (extensions.has(key) && value !== null && typeof value !== 'undefined') {
             isEmpty = false;
             result[key] = extensionStorage[key];
+        }
+    }
+    for (const key of extensions) {
+        if (target) {
+            if (`ext_${extension}` in runtime && (typeof runtime[`ext_${extension}`].serializeForTarget === 'function')) {
+                isEmpty = false;
+                result[key] = runtime[`ext_${extension}`].serializeForTarget(target);
+            }
+        } else {
+            if (`ext_${extension}` in runtime && (typeof runtime[`ext_${extension}`].serialize === 'function')) {
+                isEmpty = false;
+                result[key] = runtime[`ext_${extension}`].serialize();
+            }
         }
     }
     if (isEmpty) {
@@ -730,14 +745,15 @@ const serializeMonitors = function (monitors, runtime, extensions) {
 const serializeConfig = function (runtime) {
     const config = Object.create(null);
 
-    if (runtime.frameLoop.framerate !== 30) config.frameRate = runtime.frameLoop.framerate;
     if (runtime.interpolationEnabled) config.interpolation = true;
     if (runtime.renderer.useHighQualityRender) config.hqPen = true;
     if (runtime.compilerOptions.warpTimer) config.warpTimer = true;
-
-    if (runtime.runtimeOptions.maxClones !== runtime.constructor.MAX_CLONES) config.maxClones = (runtime.runtimeOptions.maxClones === Infinity ? -1 : runtime.runtimeOptions.maxClones);
+    if (runtime.compilerOptions.strictEquality) config.strictEquality = true;
     if (runtime.runtimeOptions.miscLimits) config.miscLimits = true;
     if (runtime.runtimeOptions.fencing) config.fencing = true;
+
+    if (runtime.frameLoop.framerate !== 30) config.frameRate = runtime.frameLoop.framerate;
+    if (runtime.runtimeOptions.maxClones !== runtime.constructor.MAX_CLONES) config.maxClones = (runtime.runtimeOptions.maxClones === Infinity ? -1 : runtime.runtimeOptions.maxClones);
 
     if (runtime.stageHeight !== 360 || runtime.stageWidth !== 480) {
         config.stageSize = {
@@ -781,7 +797,7 @@ const serialize = function (runtime, targetId, {allowOptimization = true} = {}) 
         .map((serialized, index) => {
             // can't serialize extensionStorage until the list of used extensions is fully known
             const target = originalTargetsToSerialize[index];
-            const targetExtensionStorage = serializeExtensionStorage(target.extensionStorage, extensions);
+            const targetExtensionStorage = serializeExtensionStorage(target.extensionStorage, extensions, target);
             if (targetExtensionStorage) {
                 serialized.extensionStorage = targetExtensionStorage;
             }
@@ -830,6 +846,7 @@ const serialize = function (runtime, targetId, {allowOptimization = true} = {}) 
     // Assemble metadata
     const meta = Object.create(null);
     meta.semver = '3.0.0';
+    meta.pmVersion = runtime.pmVersion.toString();
     // TW: There isn't a good reason to put the full version number in the json, so we don't.
     meta.vm = '0.2.0';
     if (runtime.origin) {
@@ -1087,12 +1104,12 @@ const deserializeFields = function (fields) {
  * @param {object} blocks Serialized SB3 "blocks" property of a target. Will be mutated.
  * @return {object} input is modified and returned
  */
-const deserializeBlocks = function (blocks) {
+const deserializeBlocks = function (blocks, pmVersion = new SemVer('0.0.0')) {
     for (const blockId in blocks) {
         if (!Object.prototype.hasOwnProperty.call(blocks, blockId)) {
             continue;
         }
-        const block = blocks[blockId];
+        let block = blocks[blockId];
         if (Array.isArray(block)) {
             // this is one of the primitives
             // delete the old entry in object.blocks and replace it w/the
@@ -1104,6 +1121,7 @@ const deserializeBlocks = function (blocks) {
         block.id = blockId; // add id back to block since it wasn't serialized
         block.inputs = deserializeInputs(block.inputs, blockId, blocks);
         block.fields = deserializeFields(block.fields);
+        blocks[blockId] = compatBlock(block, pmVersion);
     }
     return blocks;
 };
@@ -1205,7 +1223,7 @@ const parseScratchAssets = function (object, runtime, zip) {
  *   into costumes and sounds
  * @return {!Promise.<Target>} Promise for the target created (stage or sprite), or null for unsupported objects.
  */
-const parseScratchObject = function (object, runtime, extensions, zip, assets) {
+const parseScratchObject = function (object, runtime, pmVersion, extensions, zip, assets) {
     if (!Object.prototype.hasOwnProperty.call(object, 'name')) {
         // Watcher/monitor - skip this object until those are implemented in VM.
         // @todo
@@ -1222,7 +1240,7 @@ const parseScratchObject = function (object, runtime, extensions, zip, assets) {
         sprite.name = object.name;
     }
     if (Object.prototype.hasOwnProperty.call(object, 'blocks')) {
-        deserializeBlocks(object.blocks);
+        deserializeBlocks(object.blocks, pmVersion);
         // Take a second pass to create objects and add extensions
         for (const blockId in object.blocks) {
             if (!Object.prototype.hasOwnProperty.call(object.blocks, blockId)) continue;
@@ -1358,6 +1376,9 @@ const parseScratchObject = function (object, runtime, extensions, zip, assets) {
     }
     if (Object.prototype.hasOwnProperty.call(object, 'draggable')) {
         target.draggable = object.draggable;
+    }
+    if (Object.prototype.hasOwnProperty.call(object, 'extensionData')) {
+        target.extensionStorage = object.extensionData;
     }
     if (Object.prototype.hasOwnProperty.call(object, 'extensionStorage')) {
         target.extensionStorage = object.extensionStorage;
@@ -1529,7 +1550,7 @@ const checkPlatformCompatibility = (json, runtime) => {
     }
 
     const projectPlatform = json.meta.platform.name;
-    if (projectPlatform === runtime.platform.name) {
+    if (["PenguinMod", "TurboWarp"].includes(projectPlatform)) {
         return;
     }
 
@@ -1552,7 +1573,11 @@ const deserializeConfig = function (config, runtime) {
     runtime.setFramerate(config.frameRate ?? 30);
     runtime.setInterpolation(!!config.interpolation);
     runtime.renderer.setUseHighQualityRender(!!config.hqPen);
-    runtime.compilerOptions.warpTimer = !!config.warpTimer;
+
+    runtime.setCompilerOptions({
+        warpTimer: !!config.warpTimer,
+        strictEquality: !!config.strictEquality
+    })
 
     runtime.setRuntimeOptions({
         maxClones: (config.maxClones === -1 ? Infinity : config.maxClones) ?? runtime.constructor.MAX_CLONES,
@@ -1579,10 +1604,12 @@ const deserialize = async function (json, runtime, zip, isSingleSprite) {
         extensionURLs: new Map()
     };
 
+    let pmVersion = new SemVer('0.0.0');
     // Store the origin field (e.g. project originated at CSFirst) so that we can save it again.
-    if (json.meta && json.meta.origin) {
+    if (json.meta) {
         // eslint-disable-next-line require-atomic-updates
-        runtime.origin = json.meta.origin;
+        if (json.meta.origin) runtime.origin = json.meta.origin;
+        if (json.meta.pmVersion) pmVersion = new SemVer(json.meta.pmVersion);
     } else {
         // eslint-disable-next-line require-atomic-updates
         runtime.origin = null;
@@ -1621,7 +1648,7 @@ const deserialize = async function (json, runtime, zip, isSingleSprite) {
         .then(assets => Promise.resolve(assets))
         .then(assets => Promise.all(targetObjects
             .map((target, index) =>
-                parseScratchObject(target, runtime, extensions, zip, assets[index]))))
+                parseScratchObject(target, runtime, pmVersion, extensions, zip, assets[index]))))
         .then(targets => targets // Re-sort targets back into original sprite-pane ordering
             .map((t, i) => {
                 // Add layer order property to deserialized targets.
@@ -1640,6 +1667,9 @@ const deserialize = async function (json, runtime, zip, isSingleSprite) {
         .then(targets => replaceUnsafeCharsInVariableIds(targets))
         .then(targets => {
             monitorObjects.map(monitorDesc => deserializeMonitor(monitorDesc, runtime, targets, extensions));
+            if (Object.prototype.hasOwnProperty.call(json, 'extensionData')) {
+                runtime.extensionStorage = json.extensionData;
+            }
             if (Object.prototype.hasOwnProperty.call(json, 'extensionStorage')) {
                 runtime.extensionStorage = json.extensionStorage;
             }

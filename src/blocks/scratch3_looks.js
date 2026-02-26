@@ -4,6 +4,7 @@ const uid = require('../util/uid');
 const StageLayering = require('../engine/stage-layering');
 const getMonitorIdForBlockWithArgs = require('../util/get-monitor-id');
 const MathUtil = require('../util/math-util');
+const Color = require('../util/color');
 
 /**
  * @typedef {object} BubbleState - the bubble state associated with a particular target.
@@ -312,6 +313,8 @@ class Scratch3LooksBlocks {
             //pm monitors
             looks_stretchGetX: ({}, {target}) => target.stretch[0],
             looks_stretchGetY: ({}, {target}) => target.stretch[1], 
+            looks_tintColor: ({}, {target}) => this._getTintColor(target),
+            looks_getEffectValue: ({EFFECT}, {target}) => target.getEffect(Cast.toString(EFFECT).toLowerCase()),
         };
     }
 
@@ -335,6 +338,14 @@ class Scratch3LooksBlocks {
             looks_stretchGetY: {
                 isSpriteSpecific: true,
                 getId: targetId => `${targetId}_stretchGetY`
+            },
+            looks_tintColor: {
+                isSpriteSpecific: true,
+                getId: targetId => `${targetId}_tintColor`
+            },
+            looks_getEffectValue: {
+                isSpriteSpecific: true,
+                getId: (targetId, fields) => getMonitorIdForBlockWithArgs(`${targetId}_getEffectValue`, fields)
             },
         };
     }
@@ -629,6 +640,17 @@ class Scratch3LooksBlocks {
 
     stoptalking (args, util) {
         this._say('', util.target);
+    }
+
+    _getTintColor (target) {
+        const effects = target.effects;
+        if (typeof effects.tintColor !== 'number') return '#ffffff';
+        return Color.decimalToHex(effects.tintColor - 1);
+    }
+    _setTintColor (color, target) { // used by compiler
+        const rgb = Cast.toRgbColorObject(color);
+        const decimal = Color.rgbToDecimal(rgb);
+        target.setEffect("tintColor", decimal + 1);
     }
 }
 

@@ -235,8 +235,9 @@ class VariablePool {
  * Part of the old compiler's API.
  */
 class Frame {
-    constructor (isLoop) {
+    constructor (isLoop, parent) {
         this.isLoop = isLoop;
+        this.parent = parent;
         this.isLastBlock = false;
         this.allowReturns = false;
     }

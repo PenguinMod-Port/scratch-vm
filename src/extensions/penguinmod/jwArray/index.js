@@ -42,16 +42,7 @@ function span(text) {
 }
 
 function isObject(x) {
-    const fnToString = Function.prototype.toString
-    const classRegex = /^class\s/
-    if (typeof x === "function") {
-        return !classRegex.test(fnToString.call(x))
-    }
-    if (x !== null && typeof x === "object") {
-        const ctor = x.constructor
-        return !(typeof ctor === "function" && classRegex.test(fnToString.call(ctor)))
-    }
-    return false
+    return x !== null && typeof x === "object" && [null, Object.prototype].includes(Object.getPrototypeOf(x));
 }
 
 class ArrayType {
@@ -62,13 +53,14 @@ class ArrayType {
     constructor(array = [], safe = false) {
         this.array = safe ? array : array.map(v => {
             if (v instanceof Array) return new ArrayType([...v])
+            if (vm.dogeiscutObject && isObject(v)) return new vm.dogeiscutObject.Type({...v})
             return v
         })
     }
 
-    static toArray(x) {
-        if (x instanceof ArrayType) return new ArrayType([...x.array], true)
-        if (x instanceof Array) return new ArrayType([...x])
+    static toArray(x, readOnly = false) {
+        if (x instanceof ArrayType) return readOnly ? x : new ArrayType([...x.array], true)
+        if (x instanceof Array) return readOnly ? new ArrayType(x) : new ArrayType([...x])
         if (x === "" || x === null || x === undefined) return new ArrayType([], true)
         if (typeof x == "object" && typeof x.toJSON == "function") {
             let parsed = x.toJSON()
@@ -80,7 +72,7 @@ class ArrayType {
             let parsed = JSON.parse(x)
             if (parsed instanceof Array) return new ArrayType(parsed)
         } catch {}
-        return new ArrayType([x])
+        return new ArrayType([x], true)
     }
 
     static forArray(x) {
@@ -607,7 +599,7 @@ class Extension {
                 },
                 forEach: (node, compiler, imports) => {
                     const array = compiler.localVariables.next();
-                    compiler.source += `let ${array} = vm.jwArray.Type.toArray(${compiler.descendInput(node.array).asUnknown()}).array;\n`
+                    compiler.source += `let ${array} = vm.jwArray.Type.toArray(${compiler.descendInput(node.array).asUnknown()}, true).array;\n`
                     compiler.source += `thread._jwArrayForEach ??= [];\n`
                     const forIndex = compiler.localVariables.next();
                     compiler.source += `let ${forIndex} = thread._jwArrayForEach.push([]) - 1;\n`
@@ -631,7 +623,7 @@ class Extension {
                     compiler.source += `let ${forIndex} = thread._jwArrayForEach.push([]) - 1;\n`
                     const og = compiler.localVariables.next();
                     const out = compiler.localVariables.next();
-                    compiler.source += `let ${og} = vm.jwArray.Type.toArray(${compiler.descendInput(node.array).asUnknown()}).array;\n`
+                    compiler.source += `let ${og} = vm.jwArray.Type.toArray(${compiler.descendInput(node.array).asUnknown()}, true).array;\n`
                     compiler.source += `let ${out} = [];\n`
                     const i = compiler.localVariables.next();
                     compiler.source += `for (let ${i} = 0; ${i} < ${og}.length; ${i}++) {\n`
@@ -701,25 +693,25 @@ class Extension {
     }
 
     get({ARRAY, INDEX}) {
-        ARRAY = jwArray.Type.toArray(ARRAY)
+        ARRAY = jwArray.Type.toArray(ARRAY, true)
 
         return jwArray.Type.forArray(ARRAY.array[Cast.toNumber(INDEX)-1] === undefined ? "" : ARRAY.array[Cast.toNumber(INDEX)-1])
     }
 
     index({ARRAY, VALUE}) {
-        ARRAY = jwArray.Type.toArray(ARRAY)
+        ARRAY = jwArray.Type.toArray(ARRAY, true)
 
         return ARRAY.array.map(v => Cast.toString(v)).indexOf(Cast.toString(VALUE)) + 1
     }
 
     has({ARRAY, VALUE}) {
-        ARRAY = jwArray.Type.toArray(ARRAY)
+        ARRAY = jwArray.Type.toArray(ARRAY, true)
 
         return ARRAY.array.map(v => Cast.toString(v)).includes(Cast.toString(VALUE))
     }
 
     length({ARRAY}) {
-        ARRAY = jwArray.Type.toArray(ARRAY)
+        ARRAY = jwArray.Type.toArray(ARRAY, true)
 
         return ARRAY.length
     }
@@ -755,7 +747,7 @@ class Extension {
     }
 
     items({ARRAY, X, Y}) {
-        ARRAY = jwArray.Type.toArray(ARRAY)
+        ARRAY = jwArray.Type.toArray(ARRAY, true)
         X = clampIndex(Cast.toNumber(X))
         Y = clampIndex(Cast.toNumber(Y))
 
@@ -774,7 +766,7 @@ class Extension {
     repeat({ARRAY, TIMES}) {
         TIMES = clampIndex(Cast.toNumber(TIMES))
         if (TIMES === 0) return new jwArray.Type([], true)
-        ARRAY = jwArray.Type.toArray(ARRAY)
+        ARRAY = jwArray.Type.toArray(ARRAY, true)
         if (TIMES === 1 || ARRAY.array.length == 0) return ARRAY
         return new jwArray.Type(Array(TIMES).fill(ARRAY.array).flat(), true)
     }
@@ -787,27 +779,27 @@ class Extension {
     }
 
     flat({ARRAY, DEPTH}) {
-        ARRAY = jwArray.Type.toArray(ARRAY)
+        ARRAY = jwArray.Type.toArray(ARRAY, true)
         DEPTH = Cast.toNumber(DEPTH)
 
         return ARRAY.flat(DEPTH)
     }
 
     toString({ARRAY, FORMAT}) {
-        ARRAY = jwArray.Type.toArray(ARRAY)
+        ARRAY = jwArray.Type.toArray(ARRAY, true)
         
         return ARRAY.toString(FORMAT === "pretty")
     }
 
     join({ARRAY, DIVIDER}) {
-        ARRAY = jwArray.Type.toArray(ARRAY)
+        ARRAY = jwArray.Type.toArray(ARRAY, true)
         DIVIDER = Cast.toString(DIVIDER)
 
         return ARRAY.array.map(v => Cast.toString(v)).join(DIVIDER)
     }
 
     sum({ARRAY}) {
-        ARRAY = jwArray.Type.toArray(ARRAY)
+        ARRAY = jwArray.Type.toArray(ARRAY, true)
 
         return ARRAY.array.reduce((o, v) => o + Cast.toNumber(v), 0)
     }

@@ -24,6 +24,7 @@ const fetchWithTimeout = require('../util/fetch-with-timeout');
 const platform = require('./tw-platform.js');
 const safeStringify = require('../util/tw-safe-stringify.js');
 const MonitorState = require('./tw-monitor-state.js');
+const SemVer = require('../util/semver.js')
 
 // Virtual I/O devices.
 const Clock = require('../io/clock');
@@ -130,6 +131,9 @@ const ArgumentTypeMap = (() => {
             fieldName: 'SOUND_MENU'
         }
     };
+    map[ArgumentType.CUSTOM] = {
+        fieldType: 'field_custom'
+    };
     return map;
 })();
 
@@ -210,8 +214,10 @@ let rendererDrawProfilerId = -1;
  * @constructor
  */
 class Runtime extends EventEmitter {
-    constructor () {
+    constructor (vm) {
         super();
+
+        this.vm = vm;
 
         /**
          * Target management and storage.
@@ -465,7 +471,8 @@ class Runtime extends EventEmitter {
 
         this.compilerOptions = {
             enabled: true,
-            warpTimer: false
+            warpTimer: false,
+            strictEquality: false
         };
 
         this.debug = false;
@@ -510,10 +517,23 @@ class Runtime extends EventEmitter {
         this.enforcePrivacy = true;
 
         /**
+         * If true, an external communication method exists and enforcePrivacy is enabled.
+         * Do not update this directly. Must be changed via public functions that call Runtime.updatePrivacy().
+         */
+        this.privacyRestrictionsActive = false;
+
+        /**
          * Internal map of opaque identifiers to the callback to run that function.
          * @type {Map<string, function>}
          */
         this.extensionButtons = new Map();
+
+        /**
+         * Contains the audio context and gain node for each extension that registers them.
+         * Used to make sure the extensions respect addons or the pause button.
+         * @type {Map<string, {audioContext: AudioContext, gainNode: GainNode}>}
+         */
+        this._extensionAudioObjects = new Map();
 
         /**
          * Responsible for managing custom fonts.
@@ -538,6 +558,8 @@ class Runtime extends EventEmitter {
 
         // lists all custom serializers
         this.serializers = {};
+
+        this.pmVersion = new SemVer('0.1.0');
     }
 
     /**
@@ -665,6 +687,7 @@ class Runtime extends EventEmitter {
 
     /**
      * Event called before any block is executed.
+     * @const {string}
      */
     static get BEFORE_EXECUTE () {
         return 'BEFORE_EXECUTE';
@@ -672,9 +695,26 @@ class Runtime extends EventEmitter {
 
     /**
      * Event called after every block in the project has been executed.
+     * @const {string}
      */
     static get AFTER_EXECUTE () {
         return 'AFTER_EXECUTE';
+    }
+
+    /**
+     * Event name for thread initialization.
+     * @const {string}
+     */
+    static get THREAD_STARTED () {
+        return 'THREAD_STARTED'
+    }
+
+    /**
+     * Event name for thread finishing.
+     * @const {string}
+     */
+    static get THREAD_FINISHED () {
+        return 'THREAD_FINISHED'
     }
 
     /**
@@ -1074,6 +1114,28 @@ class Runtime extends EventEmitter {
         OldCompiler.IRGeneratorStub.setExtensionIr(extensionId, information.ir);
         OldCompiler.JSGeneratorStub.setExtensionJs(extensionId, information.js);
     }
+    
+    /**
+     * Allows AudioContexts and GainNodes from an extension to respect addons and runtime pausing by default.
+     * If audioContext is not supplied, recording addon + pause button will not work with the extension this way.
+     * If gainNode is not supplied, recording addon + volume slider will not work with the extension this way.
+     * @param {string} extensionId The extension's ID. May be used internally in the future, or by other extensions.
+     * @param {AudioContext} audioContext The AudioContext being used in the extension.
+     * @param {GainNode} gainNode The GainNode that is connected to the AudioContext. All other nodes in the extension should be connected to this GainNode, and this GainNode should be connected to the destination of the AudioContext.
+     */
+    registerExtensionAudioContext(extensionId, audioContext, gainNode) {
+        if (typeof extensionId !== "string") throw new TypeError('Extension ID must be string');
+        if (!extensionId) throw new Error('No extension ID specified'); // empty string
+
+        const obj = {};
+        if (audioContext) {
+            obj.audioContext = audioContext;
+        }
+        if (gainNode) {
+            obj.gainNode = gainNode;
+        }
+        this._extensionAudioObjects.set(extensionId, obj);
+    }
 
     getMonitorState () {
         return this._monitorState;
@@ -1126,6 +1188,9 @@ class Runtime extends EventEmitter {
             categoryInfo.color2 = defaultExtensionColors[1];
             categoryInfo.color3 = defaultExtensionColors[2];
         }
+
+        // undefined will default to the regular text color
+        categoryInfo.blockText = extensionInfo.blockText;
 
         this._blockInfo.push(categoryInfo);
 
@@ -1397,10 +1462,11 @@ class Runtime extends EventEmitter {
             inputsInline: true,
             category: categoryInfo.name,
             branches: blockInfo.branches ?? [],
-            extensions: [],
+            extensions: blockInfo.extensions ?? [],
             colour: blockInfo.color1 ?? categoryInfo.color1,
             colourSecondary: blockInfo.color2 ?? categoryInfo.color2,
-            colourTertiary: blockInfo.color3 ?? categoryInfo.color3
+            colourTertiary: blockInfo.color3 ?? categoryInfo.color3,
+            blockText: blockInfo.blockText ?? categoryInfo.blockText
         };
         const context = {
             // TODO: store this somewhere so that we can map args appropriately after translation.
@@ -1605,7 +1671,7 @@ class Runtime extends EventEmitter {
             xml: `<label text="${xmlEscape(blockInfo.text)}"></label>`
         };
     }
-    
+
     /**
      * Convert a button for scratch-blocks. A button has no opcode but specifies a callback name in the `func` field.
      * @param {ExtensionBlockMetadata} buttonInfo - the button to convert
@@ -1625,7 +1691,7 @@ class Runtime extends EventEmitter {
             };
         }
         // Callbacks with data will be forwarded from GUI
-        const id = `${categoryInfo.id}_${buttonInfo.func}`;
+        const id = `${categoryInfo.id}_${buttonInfo.func ?? buttonInfo.opcode}`;
         // callFunc is set by extension manager
         this.extensionButtons.set(id, buttonInfo.callFunc);
         return {
@@ -1698,6 +1764,13 @@ class Runtime extends EventEmitter {
         // check if this is not one of those cases. E.g. an inline image on a block.
         if (argTypeInfo.fieldType === 'field_image') {
             argJSON = this._constructInlineImageJson(argInfo);
+        } else if (argTypeInfo.fieldType === 'field_custom') {
+            argJSON = {
+                type: 'field_custom',
+                name: placeholder,
+                id: argInfo.id,
+                value: argInfo.defaultValue
+            };
         } else {
             // Construct input value
 
@@ -2088,6 +2161,7 @@ class Runtime extends EventEmitter {
             thread.tryCompile();
         }
 
+        this.emit(Runtime.THREAD_STARTED, thread);
         return thread;
     }
 
@@ -2527,6 +2601,14 @@ class Runtime extends EventEmitter {
         this.emit(Runtime.RUNTIME_PRE_PAUSED);
         this.paused = true;
 
+        // pause all audio contexts (that includes exts with their own AC or gain node)
+        this.audioEngine.audioContext.suspend();
+        for (const audioData of this._extensionAudioObjects.values()) {
+            if (audioData.audioContext) {
+                audioData.audioContext.suspend();
+            }
+        }
+
         this.ioDevices.clock.pause();
         for (const thread of this.threads) {
             thread.pause();
@@ -2540,6 +2622,14 @@ class Runtime extends EventEmitter {
     play () {
         if (!this.paused) return;
         this.paused = false;
+
+        // resume all audio contexts (that includes exts with their own AC or gain node)
+        this.audioEngine.audioContext.resume();
+        for (const audioData of this._extensionAudioObjects.values()) {
+            if (audioData.audioContext) {
+                audioData.audioContext.resume();
+            }
+        }
 
         this.ioDevices.clock.resume();
         for (const thread of this.threads) {
@@ -2572,6 +2662,7 @@ class Runtime extends EventEmitter {
             this._stopThread(this.sequencer.activeThread);
         }
         // Remove all remaining threads from executing in the next tick.
+        this.threads.forEach(v => v.status !== Thread.STATUS_DONE && this.emit(Runtime.THREAD_FINISHED, v))
         this.threads = [];
         this.threadMap.clear();
 
@@ -3396,6 +3487,7 @@ class Runtime extends EventEmitter {
      * @property {string} category - the category for this opcode
      * @property {Function} [labelFn] - function to generate the label for this opcode
      * @property {string} [label] - the label for this opcode if `labelFn` is absent
+     * @property {string} [monitorColor] - the color of the monitor
      */
     getLabelForOpcode (extendedOpcode) {
         const [category, opcode] = StringUtil.splitFirst(extendedOpcode, '_');
@@ -3407,10 +3499,14 @@ class Runtime extends EventEmitter {
         const block = categoryInfo.blocks.find(b => b.info.opcode === opcode);
         if (!block) return;
 
+        const labelFn = block.info.labelFn ? this[`ext_${category}`][block.info.labelFn] : undefined;
+        const label = block.info.label ?? `${categoryInfo.name}: ${block.info.text}`;
+        const monitorColor = block.info.color1 ?? categoryInfo.color1;
+
         // TODO: we may want to format the label in a locale-specific way.
         return {
-            category: 'extension', // This assumes that all extensions have the same monitor color.
-            label: `${categoryInfo.name}: ${block.info.text}`
+            category: 'extension',
+            labelFn, label, monitorColor,
         };
     }
 
@@ -3522,12 +3618,12 @@ class Runtime extends EventEmitter {
     }
 
     updatePrivacy () {
-        const enforceRestrictions = (
+        this.privacyRestrictionsActive = (
             this.enforcePrivacy &&
             Object.values(this.externalCommunicationMethods).some(i => i)
         );
         if (this.renderer && this.renderer.setPrivateSkinAccess) {
-            this.renderer.setPrivateSkinAccess(!enforceRestrictions);
+            this.renderer.setPrivateSkinAccess(!this.privacyRestrictionsActive);
         }
     }
 
