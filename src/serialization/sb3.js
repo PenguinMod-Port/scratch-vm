@@ -667,7 +667,7 @@ const serializeTarget = function (target, extensions, runtime) {
  * @param {Set<string>} extensions extension IDs
  * @returns {Record<string, unknown>|null}
  */
-const serializeExtensionStorage = (extensionStorage, extensions, target) => {
+const serializeExtensionStorage = (extensionStorage, extensions, target, runtime) => {
     const result = {};
     let isEmpty = true;
     for (const [key, value] of Object.entries(extensionStorage)) {
@@ -797,7 +797,7 @@ const serialize = function (runtime, targetId, {allowOptimization = true} = {}) 
         .map((serialized, index) => {
             // can't serialize extensionStorage until the list of used extensions is fully known
             const target = originalTargetsToSerialize[index];
-            const targetExtensionStorage = serializeExtensionStorage(target.extensionStorage, extensions, target);
+            const targetExtensionStorage = serializeExtensionStorage(target.extensionStorage, extensions, target, runtime);
             if (targetExtensionStorage) {
                 serialized.extensionStorage = targetExtensionStorage;
             }
@@ -822,7 +822,7 @@ const serialize = function (runtime, targetId, {allowOptimization = true} = {}) 
         return serializedTargets[0];
     }
 
-    const globalExtensionStorage = serializeExtensionStorage(runtime.extensionStorage, extensions);
+    const globalExtensionStorage = serializeExtensionStorage(runtime.extensionStorage, extensions, null, runtime);
     if (globalExtensionStorage) {
         obj.extensionStorage = globalExtensionStorage;
     }
