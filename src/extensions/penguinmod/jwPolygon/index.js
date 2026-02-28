@@ -155,6 +155,43 @@ class PolygonType {
 
         return collision;
     }
+
+    polyLine(x1, y1, x2, y2) {
+        for (let i = 0; i < this.points.length; i++) {
+            let currentPoint = this.points[i];
+            let nextPoint = this.points[(i + 1) % this.points.length];
+
+            let hit = PolygonType.lineLine(x1, y1, x2, y2, currentPoint.x, currentPoint.y, nextPoint.x, nextPoint.y);
+            if (hit) return true;
+        }
+
+        return false;
+    }
+
+    polyLinePoints(x1, y1, x2, y2) {
+        let output = [];
+
+        for (let i = 0; i < this.points.length; i++) {
+            let currentPoint = this.points[i];
+            let nextPoint = this.points[(i + 1) % this.points.length];
+
+            let hit = PolygonType.lineLine(x1, y1, x2, y2, currentPoint.x, currentPoint.y, nextPoint.x, nextPoint.y);
+            if (hit && !output.find(v => v.x == hit.x && v.y == hit.y)) output.push(hit);
+        }
+
+        return output;
+    }
+
+    static lineLine(x1, y1, x2, y2, x3, y3, x4, y4) {
+        let uA = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / ((y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1));
+        let uB = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / ((y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1));
+
+        if (uA >= 0 && uA <= 1 && uB >= 0 && uB <= 1) {
+            return { x: x1 + (x2 - x1) * uA, y: y1 + (y2 - y1) * uA };
+        }
+
+        return null;
+    }
 }
 
 let jwArray = {
@@ -269,7 +306,7 @@ class Extension {
                 },
                 {
                     opcode: "isConvex",
-                    text: "is [POLYGON] convex?",
+                    text: "is [POLYGON] convex",
                     blockType: BlockType.BOOLEAN,
                     arguments: {
                         POLYGON: jwPolygon.Argument
@@ -327,6 +364,27 @@ class Extension {
                         POINT: jwVector.Argument,
                         POLYGON: jwPolygon.Argument
                     }
+                },
+                {
+                    opcode: "polyLine",
+                    text: "is line [POINTA] [POINTB] intersecting [POLYGON]",
+                    blockType: BlockType.BOOLEAN,
+                    arguments: {
+                        POINTA: jwVector.Argument,
+                        POINTB: jwVector.Argument,
+                        POLYGON: jwPolygon.Argument
+                    }
+                },
+                "---",
+                {
+                    opcode: "polyLinePoints",
+                    text: "points of line [POINTA] [POINTB] intersecting [POLYGON]",
+                    arguments: {
+                        POINTA: jwVector.Argument,
+                        POINTB: jwVector.Argument,
+                        POLYGON: jwPolygon.Argument
+                    },
+                    ...jwArray.Block
                 }
             ],
             menus: {
@@ -474,6 +532,20 @@ class Extension {
         POINT = jwVector.Type.toVector(POINT);
         POLYGON = jwPolygon.Type.toPolygon(POLYGON);
         return POLYGON.polyPoint(POINT.x, POINT.y);
+    }
+
+    polyLine({POINTA, POINTB, POLYGON}) {
+        POINTA = jwVector.Type.toVector(POINTA);
+        POINTB = jwVector.Type.toVector(POINTB);
+        POLYGON = jwPolygon.Type.toPolygon(POLYGON);
+        return POLYGON.polyLine(POINTA.x, POINTA.y, POINTB.x, POINTB.y);
+    }
+
+    polyLinePoints({POINTA, POINTB, POLYGON}) {
+        POINTA = jwVector.Type.toVector(POINTA);
+        POINTB = jwVector.Type.toVector(POINTB);
+        POLYGON = jwPolygon.Type.toPolygon(POLYGON);
+        return new jwArray.Type(POLYGON.polyLinePoints(POINTA.x, POINTA.y, POINTB.x, POINTB.y).map(v => new jwVector.Type(v.x, v.y)));
     }
 }
 
