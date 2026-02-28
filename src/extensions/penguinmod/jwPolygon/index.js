@@ -36,7 +36,7 @@ class PolygonType {
 
     static toPolygon(x) {
         if (x instanceof PolygonType) return x
-        if (x instanceof jwArray.Type) return new PolygonType(x.array.map(v => jwVector.Type.toVector(v)))
+        if (x instanceof jwArray.Type) return new PolygonType(x.array.map(v => jwVector.Type.toVector(v)).map(v => ({x: v.x, y: v.y})))
         return new PolygonType
     }
 
@@ -136,6 +136,24 @@ class PolygonType {
         let bounds = this.bounds();
         let scale = Math.min(size / (bounds.right - bounds.left), size / (bounds.bottom - bounds.top));
         return new PolygonType(this.points.map(v => ({ x: (v.x - center.x) * scale + center.x, y: (v.y - center.y) * scale + center.y })));
+    }
+
+    polyPoint(x, y) {
+        let collision = false;
+
+        for (let i = 0; i < this.points.length; i++) {
+            let currentPoint = this.points[i];
+            let nextPoint = this.points[(i + 1) % this.points.length];
+
+            if (
+                ((currentPoint.y >= y) != (nextPoint.y >= y)) &&
+                (x <= (nextPoint.x - currentPoint.x) * (y - currentPoint.y) / (nextPoint.y - currentPoint.y) + currentPoint.x)
+            ) {
+                collision = !collision;
+            }
+        }
+
+        return collision;
     }
 }
 
@@ -299,6 +317,16 @@ class Extension {
                         }
                     },
                     ...jwPolygon.Block
+                },
+                "---",
+                {
+                    opcode: "polyPoint",
+                    text: "is [POINT] intersecting [POLYGON]",
+                    blockType: BlockType.BOOLEAN,
+                    arguments: {
+                        POINT: jwVector.Argument,
+                        POLYGON: jwPolygon.Argument
+                    }
                 }
             ],
             menus: {
@@ -440,6 +468,12 @@ class Extension {
             x: v.x * Math.cos(ANGLE * Math.PI / 180) - v.y * Math.sin(ANGLE * Math.PI / 180), 
             y: v.x * Math.sin(ANGLE * Math.PI / 180) + v.y * Math.cos(ANGLE * Math.PI / 180)
         })));
+    }
+
+    polyPoint({POINT, POLYGON}) {
+        POINT = jwVector.Type.toVector(POINT);
+        POLYGON = jwPolygon.Type.toPolygon(POLYGON);
+        return POLYGON.polyPoint(POINT.x, POINT.y);
     }
 }
 

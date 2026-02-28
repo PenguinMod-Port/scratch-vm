@@ -678,14 +678,14 @@ const serializeExtensionStorage = (extensionStorage, extensions, target) => {
     }
     for (const key of extensions) {
         if (target) {
-            if (`ext_${extension}` in runtime && (typeof runtime[`ext_${extension}`].serializeForTarget === 'function')) {
+            if (`ext_${key}` in runtime && (typeof runtime[`ext_${key}`].serializeForTarget === 'function')) {
                 isEmpty = false;
-                result[key] = runtime[`ext_${extension}`].serializeForTarget(target);
+                result[key] = runtime[`ext_${key}`].serializeForTarget(target);
             }
         } else {
-            if (`ext_${extension}` in runtime && (typeof runtime[`ext_${extension}`].serialize === 'function')) {
+            if (`ext_${key}` in runtime && (typeof runtime[`ext_${key}`].serialize === 'function')) {
                 isEmpty = false;
-                result[key] = runtime[`ext_${extension}`].serialize();
+                result[key] = runtime[`ext_${key}`].serialize();
             }
         }
     }
