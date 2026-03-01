@@ -165,7 +165,8 @@ class PolygonType {
             if (hit) return true;
         }
 
-        return false;
+        // could be inside
+        return this.polyPoint(x1, y1) || this.polyPoint(x2, y2);
     }
 
     polyLinePoints(x1, y1, x2, y2) {
@@ -191,6 +192,17 @@ class PolygonType {
         }
 
         return null;
+    }
+
+    polyPoly(other) {
+        for (let i = 0; i < this.points.length; i++) {
+            let currentPoint = this.points[i];
+            let nextPoint = this.points[(i + 1) % this.points.length];
+
+            if (other.polyLine(currentPoint.x, currentPoint.y, nextPoint.x, nextPoint.y)) return true;
+        }
+
+        return false;
     }
 }
 
@@ -375,6 +387,15 @@ class Extension {
                         POLYGON: jwPolygon.Argument
                     }
                 },
+                {
+                    opcode: "polyPoly",
+                    text: "is polygon [POLYGONA] intersecting [POLYGONB]",
+                    blockType: BlockType.BOOLEAN,
+                    arguments: {
+                        POLYGONA: jwPolygon.Argument,
+                        POLYGONB: jwPolygon.Argument
+                    }
+                },
                 "---",
                 {
                     opcode: "polyLinePoints",
@@ -539,6 +560,12 @@ class Extension {
         POINTB = jwVector.Type.toVector(POINTB);
         POLYGON = jwPolygon.Type.toPolygon(POLYGON);
         return POLYGON.polyLine(POINTA.x, POINTA.y, POINTB.x, POINTB.y);
+    }
+
+    polyPoly({POLYGONA, POLYGONB}) {
+        POLYGONA = jwPolygon.Type.toPolygon(POLYGONA);
+        POLYGONB = jwPolygon.Type.toPolygon(POLYGONB);
+        return POLYGONA.polyPoly(POLYGONB);
     }
 
     polyLinePoints({POINTA, POINTB, POLYGON}) {
