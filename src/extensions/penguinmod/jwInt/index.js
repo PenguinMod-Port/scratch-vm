@@ -354,7 +354,7 @@ class Extension {
     pow({A, B}) {
         A = jwInt.Type.toInt(A)
         B = jwInt.Type.toInt(B)
-        if (B.number < 1n) return new jwInt.Type();
+        if (B.number < 0n) return new jwInt.Type();
         return new jwInt.Type(A.number ** B.number);
     }
 
@@ -362,7 +362,7 @@ class Extension {
         A = jwInt.Type.toInt(A);
         B = jwInt.Type.toInt(B);
         if (B.number === 0n) return new jwInt.Type();
-        result = A.number % B.number;
+        let result = A.number % B.number;
         if (result / B.number < 0n) result += B.number;
         return new jwInt.Type(result);
     }
