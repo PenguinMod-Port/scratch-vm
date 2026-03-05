@@ -3487,7 +3487,9 @@ class Runtime extends EventEmitter {
      * @property {string} category - the category for this opcode
      * @property {Function} [labelFn] - function to generate the label for this opcode
      * @property {string} [label] - the label for this opcode if `labelFn` is absent
-     * @property {string} [monitorColor] - the color of the monitor
+     * @property {Object} [monitorColor] - the color of the monitor
+     * @property {string} [monitorColor.background] - background color
+     * @property {string} [monitorColor.text] - text color
      */
     getLabelForOpcode (extendedOpcode) {
         const [category, opcode] = StringUtil.splitFirst(extendedOpcode, '_');
@@ -3501,7 +3503,10 @@ class Runtime extends EventEmitter {
 
         const labelFn = block.info.labelFn ? this[`ext_${category}`][block.info.labelFn] : undefined;
         const label = block.info.label ?? `${categoryInfo.name}: ${block.info.text}`;
-        const monitorColor = block.info.color1 ?? categoryInfo.color1;
+        const monitorColor = {
+            background: block.info.color1 ?? categoryInfo.color1 ?? null,
+            text: block.info.blockText ?? categoryInfo.blockText ?? null
+        };
 
         // TODO: we may want to format the label in a locale-specific way.
         return {
