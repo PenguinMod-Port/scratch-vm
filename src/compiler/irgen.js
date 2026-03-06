@@ -70,6 +70,8 @@ class ScriptTreeGenerator {
         /** @private */
         this.stage = this.runtime.getTargetForStage();
 
+        this.debug = this.runtime.debug;
+
         /**
          * This script's intermediate representation.
          */
@@ -1977,6 +1979,8 @@ class IRGenerator {
         this.thread = thread;
         this.blocks = thread.blockContainer;
 
+        this.debug = this.thread.runtime.debug;
+
         this.proceduresToCompile = new Map();
         this.compilingProcedures = new Map();
         /** @type {Object.<string, IntermediateScript>} */
@@ -2076,7 +2080,13 @@ class IRGenerator {
         // Analyze scripts until no changes are made.
         while (this.analyzeScript(entry));
 
-        return new IntermediateRepresentation(entry, this.procedures);
+        let output = new IntermediateRepresentation(entry, this.procedures);
+
+        if (this.debug) {
+            log.info(`IR: ${this.target.getName()}: interpreted ${this.entry.script.procedureCode || 'script'}`, output);
+        }
+
+        return new output;
     }
 }
 

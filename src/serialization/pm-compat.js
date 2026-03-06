@@ -23,7 +23,7 @@ export function compatBlock(block, pmVersion) {
         //control_expandableIf
         if (block.opcode === "control_expandableIf" && block.mutation) {
             let value = Number(block.mutation.branches) * 2 - 2;
-            if (!block.mutation['ends-in-else']) value += 1;
+            if (block.mutation['ends-in-else'] !== "true") value += 1;
 
             block.fields.EXPANDABLE = {name: "EXPANDABLE", value};
             delete block.mutation;
