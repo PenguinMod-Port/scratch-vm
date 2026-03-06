@@ -1979,7 +1979,7 @@ class IRGenerator {
         this.thread = thread;
         this.blocks = thread.blockContainer;
 
-        this.debug = this.thread.runtime.debug;
+        this.debug = this.thread.target.runtime.debug;
 
         this.proceduresToCompile = new Map();
         this.compilingProcedures = new Map();
