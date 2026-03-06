@@ -801,7 +801,7 @@ class JSGenerator {
             this.source += `}\n`;
             break;
         }
-        case StackOpcode.CONTROL_WHILE:
+        case StackOpcode.CONTROL_WHILE: {
             const loopName = this.localVariables.next();
             this.source += `${loopName}: while (${this.descendInput(node.condition)}) {\n`;
             this.descendStack(node.do, {inLoop: true, loopName});
@@ -812,6 +812,7 @@ class JSGenerator {
             }
             this.source += `}\n`;
             break;
+        }
         case StackOpcode.CONTROL_CLEAR_COUNTER:
             this.source += 'runtime.ext_scratch3_control._counter = 0;\n';
             break;
@@ -836,6 +837,18 @@ class JSGenerator {
         case StackOpcode.PM_CONTROL_DELETE_CLONES:
             this.source += `runtime.ext_scratch3_control._deleteClones(${this.descendInput(node.target)}, target);\n`;
             break;
+        case StackOpcode.PM_CONTROL_DO_WHILE: {
+            const loopName = this.localVariables.next();
+            this.source += `${loopName}: do {\n`;
+            this.descendStack(node.do, {inLoop: true, loopName});
+            if (node.warpTimer) {
+                this.yieldStuckOrNotWarp();
+            } else {
+                this.yieldLoop();
+            }
+            this.source += `} while (${this.descendInput(node.condition)});\n`;
+            break;
+        }
         case StackOpcode.PM_CONTROL_ESCAPE_LOOP:
             if (this.inLoop) {
                 this.source += this.loopName ? `break ${this.loopName};\n` : 'break;\n';

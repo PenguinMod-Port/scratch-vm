@@ -1005,6 +1005,13 @@ class ScriptTreeGenerator {
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_DELETE_CLONES, {
                 target: this.descendInputOfBlock(block, 'CLONE_OPTION').toType(InputType.STRING)
             });
+        case 'control_do_while':
+            return new IntermediateStackBlock(StackOpcode.PM_CONTROL_DO_WHILE, {
+                condition: this.descendInputOfBlock(block, 'CONDITION').toType(InputType.BOOLEAN),
+                do: this.descendSubstack(block, 'SUBSTACK'),
+                // We should consider analyzing this like we do for control_repeat_until
+                warpTimer: false
+            }, this.analyzeLoop());
         case 'control_expandableIf': {
             const EXPANDABLE = Number(block.fields.EXPANDABLE.value);
             let ifCount = Math.ceil(EXPANDABLE / 2);
@@ -1032,7 +1039,7 @@ class ScriptTreeGenerator {
                 from: this.descendInputOfBlock(block, 'FROM').toType(InputType.NUMBER),
                 to: this.descendInputOfBlock(block, 'TO').toType(InputType.NUMBER),
                 do: this.descendSubstack(block, 'SUBSTACK')
-            });
+            }, this.analyzeLoop());
         case 'control_repeatForSeconds':
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_REPEAT_SECONDS, {
                 seconds: this.descendInputOfBlock(block, 'TIMES').toType(InputType.NUMBER),
