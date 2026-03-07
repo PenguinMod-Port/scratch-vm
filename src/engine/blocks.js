@@ -796,6 +796,9 @@ class Blocks {
             case 'collapsed':
                 block.collapsed = args.value;
                 break;
+            case 'inline':
+                block.external = !args.value;
+                break;
             case 'shadow':
                 block.shadow = args.value;
                 break;
@@ -1202,7 +1205,8 @@ class Blocks {
             `<${tagName}
                 id="${xmlEscape(block.id)}"
                 type="${xmlEscape(block.opcode)}"
-                ${block.collapsed ? 'collapsed="true"' : ''}
+                collapsed="${block.collapsed ? 'true' : 'false'}"
+                inline="${block.external ? 'false' : 'true'}"
                 ${block.topLevel ? `x="${block.x}" y="${block.y}"` : ''}
             >`;
         const commentId = block.comment;

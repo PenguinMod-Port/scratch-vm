@@ -224,6 +224,9 @@ const serializeBlock = function (block) {
     if (block.collapsed) {
         obj.collapsed = true;
     }
+    if (block.external) {
+        obj.external = true;
+    }
     return obj;
 };
 
