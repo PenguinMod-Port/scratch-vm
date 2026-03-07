@@ -262,9 +262,6 @@ class JSGenerator {
         case InputOpcode.PM_CONTROL_TRY_CATCH_ERROR:
             return `(typeof _pmControlTryCatchError !== "undefined" ? _pmControlTryCatchError : "")`;
 
-        case InputOpcode.SENSING_KEY_DOWN:
-            return `runtime.ioDevices.keyboard.getKeyIsDown(${this.descendInput(node.key)})`;
-
         case InputOpcode.LIST_CONTAINS:
             return `listContains(${this.referenceVariable(node.list)}, ${this.descendInput(node.item)})`;
         case InputOpcode.LIST_CONTENTS:
@@ -565,12 +562,16 @@ class JSGenerator {
             return 'runtime.ioDevices.mouse.getScratchX()';
         case InputOpcode.SENSING_MOUSE_Y:
             return 'runtime.ioDevices.mouse.getScratchY()';
+        case InputOpcode.SENSING_KEY_DOWN:
+            return `runtime.ioDevices.keyboard.getKeyIsDown(${this.descendInput(node.key)})`;
 
         //pm sensing
         case InputOpcode.PM_SENSING_DISTANCE_COORDINATES:
             return `Math.hypot(${this.descendInput(node.x2)} - ${this.descendInput(node.x1)}, ${this.descendInput(node.y2)} - ${this.descendInput(node.y1)})`;
         case InputOpcode.PM_SENSING_HAS_NUMBER:
             return `/\d/.test(Cast.toString(${this.descendInput(node.text)}))`;
+        case InputOpcode.PM_SENSING_KEY_HIT:
+            return `runtime.ioDevices.keyboard.getKeyIsHit(${this.descendInput(node.key)})`;
         case InputOpcode.PM_SENSING_IS_TEXT:
             return `isNaN(Number(${this.descendInput(node.text)}))`;
         case InputOpcode.PM_SENSING_MOUSE_SCROLLING:

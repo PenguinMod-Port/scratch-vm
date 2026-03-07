@@ -779,6 +779,14 @@ class ScriptTreeGenerator {
                 x2: this.descendInputOfBlock(block, 'x2'),
                 y2: this.descendInputOfBlock(block, 'y2')
             });
+        case 'sensing_keyhit':
+            return new IntermediateInput(InputOpcode.PM_SENSING_KEY_HIT, InputType.BOOLEAN, {
+                key: this.descendInputOfBlock(block, 'KEY_OPTION', true)
+            });
+        case 'sensing_mousescrolling':
+            return new IntermediateInput(InputOpcode.PM_SENSING_MOUSE_SCROLLING, InputType.BOOLEAN, {
+                option: this.descendInputOfBlock(block, 'SCROLL_OPTION')
+            });
         case 'sensing_thing_has_number': {
             let text = this.descendInputOfBlock(block, 'TEXT1');
             if (text.isSubtypeOf(InputType.NUMBER)) return this.createConstantInput(true);
@@ -805,10 +813,6 @@ class ScriptTreeGenerator {
                 text
             });
         }
-        case 'sensing_mousescrolling':
-            return new IntermediateInput(InputOpcode.PM_SENSING_MOUSE_SCROLLING, InputType.BOOLEAN, {
-                option: this.descendInputOfBlock(block, 'SCROLL_OPTION')
-            });
 
         case 'sound_sounds_menu':
             // This menu is special compared to other menus -- it actually has an opcode function.
