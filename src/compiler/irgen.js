@@ -2083,7 +2083,7 @@ class IRGenerator {
         let output = new IntermediateRepresentation(entry, this.procedures);
 
         if (this.debug) {
-            log.info(`IR: ${this.target.getName()}: interpreted ${this.entry.script.procedureCode || 'script'}`, output);
+            log.info(`IR: ${this.thread.target.getName()}: interpreted ${entry.procedureCode || 'script'}`, output);
         }
 
         return output;
