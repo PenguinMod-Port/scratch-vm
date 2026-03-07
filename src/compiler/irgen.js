@@ -2086,7 +2086,7 @@ class IRGenerator {
             log.info(`IR: ${this.target.getName()}: interpreted ${this.entry.script.procedureCode || 'script'}`, output);
         }
 
-        return new output;
+        return output;
     }
 }
 
