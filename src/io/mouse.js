@@ -17,6 +17,9 @@ class Mouse {
          * @type{!Runtime}
          */
         this.runtime = runtime;
+
+        // old pm camera stuff
+        this.cameraBound = null;
     }
 
     /**
@@ -174,6 +177,14 @@ class Mouse {
             this.usesRightClickDown = true;
         }
         return this._buttons.has(button);
+    }
+
+    bindToCamera(screen) {
+        this.cameraBound = screen;
+    }
+
+    removeCameraBinding() {
+        this.cameraBound = null;
     }
 }
 

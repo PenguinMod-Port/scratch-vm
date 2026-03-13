@@ -24,7 +24,8 @@ const fetchWithTimeout = require('../util/fetch-with-timeout');
 const platform = require('./tw-platform.js');
 const safeStringify = require('../util/tw-safe-stringify.js');
 const MonitorState = require('./tw-monitor-state.js');
-const SemVer = require('../util/semver.js')
+const SemVer = require('../util/semver.js');
+const MathUtil = require('../util/math-util.js');
 
 // Virtual I/O devices.
 const Clock = require('../io/clock');
@@ -559,7 +560,11 @@ class Runtime extends EventEmitter {
         // lists all custom serializers
         this.serializers = {};
 
+        // pm version
         this.pmVersion = new SemVer('0.1.0');
+
+        // deprecated camera states
+        this.cameraStates = {};
     }
 
     /**
@@ -3704,6 +3709,49 @@ class Runtime extends EventEmitter {
             serialize,
             deserialize
         };
+    }
+
+    /* deprecated camera stuff */
+    
+    /**
+     * gets a screen, if no screen can be found it will create one
+     * @param {string} screen the screen to get
+     * @returns {object} the screen state object
+     */
+    getCamera(screen) {
+        if (typeof this.cameraStates[screen] !== 'object') {
+            this.cameraStates[screen] = {
+                pos: [0, 0],
+                dir: 0,
+                scale: 1
+            };
+        }
+        return this.cameraStates[screen];
+    }
+
+    /**
+     * assign new camera state options
+     * @param {string} screen the screen
+     * @param {object} state the state to apply to the screen
+     * @param {boolean} silent if we should emit an event because of this change
+     */
+    updateCamera(screen, state, silent) {
+        if (state.dir) state.dir = MathUtil.wrapClamp(state.dir, -179, 180);
+        if (typeof this.cameraStates[screen] !== 'object') {
+            this.cameraStates[screen] = {
+                pos: [0, 0],
+                dir: 0,
+                scale: 1
+            };
+        }
+        this.cameraStates[screen] = state =
+            Object.assign(this.cameraStates[screen], state);
+        if (!silent ?? state.silent) this.emitCameraChanged(screen);
+    }
+    emitCameraChanged(screen) {
+        let state = this.cameraStates[screen];
+        this.renderer.setCamera(state.pos[0], state.pos[1], state.scale, state.dir + 90);
+        this.requestRedraw();
     }
 }
 

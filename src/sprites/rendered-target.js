@@ -184,6 +184,8 @@ class RenderedTarget extends Target {
         this.onTargetVisualChange = null;
 
         this.interpolationData = null;
+
+        this.cameraBound = 'default';
     }
 
     /**
@@ -1170,6 +1172,16 @@ class RenderedTarget extends Target {
                 this.runtime.requestRedraw();
             }
         }
+    }
+
+    bindToCamera(screen) {
+        this.cameraBound = screen;
+        this.updateAllDrawableProperties();
+    }
+
+    removeCameraBinding() {
+        this.cameraBound = null;
+        this.updateAllDrawableProperties();
     }
 }
 

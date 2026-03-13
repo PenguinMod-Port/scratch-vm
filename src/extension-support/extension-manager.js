@@ -60,8 +60,9 @@ const defaultBuiltinExtensions = {
     // sharkpool
     SPjavascriptV2: () => require('../extensions/penguinmod/SPjavascriptV2'),
 
-    // old ass extensions that are only included for compatability
+    // old ass deprecated extensions
     jwUnite: () => require('../extensions/penguinmod/jwUnite'),
+    pmCamera: () => require('../extensions/penguinmod/pmCamera'),
 };
 
 /**
