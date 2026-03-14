@@ -13,6 +13,15 @@ function span(text) {
     return el
 }
 
+const escapeHTML = unsafe => {
+    return unsafe
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;")
+};
+
 class CameraType {
     static default = new CameraType(vm.renderer.camera.defaultName);
     static unbinded = new CameraType(vm.renderer.camera.unbindedName);
@@ -29,6 +38,23 @@ class CameraType {
         if (v instanceof CameraType) return v;
         if (vm.renderer.camera.getState(v)) return new CameraType(v);
         return CameraType.unbinded;
+    }
+
+    toString() {
+        switch (this.name) {
+            case vm.renderer.camera.defaultName: return "__default__";
+            case vm.renderer.camera.unbindedName: return "__unbinded__";
+        }
+        return this.name;
+    }
+
+    toReporterContent() {
+        if (typeof this.name === "symbol") return span(`Camera&lt;<u>${this.name.description}</u>&gt;`);
+        return span(`Camera&lt;${escapeHTML(this.name)}&gt;`);
+    }
+
+    jwArrayHandler() {
+        return this.toReporterContent().innerHTML;
     }
 
     setPosition(x, y) {
@@ -291,7 +317,7 @@ class Extension {
 
     ofName({NAME}) {
         NAME = Cast.toString(NAME);
-        return jwCamera.Type.toCamera(NAME);
+        return new jwCamera.Type(NAME);
     }
 
     setPosition({CAMERA, VECTOR}) {
