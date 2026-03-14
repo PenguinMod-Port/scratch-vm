@@ -48,6 +48,7 @@ const defaultBuiltinExtensions = {
     jwPolygon: () => require('../extensions/penguinmod/jwPolygon'),
     jwFragment: () => require('../extensions/penguinmod/jwFragment'),
     jwPromise: () => require('../extensions/penguinmod/jwPromise'),
+    jwCamera: () => require('../extensions/penguinmod/jwCamera'),
 
     // jeremy
     jgStorage: () => require('../extensions/penguinmod/jgStorage'),
