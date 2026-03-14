@@ -749,6 +749,7 @@ class RenderedTarget extends Target {
             switch (this.cameraBound) {
                 case "default": screen = this.renderer.camera.defaultName; break;
                 case null: screen = this.renderer.camera.unbindedName; break;
+                default: screen = this.cameraBound;
             }
             this.renderer._allDrawables[this.drawableID].setCameraState(screen);
 

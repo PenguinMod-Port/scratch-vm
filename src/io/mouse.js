@@ -1,4 +1,5 @@
 const MathUtil = require('../util/math-util');
+const { translateScreenPos } = require('../util/pos-math');
 
 const roundToThreeDecimals = number => Math.round(number * 1000) / 1000;
 
@@ -18,7 +19,6 @@ class Mouse {
          */
         this.runtime = runtime;
 
-        // old pm camera stuff
         this.cameraBound = null;
     }
 
@@ -142,10 +142,11 @@ class Mouse {
      * @return {number} Clamped and integer rounded X position of the mouse cursor.
      */
     getScratchX () {
+        const mouseX = translateScreenPos(this.runtime, this.cameraBound, this._scratchX, this._scratchY)[0];
         if (this.runtime.runtimeOptions.miscLimits) {
-            return Math.round(this._scratchX);
+            return Math.round(mouseX);
         }
-        return roundToThreeDecimals(this._scratchX);
+        return roundToThreeDecimals(mouseX);
     }
 
     /**
@@ -153,10 +154,11 @@ class Mouse {
      * @return {number} Clamped and integer rounded Y position of the mouse cursor.
      */
     getScratchY () {
+        const mouseY = translateScreenPos(this.runtime, this.cameraBound, this._scratchX, this._scratchY)[1];
         if (this.runtime.runtimeOptions.miscLimits) {
-            return Math.round(this._scratchY);
+            return Math.round(mouseY);
         }
-        return roundToThreeDecimals(this._scratchY);
+        return roundToThreeDecimals(mouseY);
     }
 
     /**
@@ -182,9 +184,8 @@ class Mouse {
     bindToCamera(screen) {
         this.cameraBound = screen;
     }
-
     removeCameraBinding() {
-        this.cameraBound = null;
+        this.cameraBound = this.runtime.renderer.camera.unbindedName;
     }
 }
 

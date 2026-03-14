@@ -2089,6 +2089,7 @@ class Runtime extends EventEmitter {
         this.renderer = renderer;
         this.renderer.setLayerGroupOrdering(StageLayering.LAYER_GROUPS);
         this.renderer.offscreenTouching = !this.runtimeOptions.fencing;
+        this.ioDevices.mouse.removeCameraBinding();
         this.updatePrivacy();
     }
 

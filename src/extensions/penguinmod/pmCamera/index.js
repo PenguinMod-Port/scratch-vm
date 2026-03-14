@@ -16,7 +16,6 @@ class PenguinModCamera {
         runtime.setRuntimeOptions({
             fencing: false
         });
-        runtime.ioDevices.mouse.bindToCamera(0);
     }
     getCamera(target) {
         return this.runtime.getCamera(this.getActiveCamera(target));
@@ -322,6 +321,9 @@ class PenguinModCamera {
             this.setActiveCamera(myself, SCREEN);
             break;
         case '__MOUSEPOINTER__':
+            switch (SCREEN) {
+                case 'default': SCREEN = this.runtime.renderer.camera.defaultName; break;
+            }
             util.ioQuery('mouse', 'bindToCamera', [SCREEN]);
             break;
         /*
