@@ -3750,7 +3750,14 @@ class Runtime extends EventEmitter {
     }
     emitCameraChanged(screen) {
         let state = this.cameraStates[screen];
-        this.renderer.setCamera(state.pos[0], state.pos[1], state.scale, state.dir + 90);
+        switch (screen) {
+            case "default": screen = this.renderer.camera.defaultName; break;
+            case null: screen = this.renderer.camera.unbindedName; break;
+        }
+        if (!this.renderer.camera.states[screen]) this.renderer.camera.createState(screen);
+        this.renderer.camera.setPosition(state.pos[0], state.pos[1], screen);
+        this.renderer.camera.setSize(state.scale * 100, state.scale * 100, screen);
+        this.renderer.camera.setDirection(state.dir + 90, screen);
         this.requestRedraw();
     }
 }

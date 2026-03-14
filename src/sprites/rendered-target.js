@@ -745,6 +745,13 @@ class RenderedTarget extends Target {
                 this.renderer.updateDrawableEffect(this.drawableID, effectName, this.effects[effectName]);
             }
 
+            let screen;
+            switch (this.cameraBound) {
+                case "default": screen = this.renderer.camera.defaultName; break;
+                case null: screen = this.renderer.camera.unbindedName; break;
+            }
+            this.renderer._allDrawables[this.drawableID].setCameraState(screen);
+
             if (this.visible) {
                 this.emitVisualChange();
                 this.runtime.requestRedraw();
