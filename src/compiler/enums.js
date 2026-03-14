@@ -139,6 +139,7 @@ const StackOpcode = {
     PM_CONTROL_FROM_TO: 'control.fromTo',
     PM_CONTROL_REPEAT_SECONDS: 'control.repeatSeconds',
     PM_CONTROL_RESTART_PROJECT: 'control.restartProject',
+    PM_CONTROL_RUN_AS: 'control.runAs',
     PM_CONTROL_SET_COUNTER: 'control.counterSet',
     PM_CONTROL_SWITCH: 'control.switch',
     PM_CONTROL_THROW_ERROR: 'control.throwError',

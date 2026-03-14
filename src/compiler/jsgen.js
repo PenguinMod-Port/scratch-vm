@@ -901,6 +901,28 @@ class JSGenerator {
             this.source += `runtime.greenFlag();\n`;
             this.retire();
             break;
+        case StackOpcode.PM_CONTROL_RUN_AS: {
+            const isStage = node.sprite.opcode === InputOpcode.CONSTANT && node.sprite.value === '_stage_';
+
+            const originalTarget = this.localVariables.next();
+            this.source += `const ${originalTarget} = target;\n`;
+            this.source += `{\n`;
+            if (isStage) {
+                this.source += `let target = runtime._stageTarget`;
+            } else {
+                const evaluatedName = this.localVariables.next();
+                this.source += `const ${evaluatedName} = ${this.descendInput(node.sprite)};\n`;
+                this.source += `let target = runtime.getSpriteTargetByName(${evaluatedName}) || runtime.getTargetById(${evaluatedName});\n`;
+            }
+            this.source += `thread.target = target;\n`;
+            this.source += `if (target) {\n`;
+            this.descendStack(node.substack);
+            this.source += `}\n`;
+            this.source += `target = ${originalTarget};\n`;
+            this.source += `thread.target = ${originalTarget};\n`;
+            this.source += `}\n`;
+            break;
+        }
         case StackOpcode.PM_CONTROL_SET_COUNTER:
             this.source += `runtime.ext_scratch3_control._counter = ${this.descendInput(node.value)};\n`;
             break;

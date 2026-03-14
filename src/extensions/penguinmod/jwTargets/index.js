@@ -316,11 +316,11 @@ class Extension {
                         TARGET: Target.Argument
                     }
                 },
-                /*'---',
+                '---',
                 {
                     blockType: BlockType.XML,
                     xml: `<block type="control_run_as_sprite" />`
-                }*/
+                }
             ],
             menus: {
                 sprite: {

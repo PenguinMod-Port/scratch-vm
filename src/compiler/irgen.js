@@ -562,7 +562,7 @@ class ScriptTreeGenerator {
             })
         }
         case 'operator_falseBoolean':
-            return this.createConstantInput(true);
+            return this.createConstantInput(false);
         case 'operator_gtorequal':
             return new IntermediateInput(InputOpcode.OP_NOT, InputType.BOOLEAN, {
                 operand: new IntermediateInput(InputOpcode.OP_LESS, InputType.BOOLEAN, {
@@ -1053,6 +1053,11 @@ class ScriptTreeGenerator {
             }, this.analyzeLoop());
         case 'control_restartproject':
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_RESTART_PROJECT);
+        case 'control_run_as_sprite':
+            return new IntermediateStackBlock(StackOpcode.PM_CONTROL_RUN_AS, {
+                sprite: this.descendInputOfBlock(block, 'RUN_AS_OPTION').toType(InputType.STRING),
+                substack: this.descendSubstack(block, 'SUBSTACK')
+            })
         case 'control_set_counter':
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_SET_COUNTER, {
                 value: this.descendInputOfBlock(block, 'VALUE').toType(InputType.NUMBER)
