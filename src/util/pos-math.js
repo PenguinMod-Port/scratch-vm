@@ -1,7 +1,7 @@
 /* eslint-disable no-mixed-operators */
 const translateForCamera = (runtime, screen, x, y) => {
     const {pos, size, direction} = runtime.renderer.camera.getState(screen, true);
-    const radians = (direction / 180) * Math.PI;
+    const radians = (direction - 90) / 180 * Math.PI;
     const sin = Math.sin(radians);
     const cos = Math.cos(radians);
     const offX = x - pos[0];
@@ -14,7 +14,7 @@ const translateForCamera = (runtime, screen, x, y) => {
 
 const translateScreenPos = (runtime, screen, x, y) => {
     const {pos, size, direction} = runtime.renderer.camera.getState(screen, true);
-    const radians = (-direction / 180) * Math.PI;
+    const radians = (-direction + 90) / 180 * Math.PI;
     const sin = Math.sin(radians);
     const cos = Math.cos(radians);
     return [
