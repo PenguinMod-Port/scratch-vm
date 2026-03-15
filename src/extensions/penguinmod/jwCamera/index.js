@@ -376,7 +376,7 @@ class Extension {
 
     bindedCamera({TARGET}) {
         TARGET = jwTargets.Type.toTarget(TARGET);
-        if (!TARGET.target) return;
+        if (!TARGET.target) return jwCamera.Type.unbinded;
         return jwCamera.Type.bindedCamera(TARGET.target);
     }
 
