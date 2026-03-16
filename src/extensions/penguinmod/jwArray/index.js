@@ -589,7 +589,7 @@ class Extension {
                     compiler.source = 'vm.jwArray.Type.toArray(yield* (function*() {\n';
                     compiler.source += `thread._jwArrayBuilderIndex ??= [];\n`
                     compiler.source += `thread._jwArrayBuilderIndex.push([]);\n`
-                    compiler.descendStack(node.substack, {allowReturns: true});
+                    compiler.descendStack(node.substack, {allowReturns: true, inLoop: false});
                     compiler.source += `return thread._jwArrayBuilderIndex.pop();\n`
                     compiler.source += '})())';
                     // save edited
