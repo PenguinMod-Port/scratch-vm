@@ -291,6 +291,14 @@ class JSGeneratorStub {
                 real.descendStack(stack, frame);
             },
 
+            pushFrame (frame) {
+                real.pushFrame(frame);
+            },
+            
+            popFrame () {
+                real.popFrame();
+            },
+
             yieldLoop: () => real.yieldLoop(),
             yieldNotWarp: () => real.yieldNotWarp(),
             yieldStuckOrNotWarp: () => real.yieldStuckOrNotWarp(),
