@@ -23,6 +23,7 @@ const stacked = [
     'motion_scroll_right',
     'motion_scroll_up',
     'sensing_askandwait',
+    'sensing_setclipboard',
     'sensing_setdragmode',
     'sound_changeeffectby',
     'sound_changevolumeby',
@@ -37,6 +38,7 @@ const stacked = [
 const inputs = [
     'motion_xscroll',
     'motion_yscroll',
+    'sensing_getclipboard',
     'sensing_loud',
     'sensing_loudness',
     'sensing_online',

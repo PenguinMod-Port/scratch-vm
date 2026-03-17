@@ -28,6 +28,7 @@ const SemVer = require('../util/semver.js');
 const MathUtil = require('../util/math-util.js');
 
 // Virtual I/O devices.
+const ClipboardIO = require('../io/clipboard');
 const Clock = require('../io/clock');
 const Cloud = require('../io/cloud');
 const Keyboard = require('../io/keyboard');
@@ -374,6 +375,7 @@ class Runtime extends EventEmitter {
         // I/O related data.
         /** @type {Object.<string, Object>} */
         this.ioDevices = {
+            clipboard: new ClipboardIO(this),
             clock: new Clock(this),
             cloud: new Cloud(this),
             keyboard: new Keyboard(this),

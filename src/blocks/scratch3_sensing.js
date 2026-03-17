@@ -73,7 +73,11 @@ class Scratch3SensingBlocks {
             sensing_answer: this.getAnswer,
             sensing_username: this.getUsername,
             sensing_userid: () => {}, // legacy no-op block
-            sensing_online: this.isOnline
+            sensing_online: this.isOnline,
+
+            // pm
+            sensing_getclipboard: this.getClipboard,
+            sensing_setclipboard: this.setClipboard
         };
     }
 
@@ -108,6 +112,11 @@ class Scratch3SensingBlocks {
             },
             sensing_online: {
                 getId: () => 'online'
+            },
+
+            //pm
+            sensing_getclipboard: {
+                getId: () => 'clipboard'
             }
         };
     }
@@ -367,6 +376,14 @@ class Scratch3SensingBlocks {
             default:
                 return false;
         }
+    }
+
+    async getClipboard (args, util) {
+        return await util.ioQuery('clipboard', 'readText');
+    }
+
+    async setClipboard (args, util) {
+        await util.ioQuery('clipboard', 'writeText', [Cast.toString(args.ITEM)]);
     }
 }
 
