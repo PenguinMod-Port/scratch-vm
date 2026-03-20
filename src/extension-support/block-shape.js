@@ -12,7 +12,7 @@ const BlockShape = {
     HEXAGONAL: ScratchBlocksConstants.OUTPUT_SHAPE_HEXAGONAL,
 
     /**
-     * Output shape: rounded (numbers).
+     * Output shape: rounded (numbers/strings/any).
      */
     ROUND: ScratchBlocksConstants.OUTPUT_SHAPE_ROUND,
 
@@ -54,7 +54,17 @@ const BlockShape = {
     /**
      * Output shape: arrow (sets).
      */
-    ARROW: ScratchBlocksConstants.OUTPUT_SHAPE_ARROW
+    ARROW: ScratchBlocksConstants.OUTPUT_SHAPE_ARROW,
+
+    /**
+     * Output shape: ticket (dates).
+     */
+    TICKET: ScratchBlocksConstants.OUTPUT_SHAPE_TICKET,
+
+    /**
+     * Output shape: slanted (regex).
+     */
+    SLANTED: ScratchBlocksConstants.OUTPUT_SHAPE_SLANTED
 };
 
 module.exports = BlockShape;
