@@ -10,7 +10,9 @@ class Mouse {
         this._scratchX = 0;
         this._scratchY = 0;
         this._buttons = new Set();
-        this.usesRightClickDown = false;
+        this._buttonsClicked = new Set();
+        this._buttonsReleased = new Set();
+        this.usesRightClickDown = true; // yea
         this._isDown = false;
         /**
          * Reference to the owning Runtime.
@@ -20,6 +22,11 @@ class Mouse {
         this.runtime = runtime;
 
         this.cameraBound = null;
+
+        this.runtime.on("RUNTIME_STEP_END", () => {
+            this._buttonsClicked.clear();
+            this._buttonsReleased.clear();
+        });
     }
 
     /**
@@ -87,8 +94,10 @@ class Mouse {
             const button = typeof data.button === 'undefined' ? 0 : data.button;
             if (data.isDown) {
                 this._buttons.add(button);
+                this._buttonsClicked.add(button);
             } else {
                 this._buttons.delete(button);
+                this._buttonsReleased.add(button);
             }
 
             const previousDownState = this._isDown;
@@ -175,10 +184,16 @@ class Mouse {
      * @return {boolean} Is the mouse button down?
      */
     getButtonIsDown (button) {
-        if (button === 2) {
-            this.usesRightClickDown = true;
-        }
+        if (button === -1) return this._buttons.size > 0;
         return this._buttons.has(button);
+    }
+    getButtonIsClicked (button) {
+        if (button === -1) return this._buttonsClicked.size > 0;
+        return this._buttonsClicked.has(button);
+    }
+    getButtonIsReleased (button) {
+        if (button === -1) return this._buttonsReleased.size > 0;
+        return this._buttonsReleased.has(button);
     }
 
     bindToCamera(screen) {

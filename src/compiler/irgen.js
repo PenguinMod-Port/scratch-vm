@@ -783,6 +783,22 @@ class ScriptTreeGenerator {
             return new IntermediateInput(InputOpcode.PM_SENSING_KEY_HIT, InputType.BOOLEAN, {
                 key: this.descendInputOfBlock(block, 'KEY_OPTION', true)
             });
+        case 'sensing_mouse_button_clicked':
+            return new IntermediateInput(InputOpcode.PM_SENSING_MOUSEBTN_CLICKED, InputType.BOOLEAN, {
+                button: ["left", "middle", "right"].indexOf(block.fields.BUTTON_OPTION.value)
+            });
+        case 'sensing_mouse_button_down':
+            return new IntermediateInput(InputOpcode.PM_SENSING_MOUSEBTN_DOWN, InputType.BOOLEAN, {
+                button: ["left", "middle", "right"].indexOf(block.fields.BUTTON_OPTION.value)
+            });
+        case 'sensing_mouse_button_released':
+            return new IntermediateInput(InputOpcode.PM_SENSING_MOUSEBTN_RELEASED, InputType.BOOLEAN, {
+                button: ["left", "middle", "right"].indexOf(block.fields.BUTTON_OPTION.value)
+            });
+        case 'sensing_mouseclicked':
+            return new IntermediateInput(InputOpcode.PM_SENSING_MOUSE_CLICKED, InputType.BOOLEAN, {
+                button: -1 //any
+            });
         case 'sensing_mousescrolling':
             return new IntermediateInput(InputOpcode.PM_SENSING_MOUSE_SCROLLING, InputType.BOOLEAN, {
                 option: this.descendInputOfBlock(block, 'SCROLL_OPTION')

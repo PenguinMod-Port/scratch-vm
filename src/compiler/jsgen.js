@@ -574,6 +574,12 @@ class JSGenerator {
             return `runtime.ioDevices.keyboard.getKeyIsHit(${this.descendInput(node.key)})`;
         case InputOpcode.PM_SENSING_IS_TEXT:
             return `isNaN(Number(${this.descendInput(node.text)}))`;
+        case InputOpcode.PM_SENSING_MOUSEBTN_CLICKED:
+            return `runtime.ioDevices.mouse.getButtonIsClicked(${node.button})`;
+        case InputOpcode.PM_SENSING_MOUSEBTN_DOWN:
+            return `runtime.ioDevices.mouse.getButtonIsDown(${node.button})`;
+        case InputOpcode.PM_SENSING_MOUSEBTN_RELEASED:
+            return `runtime.ioDevices.mouse.getButtonIsReleased(${node.button})`;
         case InputOpcode.PM_SENSING_MOUSE_SCROLLING:
             return `runtime.ext_scratch3_sensing._mouseScrolling(${this.descendInput(node.option)}, runtime.ioDevices.mouseWheel.scrollDelta)`
         case InputOpcode.PM_SENSING_TIME_TIMESTAMP:

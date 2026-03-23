@@ -77,7 +77,11 @@ class Scratch3SensingBlocks {
 
             // pm
             sensing_getclipboard: this.getClipboard,
-            sensing_setclipboard: this.setClipboard
+            sensing_mouse_button_clicked: (args, util) => util.ioQuery('mouse', 'getButtonIsClicked', [(['left', 'middle', 'right'].indexOf(args.BUTTON_OPTION))]),
+            sensing_mouse_button_down: (args, util) => util.ioQuery('mouse', 'getButtonIsDown', [(['left', 'middle', 'right'].indexOf(args.BUTTON_OPTION))]),
+            sensing_mouse_button_released: (args, util) => util.ioQuery('mouse', 'getButtonIsReleased', [(['left', 'middle', 'right'].indexOf(args.BUTTON_OPTION))]),
+            sensing_mouseclicked: (_, util) => util.ioQuery('mouse', 'getButtonIsClicked', [-1]),
+            sensing_setclipboard: this.setClipboard,
         };
     }
 
@@ -117,6 +121,18 @@ class Scratch3SensingBlocks {
             //pm
             sensing_getclipboard: {
                 getId: () => 'clipboard'
+            },
+            sensing_mouse_button_clicked: {
+                getId: (_, fields) => getMonitorIdForBlockWithArgs('mouse_button_clicked', fields)
+            },
+            sensing_mouse_button_down: {
+                getId: (_, fields) => getMonitorIdForBlockWithArgs('mouse_button_down', fields)
+            },
+            sensing_mouse_button_released: {
+                getId: (_, fields) => getMonitorIdForBlockWithArgs('mouse_button_released', fields)
+            },
+            sensing_mouseclicked: {
+                getId: () => 'mouseclicked'
             }
         };
     }
