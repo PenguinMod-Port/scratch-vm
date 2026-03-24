@@ -102,6 +102,10 @@ class ArrayType {
         return "?"
     }
 
+    static parseLength(length) {
+        return clampIndex(length)
+    }
+
     jwArrayHandler() {
         return `Array<${formatNumber(this.array.length)}>`
     }
@@ -152,6 +156,31 @@ class ArrayType {
     get length() {
         return this.array.length
     }
+
+    static range(start, end) {
+        let array = Array(this.parseLength(end - start + 1))
+            .fill(0)
+            .map((v, i) => start + i);
+        return new ArrayType(array, true);
+    }
+
+    indexOf(value) {
+        if (![null, Object.prototype].includes(Object.getPrototypeOf(value)) && value.customId) {
+            // custom type
+            return this.array.findIndex(v => v.customId == value.customId && Cast.toString(v) == Cast.toString(value)) + 1;
+        } else {
+            return this.array.indexOf(value) + 1;
+        }
+    }
+
+    has(value) {
+        if (![null, Object.prototype].includes(Object.getPrototypeOf(value)) && value.customId) {
+            // custom type
+            return this.array.some(v => v.customId == value.customId && Cast.toString(v) == Cast.toString(value));
+        } else {
+            return this.array.includes(value);
+        }
+    }
 }
 
 const jwArray = {
@@ -192,7 +221,8 @@ class Extension {
                 return w
             }), true)
         );
-        vm.runtime.registerCompiledExtensionBlocks('jwArray', this.getCompileInfo());
+        vm.extensionManager.extendCompiler("jwArray", this.extendCompiler.bind(this));
+        //vm.runtime.registerCompiledExtensionBlocks('jwArray', this.getCompileInfo());
     }
     getInfo() {
         return {
@@ -201,6 +231,19 @@ class Extension {
             color1: "#ff513d",
             menuIconURI: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCIgeG1sbnM6Yng9Imh0dHBzOi8vYm94eS1zdmcuY29tIj4KICA8Y2lyY2xlIHN0eWxlPSJzdHJva2Utd2lkdGg6IDJweDsgcGFpbnQtb3JkZXI6IHN0cm9rZTsgZmlsbDogcmdiKDI1NSwgODEsIDYxKTsgc3Ryb2tlOiByZ2IoMjA1LCA1OSwgNDQpOyIgY3g9IjEwIiBjeT0iMTAiIHI9IjkiPjwvY2lyY2xlPgogIDxwYXRoIGQ9Ik0gOC4wNzMgNC4yMiBMIDYuMTQ3IDQuMjIgQyA1LjA4MyA0LjIyIDQuMjIgNS4wODMgNC4yMiA2LjE0NyBMIDQuMjIgMTMuODUzIEMgNC4yMiAxNC45MTkgNS4wODMgMTUuNzggNi4xNDcgMTUuNzggTCA4LjA3MyAxNS43OCBMIDguMDczIDEzLjg1MyBMIDYuMTQ3IDEzLjg1MyBMIDYuMTQ3IDYuMTQ3IEwgOC4wNzMgNi4xNDcgTCA4LjA3MyA0LjIyIFogTSAxMS45MjcgMTMuODUzIEwgMTMuODUzIDEzLjg1MyBMIDEzLjg1MyA2LjE0NyBMIDExLjkyNyA2LjE0NyBMIDExLjkyNyA0LjIyIEwgMTMuODUzIDQuMjIgQyAxNC45MTcgNC4yMiAxNS43OCA1LjA4MyAxNS43OCA2LjE0NyBMIDE1Ljc4IDEzLjg1MyBDIDE1Ljc4IDE0LjkxOSAxNC45MTcgMTUuNzggMTMuODUzIDE1Ljc4IEwgMTEuOTI3IDE1Ljc4IEwgMTEuOTI3IDEzLjg1MyBaIiBmaWxsPSIjZmZmIiBzdHlsZT0iIj48L3BhdGg+Cjwvc3ZnPg==",
             blocks: [
+                {
+                    opcode: 'parse',
+                    text: 'parse [INPUT] as array',
+                    arguments: {
+                        INPUT: {
+                            type: ArgumentType.STRING,
+                            defaultValue: '["a", "b", "c"]',
+                            exemptFromNormalization: true
+                        }
+                    },
+                    ...jwArray.Block
+                },
+                "---",
                 {
                     opcode: 'blank',
                     text: 'blank array',
@@ -229,13 +272,16 @@ class Extension {
                     ...jwArray.Block
                 },
                 {
-                    opcode: 'parse',
-                    text: 'parse [INPUT] as array',
+                    opcode: 'range',
+                    text: 'range from [START] to [END]',
                     arguments: {
-                        INPUT: {
-                            type: ArgumentType.STRING,
-                            defaultValue: '["a", "b", "c"]',
-                            exemptFromNormalization: true
+                        START: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 1
+                        },
+                        END: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 10
                         }
                     },
                     ...jwArray.Block
@@ -556,7 +602,160 @@ class Extension {
         };
     }
 
-    getCompileInfo() {
+    extendCompiler({IntermediateStackBlock, IntermediateInput, InputType, InputOpcode}) {
+        const opcodes = {
+            PARSE: 'jwArray.parse',
+
+            BLANK: 'jwArray.blank',
+            BLANK_LENGTH: 'jwArray.blankLength',
+            RANGE: 'jwArray.range',
+            SPLIT: 'jwArray.split',
+
+            BUILDER: 'jwArray.builder',
+            BUILDER_CURRENT: 'jwArray.builderCurrent',
+            BUILDER_APPEND: 'jwArray.builderAppend',
+            BUILDER_SET: 'jwArray.builderSet',
+
+            GET: 'jwArray.get',
+            ITEMS: 'jwArray.items',
+            INDEX: 'jwArray.index',
+            HAS: 'jwArray.has',
+            LENGTH: 'jwArray.length',
+        }
+
+        return {
+            ir: {
+                reporter(block) {
+                    switch (block.opcode) {
+                        case 'jwArray_parse':
+                            return new IntermediateInput(opcodes.PARSE, InputType.CUSTOM_TYPE, {
+                                input: this.descendInputOfBlock(block, 'INPUT')
+                            });
+
+                        case 'jwArray_blank':
+                            return new IntermediateInput(opcodes.BLANK, InputType.CUSTOM_TYPE);
+                        case 'jwArray_blankLength':
+                            return new IntermediateInput(opcodes.BLANK_LENGTH, InputType.CUSTOM_TYPE, {
+                                len: this.descendInputOfBlock(block, 'LENGTH').toType(InputType.NUMBER)
+                            });
+                        case 'jwArray_range':
+                            return new IntermediateInput(opcodes.RANGE, InputType.CUSTOM_TYPE, {
+                                start: this.descendInputOfBlock(block, 'START').toType(InputType.NUMBER),
+                                end: this.descendInputOfBlock(block, 'END').toType(InputType.NUMBER)
+                            });
+                        case 'jwArray_split':
+                            return new IntermediateInput(opcodes.SPLIT, InputType.CUSTOM_TYPE, {
+                                string: this.descendInputOfBlock(block, 'STRING').toType(InputType.STRING),
+                                divider: this.descendInputOfBlock(block, 'DIVIDER').toType(InputType.STRING)
+                            });
+
+                        case 'jwArray_builder':
+                            return new IntermediateInput(opcodes.BUILDER, InputType.CUSTOM_TYPE, {
+                                substack: this.descendSubstack(block, 'SUBSTACK')
+                            });
+                        case 'jwArray_builderCurrent':
+                            return new IntermediateInput(opcodes.BUILDER_CURRENT, InputType.CUSTOM_TYPE);
+                        
+                        case 'jwArray_get':
+                            return new IntermediateInput(opcodes.GET, InputType.CUSTOM_TYPE, {
+                                array: this.descendInputOfBlock(block, 'ARRAY'),
+                                index: this.descendInputOfBlock(block, 'INDEX').toType(InputType.NUMBER)
+                            });
+                        case 'jwArray_items':
+                            return new IntermediateInput(opcodes.ITEMS, InputType.CUSTOM_TYPE, {
+                                array: this.descendInputOfBlock(block, 'ARRAY'),
+                                from: this.descendInputOfBlock(block, 'X').toType(InputType.NUMBER),
+                                to: this.descendInputOfBlock(block, 'Y').toType(InputType.NUMBER)
+                            });
+                        case 'jwArray_index':
+                            return new IntermediateInput(opcodes.INDEX, InputType.CUSTOM_TYPE, {
+                                array: this.descendInputOfBlock(block, 'ARRAY'),
+                                value: this.descendInputOfBlock(block, 'VALUE')
+                            });
+                        case 'jwArray_has':
+                            return new IntermediateInput(opcodes.HAS, InputType.CUSTOM_TYPE, {
+                                array: this.descendInputOfBlock(block, 'ARRAY'),
+                                value: this.descendInputOfBlock(block, 'VALUE')
+                            });
+                        case 'jwArray_length':
+                            return new IntermediateInput(opcodes.LENGTH, InputType.CUSTOM_TYPE, {
+                                array: this.descendInputOfBlock(block, 'ARRAY')
+                            });
+                    }
+                },
+                command(block) {
+                    switch (block.opcode) {
+                        case 'jwArray_builderAppend':
+                            return new IntermediateStackBlock(opcodes.BUILDER_APPEND, {
+                                value: this.descendInputOfBlock(block, 'VALUE')
+                            });
+                        case 'jwArray_builderSet':
+                            return new IntermediateStackBlock(opcodes.BUILDER_SET, {
+                                array: this.descendInputOfBlock(block, 'ARRAY')
+                            });
+                    }
+                }
+            },
+            js: {
+                scriptStart() {
+                    if (!this.isProcedure) this.source += `thread._jwArrayBuilderIndex = [[]];\n`;
+                },
+                reporter(block) {
+                    const node = block.inputs;
+
+                    switch (block.opcode) {
+                        case opcodes.PARSE:
+                            return `vm.jwArray.Type.toArray(${this.descendInput(node.input)})`;
+
+                        case opcodes.BLANK:
+                            return `(new vm.jwArray.Type([], true))`;
+                        case opcodes.BLANK_LENGTH:
+                            return `(new vm.jwArray.Type(Array(vm.jwArray.Type.parseLength(${this.descendInput(node.len)})).fill(null), true))`;
+                        case opcodes.RANGE:
+                            return `vm.jwArray.Type.range(${this.descendInput(node.start)}, ${this.descendInput(node.end)})`;
+                        case opcodes.SPLIT:
+                            return `(new vm.jwArray.Type(${this.descendInput(node.string)}.split(${this.descendInput(node.divider)}), true))`;
+                        
+                        case opcodes.BUILDER: {
+                            let source = "";
+                            source += `vm.jwArray.Type.toArray(${this.script.yields ? "yield* (function*" : "(function"}() {\n`
+                            source += `thread._jwArrayBuilderIndex.push([]);\n`
+                            source += this.descendStackInline(node.substack, {allowReturns: true, inLoop: false});
+                            source += `return thread._jwArrayBuilderIndex.pop();\n`
+                            source += `})())`;
+                            return source;
+                        }
+                        case opcodes.BUILDER_CURRENT:
+                            return `(new vm.jwArray.Type(thread._jwArrayBuilderIndex[thread._jwArrayBuilderIndex.length - 1], true))`;
+                        
+                        case opcodes.GET:
+                            return `(vm.jwArray.Type.toArray(${this.descendInput(node.array)}).array[${this.descendInput(node.index)}-1] ?? null)`;
+                        case opcodes.ITEMS:
+                            return `(new vm.jwArray.Type(vm.jwArray.Type.toArray(${this.descendInput(node.array)}, true).slice(Math.max(${this.descendInput(node.from)} - 1, 0), Math.max(${this.descendInput(node.to)}, 0)), true))`;
+                        case opcodes.INDEX:
+                            return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}, true).indexOf(${this.descendInput(node.value)})`;
+                        case opcodes.HAS:
+                            return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}, true).has(${this.descendInput(node.value)})`;
+                        case opcodes.LENGTH:
+                            return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}, true).length`;
+                    }
+                },
+                command(block) {
+                    const node = block.inputs;
+                    switch (block.opcode) {
+                        case opcodes.BUILDER_APPEND:
+                            this.source += `thread._jwArrayBuilderIndex[thread._jwArrayBuilderIndex.length - 1].push(vm.jwArray.Type.forArray(${this.descendInput(node.value)}));\n`;
+                            return true;
+                        case opcodes.BUILDER_SET:
+                            this.source += `thread._jwArrayBuilderIndex[thread._jwArrayBuilderIndex.length - 1] = vm.jwArray.Type.toArray(${this.descendInput(node.array)}).array;\n`;
+                            return true;
+                    }
+                }
+            }
+        }
+    }
+
+    /*getCompileInfo() {
         return {
             ir: {
                 builder: (generator, block) => {
@@ -641,7 +840,7 @@ class Extension {
                 }
             }
         };
-    }
+    }*/
 
     blank() {
         return new jwArray.Type([], true)

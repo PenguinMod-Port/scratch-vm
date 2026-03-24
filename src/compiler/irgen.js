@@ -224,10 +224,9 @@ class ScriptTreeGenerator {
 
         for (let extensionId in IRGenerator.compilerExtensions) {
             let extension = IRGenerator.compilerExtensions[extensionId]
-            if (extension.reporter && block.opcode.startsWith(extensionId + "_")) {
+            if (extension.reporter) {
                 let returns = extension.reporter.call(this, block, preserveStrings);
                 if (returns) return returns;
-                break;
             }
         }
 
@@ -911,10 +910,9 @@ class ScriptTreeGenerator {
 
         for (let extensionId in IRGenerator.compilerExtensions) {
             let extension = IRGenerator.compilerExtensions[extensionId]
-            if (extension.command && block.opcode.startsWith(extensionId + "_")) {
+            if (extension.command) {
                 let returns = extension.command.call(this, block);
                 if (returns) return returns;
-                break;
             }
         }
 
