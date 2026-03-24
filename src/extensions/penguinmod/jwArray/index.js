@@ -51,11 +51,7 @@ class ArrayType {
     array = []
 
     constructor(array = [], safe = false) {
-        this.array = safe ? array : array.map(v => {
-            if (v instanceof Array) return new ArrayType([...v])
-            if (vm.dogeiscutObject && isObject(v)) return new vm.dogeiscutObject.Type({...v})
-            return v
-        })
+        this.array = safe ? array : array.map(ArrayType.forArray)
     }
 
     static toArray(x, readOnly = false) {
@@ -76,7 +72,7 @@ class ArrayType {
     }
 
     static forArray(x) {
-        if (x instanceof ArrayType) return new ArrayType([...x.array])
+        if (x instanceof ArrayType) return x
         if (x instanceof Array) return new ArrayType([...x])
         if (vm.dogeiscutObject && isObject(x)) return new vm.dogeiscutObject.Type({...x})
         return x
@@ -180,6 +176,26 @@ class ArrayType {
         } else {
             return this.array.includes(value);
         }
+    }
+
+    set(index, value) {
+        this.array[index - 1] = ArrayType.forArray(value);
+        return this;
+    }
+
+    append(value) {
+        this.array.push(ArrayType.forArray(value));
+        return this;
+    }
+
+    concat(other) {
+        this.array = this.array.concat(other.array);
+        return this;
+    }
+
+    fill(value) {
+        this.array.fill(ArrayType.forArray(value));
+        return this;
     }
 }
 
@@ -621,6 +637,11 @@ class Extension {
             INDEX: 'jwArray.index',
             HAS: 'jwArray.has',
             LENGTH: 'jwArray.length',
+
+            SET: 'jwArray.set',
+            APPEND: 'jwArray.append',
+            CONCAT: 'jwArray.concat',
+            FILL: 'jwArray.fill',
         }
 
         return {
@@ -657,7 +678,7 @@ class Extension {
                             return new IntermediateInput(opcodes.BUILDER_CURRENT, InputType.CUSTOM_TYPE);
                         
                         case 'jwArray_get':
-                            return new IntermediateInput(opcodes.GET, InputType.CUSTOM_TYPE, {
+                            return new IntermediateInput(opcodes.GET, InputType.ANY, {
                                 array: this.descendInputOfBlock(block, 'ARRAY'),
                                 index: this.descendInputOfBlock(block, 'INDEX').toType(InputType.NUMBER)
                             });
@@ -668,18 +689,40 @@ class Extension {
                                 to: this.descendInputOfBlock(block, 'Y').toType(InputType.NUMBER)
                             });
                         case 'jwArray_index':
-                            return new IntermediateInput(opcodes.INDEX, InputType.CUSTOM_TYPE, {
+                            return new IntermediateInput(opcodes.INDEX, InputType.NUMBER_WHOLE, {
                                 array: this.descendInputOfBlock(block, 'ARRAY'),
                                 value: this.descendInputOfBlock(block, 'VALUE')
                             });
                         case 'jwArray_has':
-                            return new IntermediateInput(opcodes.HAS, InputType.CUSTOM_TYPE, {
+                            return new IntermediateInput(opcodes.HAS, InputType.BOOLEAN, {
                                 array: this.descendInputOfBlock(block, 'ARRAY'),
                                 value: this.descendInputOfBlock(block, 'VALUE')
                             });
                         case 'jwArray_length':
-                            return new IntermediateInput(opcodes.LENGTH, InputType.CUSTOM_TYPE, {
+                            return new IntermediateInput(opcodes.LENGTH, InputType.NUMBER_WHOLE, {
                                 array: this.descendInputOfBlock(block, 'ARRAY')
+                            });
+
+                        case 'jwArray_set':
+                            return new IntermediateInput(opcodes.SET, InputType.CUSTOM_TYPE, {
+                                array: this.descendInputOfBlock(block, 'ARRAY'),
+                                index: this.descendInputOfBlock(block, 'INDEX').toType(InputType.NUMBER),
+                                value: this.descendInputOfBlock(block, 'VALUE')
+                            });
+                        case 'jwArray_append':
+                            return new IntermediateInput(opcodes.APPEND, InputType.CUSTOM_TYPE, {
+                                array: this.descendInputOfBlock(block, 'ARRAY'),
+                                value: this.descendInputOfBlock(block, 'VALUE')
+                            });
+                        case 'jwArray_concat':
+                            return new IntermediateInput(opcodes.CONCAT, InputType.CUSTOM_TYPE, {
+                                array1: this.descendInputOfBlock(block, 'ONE'),
+                                array2: this.descendInputOfBlock(block, 'TWO')
+                            });
+                        case 'jwArray_fill':
+                            return new IntermediateInput(opcodes.FILL, InputType.CUSTOM_TYPE, {
+                                array: this.descendInputOfBlock(block, 'ARRAY'),
+                                value: this.descendInputOfBlock(block, 'VALUE')
                             });
                     }
                 },
@@ -738,6 +781,15 @@ class Extension {
                             return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}, true).has(${this.descendInput(node.value)})`;
                         case opcodes.LENGTH:
                             return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}, true).length`;
+
+                        case opcodes.SET:
+                            return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).set(${this.descendInput(node.index)}, ${this.descendInput(node.value)})`;
+                        case opcodes.APPEND:
+                            return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).append(${this.descendInput(node.value)})`;
+                        case opcodes.CONCAT:
+                            return `vm.jwArray.Type.toArray(${this.descendInput(node.array1)}).concat(vm.jwArray.Type.toArray(${this.descendInput(node.array2)}, true))`;
+                        case opcodes.FILL:
+                            return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).fill(${this.descendInput(node.value)})`;
                     }
                 },
                 command(block) {
