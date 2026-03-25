@@ -115,7 +115,7 @@ class ScriptTreeGenerator {
         this.script.procedureVariant = procedureVariant;
         this.script.procedureCode = procedureCode;
         this.script.isProcedure = true;
-        this.script.yields = false;
+        this.script.yields = true;
 
         const paramNamesIdsAndDefaults = this.blocks.getProcedureParamNamesIdsAndDefaults(procedureCode);
         if (paramNamesIdsAndDefaults === null) {
@@ -1425,6 +1425,15 @@ class ScriptTreeGenerator {
                 value: this.descendInputOfBlock(block, 'VALUE')
             });
 
+        case 'procedures_reevaluate':
+            let param = this.descendInputOfBlock(block, 'PARAM');
+            if (param.opcode !== InputOpcode.PROCEDURE_ARGUMENT) {
+                return new IntermediateStackBlock(StackOpcode.NOP);
+            }
+
+            return new IntermediateStackBlock(StackOpcode.PM_PROCEDURE_REEVALUATE, {
+                index: param.inputs.index
+            })
         case 'procedures_set': {
             let param = this.descendInputOfBlock(block, 'PARAM');
             if (param.opcode !== InputOpcode.PROCEDURE_ARGUMENT) {

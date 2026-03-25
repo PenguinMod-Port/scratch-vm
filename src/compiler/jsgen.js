@@ -616,7 +616,7 @@ class JSGenerator {
                     let stack = this.descendStackInline(input, {isWarp: procedureData.isWarp, allowReturns: true});
                     args.push(`function*(thread, target, runtime, stage) {${stack}}`);
                 } else {
-                    args.push(this.descendInput(input));
+                    args.push(`function*() {return ${this.descendInput(input)};}`);
                 }
             }
             const joinedArgs = args.join(',');
@@ -1242,6 +1242,9 @@ class JSGenerator {
             this.stopScriptAndReturn(this.descendInput(node.value));
             break;
 
+        case StackOpcode.PM_PROCEDURE_REEVALUATE:
+            this.source += `p${node.index} = yield* px${node.index}();\n`;
+            break;
         case StackOpcode.PM_PROCEDURE_SET:
             this.source += `p${node.index} = ${this.descendInput(node.value)};\n`;
             break;
@@ -1576,13 +1579,17 @@ class JSGenerator {
         if (this.script.arguments.length) {
             const args = [];
             for (let i = 0; i < this.script.arguments.length; i++) {
-                args.push(`p${i}`);
+                args.push(`px${i}`);
             }
             script += args.join(',');
         }
         script += ') {\n';
 
         if (!this.isProcedure) script += `try {\n`
+
+        for (let i in this.script.arguments) {
+            script += `let p${i} = yield* px${i}();\n`;
+        }        
 
         let allowBubble = this.script.stackClicked && !this.isProcedure;
         if (allowBubble) {

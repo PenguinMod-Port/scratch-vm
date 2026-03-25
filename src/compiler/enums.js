@@ -220,7 +220,8 @@ const StackOpcode = {
     PROCEDURE_RETURN: 'procedures.return',
 
     PM_PROCEDURE_COMMANDARG: 'procedures.commandarg',
-    PM_PROCEDURE_SET: 'procedures.set'
+    PM_PROCEDURE_REEVALUATE: 'procedures.reevaluate',
+    PM_PROCEDURE_SET: 'procedures.set',
 };
 
 /**
