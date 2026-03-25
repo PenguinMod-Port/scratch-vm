@@ -1436,6 +1436,14 @@ class JSGenerator {
             this.yieldNotWarp();
         }
     }
+    yieldLoopInline() {
+        const oldSource = this.source;
+        this.source = "";
+        this.yieldLoop();
+        const result = this.source;
+        this.source = oldSource;
+        return result;
+    }
 
     /**
      * Write JS to yield the current thread if warp mode is disabled.

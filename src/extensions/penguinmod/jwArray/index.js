@@ -662,6 +662,15 @@ class Extension {
             SPLICE: 'jwArray.splice',
             REPEAT: 'jwArray.repeat',
             FLAT: 'jwArray.flat',
+
+            TO_STRING: 'jwArray.toString',
+            JOIN: 'jwArray.join',
+            SUM: 'jwArray.sum',
+
+            LOOP_INDEX: 'jwArray.loopIndex',
+            LOOP_VALUE: 'jwArray.loopValue',
+            FOR_EACH: 'jwArray.forEach',
+            BASIC_SORT: 'jwArray.basicSort'
         }
 
         return {
@@ -765,6 +774,31 @@ class Extension {
                                 array: this.descendInputOfBlock(block, 'ARRAY'),
                                 depth: this.descendInputOfBlock(block, 'DEPTH').toType(InputType.NUMBER)
                             });
+
+                        case 'jwArray_toString':
+                            return new IntermediateInput(opcodes.TO_STRING, InputType.STRING, {
+                                array: this.descendInputOfBlock(block, 'ARRAY'),
+                                pretty: block.fields.FORMAT.value === 'pretty'
+                            });
+                        case 'jwArray_join':
+                            return new IntermediateInput(opcodes.JOIN, InputType.STRING, {
+                                array: this.descendInputOfBlock(block, 'ARRAY'),
+                                divider: this.descendInputOfBlock(block, 'DIVIDER')
+                            });
+                        case 'jwArray_sum':
+                            return new IntermediateInput(opcodes.SUM, InputType.NUMBER, {
+                                array: this.descendInputOfBlock(block, 'ARRAY')
+                            });
+                        
+                        case 'jwArray_forEachI':
+                            return new IntermediateInput(opcodes.LOOP_INDEX, InputType.NUMBER_WHOLE);
+                        case 'jwArray_forEachV':
+                            return new IntermediateInput(opcodes.LOOP_VALUE, InputType.ANY);
+                        case 'jwArray_basicSort':
+                            return new IntermediateInput(opcodes.BASIC_SORT, InputType.CUSTOM_TYPE, {
+                                array: this.descendInputOfBlock(block, 'ARRAY'),
+                                value: this.descendInputOfBlock(block, 'VALUE')
+                            }, true);
                     }
                 },
                 command(block) {
@@ -777,19 +811,22 @@ class Extension {
                             return new IntermediateStackBlock(opcodes.BUILDER_SET, {
                                 array: this.descendInputOfBlock(block, 'ARRAY')
                             });
+                        
+                        case 'jwArray_forEach':
+                            return new IntermediateStackBlock(opcodes.FOR_EACH, {
+                                array: this.descendInputOfBlock(block, 'ARRAY'),
+                                substack: this.descendSubstack(block, 'SUBSTACK')
+                            });
                     }
                 }
             },
             js: {
-                scriptStart() {
-                    if (!this.isProcedure) this.source += `thread._jwArrayBuilderIndex = [[]];\n`;
-                },
                 reporter(block) {
                     const node = block.inputs;
 
                     switch (block.opcode) {
                         case opcodes.PARSE:
-                            return `vm.jwArray.Type.toArray(${this.descendInput(node.input)})`;
+                            return `vm.jwArray.Type.toArray(${this.descendInput(node.input)}, true)`;
 
                         case opcodes.BLANK:
                             return `(new vm.jwArray.Type([], true))`;
@@ -803,14 +840,14 @@ class Extension {
                         case opcodes.BUILDER: {
                             let source = "";
                             source += `vm.jwArray.Type.toArray(${this.script.yields ? "yield* (function*" : "(function"}() {\n`
-                            source += `thread._jwArrayBuilderIndex.push([]);\n`
+                            source += `const _jwArrayBuilder = [];`
                             source += this.descendStackInline(node.substack, {allowReturns: true, inLoop: false});
-                            source += `return thread._jwArrayBuilderIndex.pop();\n`
-                            source += `})())`;
+                            source += `return _jwArrayBuilder;\n`
+                            source += `})(), true)`;
                             return source;
                         }
                         case opcodes.BUILDER_CURRENT:
-                            return `(new vm.jwArray.Type(thread._jwArrayBuilderIndex[thread._jwArrayBuilderIndex.length - 1], true))`;
+                            return `(new vm.jwArray.Type(typeof _jwArrayBuilder !== "undefined" ? _jwArrayBuilder : [], true))`;
                         
                         case opcodes.GET:
                             return `(vm.jwArray.Type.toArray(${this.descendInput(node.array)}).array[${this.descendInput(node.index)}-1] ?? null)`;
@@ -840,289 +877,57 @@ class Extension {
                             return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).repeat(${this.descendInput(node.times)})`;
                         case opcodes.FLAT:
                             return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).flat(${this.descendInput(node.depth)})`;
+                        
+                        case opcodes.TO_STRING:
+                            return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).toString(${node.pretty ? 'true' : ''})`;
+                        case opcodes.JOIN:
+                            return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).array.join(${this.descendInput(node.divider)})`;
+                        case opcodes.SUM:
+                            return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).array.reduce((o, v) => o + (Number(v) || 0), 0)`;
+                        
+                        case opcodes.LOOP_INDEX:
+                            return `(typeof _jwArrayLoop !== "undefined" ? Number(_jwArrayLoop[0]) + 1 : 0)`;
+                        case opcodes.LOOP_VALUE:
+                            return `(typeof _jwArrayLoop !== "undefined" ? _jwArrayLoop[1] : null)`;
+                        case opcodes.BASIC_SORT: {
+                            let source = "";
+                            source += `vm.jwArray.Type.toArray(yield* (function*() {\n`;
+                            const array = this.localVariables.next();
+                            source += `const ${array} = vm.jwArray.Type.toArray(${this.descendInput(node.array)}, true).array;\n`;
+                            const sortValues = this.localVariables.next();
+                            source += `const ${sortValues} = [];\n`;
+                            source += `for (const _jwArrayLoop of Object.entries(${array})) {\n`;
+                            source += `${sortValues}.push(${this.descendInput(node.value)});\n`;
+                            source += this.yieldLoopInline();
+                            source += `}\n`;
+                            source += `return ${array}.map((_, i) => i)`;
+                            source +=   `.sort((a, b) => ${sortValues}[a] > ${sortValues}[b] ? 1 : ${sortValues}[a] < ${sortValues}[b] ? -1 : 0)`;
+                            source +=   `.map(i => ${array}[i]);\n`;
+                            source += `}()), true);\n`;
+                            return source;
+                        }
                     }
                 },
                 command(block) {
                     const node = block.inputs;
                     switch (block.opcode) {
                         case opcodes.BUILDER_APPEND:
-                            this.source += `thread._jwArrayBuilderIndex[thread._jwArrayBuilderIndex.length - 1].push(vm.jwArray.Type.forArray(${this.descendInput(node.value)}));\n`;
+                            this.source += `typeof _jwArrayBuilder !== "undefined" && _jwArrayBuilder.push(vm.jwArray.Type.forArray(${this.descendInput(node.value)}));\n`;
                             return true;
                         case opcodes.BUILDER_SET:
-                            this.source += `thread._jwArrayBuilderIndex[thread._jwArrayBuilderIndex.length - 1] = vm.jwArray.Type.toArray(${this.descendInput(node.array)}).array;\n`;
+                            this.source += `typeof _jwArrayBuilder !== "undefined" && _jwArrayBuilder = vm.jwArray.Type.toArray(${this.descendInput(node.array)}).array;\n`;
+                            return true;
+                        
+                        case opcodes.FOR_EACH:
+                            this.source += `for (const _jwArrayLoop of Object.entries(vm.jwArray.Type.toArray(${this.descendInput(node.array)}, true).array)) {\n`;
+                            this.descendStack(node.substack);
+                            this.yieldLoop();
+                            this.source += `}\n`;
                             return true;
                     }
                 }
             }
         }
-    }
-
-    /*getCompileInfo() {
-        return {
-            ir: {
-                builder: (generator, block) => {
-                    generator.script.yields = true
-                    return {
-                        kind: 'input',
-                        substack: generator.descendSubstack(block, 'SUBSTACK')
-                    }
-                },
-                forEach: (generator, block) => {
-                    generator.script.yields = true
-                    return {
-                        kind: 'stack',
-                        substack: generator.descendSubstack(block, 'SUBSTACK'),
-                        array: generator.descendInputOfBlock(block, 'ARRAY'),
-                    }
-                },
-                basicSort: (generator, block) => {
-                    generator.script.yields = true
-                    return {
-                        kind: 'input',
-                        array: generator.descendInputOfBlock(block, 'ARRAY'),
-                        value: generator.descendInputOfBlock(block, 'VALUE'),
-                    }
-                }
-            },
-            js: {
-                builder: (node, compiler, imports) => {
-                    const originalSource = compiler.source;
-                    compiler.source = 'vm.jwArray.Type.toArray(yield* (function*() {\n';
-                    compiler.source += `thread._jwArrayBuilderIndex ??= [];\n`
-                    compiler.source += `thread._jwArrayBuilderIndex.push([]);\n`
-                    compiler.descendStack(node.substack, {allowReturns: true, inLoop: false});
-                    compiler.source += `return thread._jwArrayBuilderIndex.pop();\n`
-                    compiler.source += '})())';
-                    // save edited
-                    const stackSource = compiler.source;
-                    compiler.source = originalSource;
-                    return new imports.TypedInput(stackSource, imports.TYPE_UNKNOWN);
-                },
-                forEach: (node, compiler, imports) => {
-                    const array = compiler.localVariables.next();
-                    compiler.source += `let ${array} = vm.jwArray.Type.toArray(${compiler.descendInput(node.array).asUnknown()}, true).array;\n`
-                    compiler.source += `thread._jwArrayForEach ??= [];\n`
-                    const forIndex = compiler.localVariables.next();
-                    compiler.source += `let ${forIndex} = thread._jwArrayForEach.push([]) - 1;\n`
-                    const index = compiler.localVariables.next();
-                    const output = compiler.localVariables.next();
-                    compiler.source += `let ${output} = yield* (function* () {for (let ${index} in ${array}) {\n`
-                    compiler.source += `thread._jwArrayForEach[${forIndex}] = [Number(${index}) + 1, ${array}[${index}]];\n`
-                    compiler.descendStack(node.substack, new imports.Frame(true, undefined, true));
-                    compiler.yieldLoop()
-                    compiler.source += '}})();\n'
-                    compiler.source += `thread._jwArrayForEach.pop();\n`
-                    compiler.source += `if (${output} !== undefined) {\n`
-                    compiler.source += `return ${output};\n`
-                    compiler.source += `};\n`
-                },
-                basicSort: (node, compiler, imports) => {
-                    const originalSource = compiler.source;
-                    compiler.source = '(yield* (function*() {';
-                    compiler.source += `thread._jwArrayForEach ??= [];\n`
-                    const forIndex = compiler.localVariables.next();
-                    compiler.source += `let ${forIndex} = thread._jwArrayForEach.push([]) - 1;\n`
-                    const og = compiler.localVariables.next();
-                    const out = compiler.localVariables.next();
-                    compiler.source += `let ${og} = vm.jwArray.Type.toArray(${compiler.descendInput(node.array).asUnknown()}, true).array;\n`
-                    compiler.source += `let ${out} = [];\n`
-                    const i = compiler.localVariables.next();
-                    compiler.source += `for (let ${i} = 0; ${i} < ${og}.length; ${i}++) {\n`
-                    compiler.source += `thread._jwArrayForEach[${forIndex}] = [${i} + 1, ${og}[${i}]];\n`
-                    compiler.source += `${out}.push([${i}, ${compiler.descendInput(node.value).asNumber()}]);\n`
-                    compiler.source += `};\n`
-                    compiler.source += `thread._jwArrayForEach.pop();\n`
-                    compiler.source += `${out}.sort((a, b) => a[1] - b[1]);\n`
-                    compiler.source += `return new vm.jwArray.Type(${out}.map(v => ${og}[v[0]]));\n`
-                    compiler.source += '})())';
-                    // save edited
-                    const stackSource = compiler.source;
-                    compiler.source = originalSource;
-                    return new imports.TypedInput(stackSource, imports.TYPE_UNKNOWN);
-                }
-            }
-        };
-    }*/
-
-    blank() {
-        return new jwArray.Type([], true)
-    }
-
-    blankLength({LENGTH}) {
-        LENGTH = clampIndex(Cast.toNumber(LENGTH))
-
-        return new jwArray.Type(Array(LENGTH).fill(null), true)
-    }
-
-    fromList({LIST}) {
-        return jwArray.Type.toArray(LIST)
-    }
-
-    parse({INPUT}) {
-        return jwArray.Type.toArray(INPUT)
-    }
-
-    split({STRING, DIVIDER}) {
-        STRING = Cast.toString(STRING)
-        DIVIDER = Cast.toString(DIVIDER)
-
-        return new jwArray.Type(STRING.split(DIVIDER), true)
-    }
-
-    builder() {
-        return 'noop'
-    }
-
-    builderCurrent({}, util) {
-        let bi = util.thread._jwArrayBuilderIndex ?? []
-        return bi[bi.length-1] ? new jwArray.Type(bi[bi.length-1]) : new jwArray.Type([], true)
-    }
-
-    builderAppend({VALUE}, util) {
-        let bi = util.thread._jwArrayBuilderIndex ?? []
-        if (bi[bi.length-1]) {
-            bi[bi.length-1].push(VALUE)
-        }
-    }
-
-    builderSet({ARRAY}, util) {
-        ARRAY = jwArray.Type.toArray(ARRAY)
-        let bi = util.thread._jwArrayBuilderIndex ?? []
-        if (bi[bi.length-1]) {
-            bi[bi.length-1] = [...ARRAY.array]
-        }
-    }
-
-    get({ARRAY, INDEX}) {
-        ARRAY = jwArray.Type.toArray(ARRAY, true)
-
-        return jwArray.Type.forArray(ARRAY.array[Cast.toNumber(INDEX)-1] === undefined ? "" : ARRAY.array[Cast.toNumber(INDEX)-1])
-    }
-
-    index({ARRAY, VALUE}) {
-        ARRAY = jwArray.Type.toArray(ARRAY, true)
-
-        return ARRAY.array.map(v => Cast.toString(v)).indexOf(Cast.toString(VALUE)) + 1
-    }
-
-    has({ARRAY, VALUE}) {
-        ARRAY = jwArray.Type.toArray(ARRAY, true)
-
-        return ARRAY.array.map(v => Cast.toString(v)).includes(Cast.toString(VALUE))
-    }
-
-    length({ARRAY}) {
-        ARRAY = jwArray.Type.toArray(ARRAY, true)
-
-        return ARRAY.length
-    }
-
-    set({ARRAY, INDEX, VALUE}) {
-        ARRAY = jwArray.Type.toArray(ARRAY)
-        INDEX = Cast.toNumber(INDEX)
-
-        ARRAY.array[clampIndex(Cast.toNumber(INDEX)-1)] = jwArray.Type.forArray(VALUE)
-        ARRAY.array = [...ARRAY.array] // no sparse arrays
-        return ARRAY
-    }
-
-    append({ARRAY, VALUE}) {
-        ARRAY = jwArray.Type.toArray(ARRAY)
-
-        ARRAY.array.push(jwArray.Type.forArray(VALUE))
-        return ARRAY
-    }
-
-    concat({ONE, TWO}) {
-        ONE = jwArray.Type.toArray(ONE)
-        TWO = jwArray.Type.toArray(TWO)
-
-        return new jwArray.Type(ONE.array.concat(TWO.array), true)
-    }
-
-    fill({ARRAY, VALUE}) {
-        ARRAY = jwArray.Type.toArray(ARRAY)
-
-        ARRAY.array.fill(jwArray.Type.forArray(VALUE))
-        return ARRAY
-    }
-
-    items({ARRAY, X, Y}) {
-        ARRAY = jwArray.Type.toArray(ARRAY, true)
-        X = clampIndex(Cast.toNumber(X))
-        Y = clampIndex(Cast.toNumber(Y))
-
-        return new jwArray.Type(ARRAY.array.slice(X - 1, Y), true)
-    }
-
-    splice({ARRAY, INDEX, ITEMS}) {
-        ARRAY = jwArray.Type.toArray(ARRAY)
-        INDEX = Cast.toNumber(INDEX)
-        ITEMS = Cast.toNumber(ITEMS)
-
-        ARRAY.array.splice(INDEX - 1, ITEMS)
-        return ARRAY
-    }
-
-    repeat({ARRAY, TIMES}) {
-        TIMES = clampIndex(Cast.toNumber(TIMES))
-        if (TIMES === 0) return new jwArray.Type([], true)
-        ARRAY = jwArray.Type.toArray(ARRAY, true)
-        if (TIMES === 1 || ARRAY.array.length == 0) return ARRAY
-        return new jwArray.Type(Array(TIMES).fill(ARRAY.array).flat(), true)
-    }
-
-    reverse({ARRAY}) {
-        ARRAY = jwArray.Type.toArray(ARRAY)
-
-        ARRAY.array.reverse()
-        return ARRAY
-    }
-
-    flat({ARRAY, DEPTH}) {
-        ARRAY = jwArray.Type.toArray(ARRAY, true)
-        DEPTH = Cast.toNumber(DEPTH)
-
-        return ARRAY.flat(DEPTH)
-    }
-
-    toString({ARRAY, FORMAT}) {
-        ARRAY = jwArray.Type.toArray(ARRAY, true)
-        
-        return ARRAY.toString(FORMAT === "pretty")
-    }
-
-    join({ARRAY, DIVIDER}) {
-        ARRAY = jwArray.Type.toArray(ARRAY, true)
-        DIVIDER = Cast.toString(DIVIDER)
-
-        return ARRAY.array.map(v => Cast.toString(v)).join(DIVIDER)
-    }
-
-    sum({ARRAY}) {
-        ARRAY = jwArray.Type.toArray(ARRAY, true)
-
-        return ARRAY.array.reduce((o, v) => o + Cast.toNumber(v), 0)
-    }
-
-    forEachI({}, util) {
-        return (util.thread._jwArrayForEach && util.thread._jwArrayForEach[util.thread._jwArrayForEach.length-1]) ? util.thread._jwArrayForEach[util.thread._jwArrayForEach.length-1][0] : 0
-    }
-
-    forEachV({}, util) {
-        return (util.thread._jwArrayForEach && util.thread._jwArrayForEach[util.thread._jwArrayForEach.length-1]) ? util.thread._jwArrayForEach[util.thread._jwArrayForEach.length-1][1] : ""
-    }
-
-    forEach() {
-        return 'noop'
-    }
-
-    forEachBreak({}, util) {
-        util.stackFrame.entry = []
-    }
-
-    basicSort() {
-        return 'noop'
     }
 }
 
