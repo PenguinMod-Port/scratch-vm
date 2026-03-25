@@ -72,7 +72,7 @@ class ArrayType {
     }
 
     static forArray(x) {
-        if (x instanceof ArrayType) return x
+        if (x instanceof ArrayType) return new ArrayType([...x.array], true)
         if (x instanceof Array) return new ArrayType([...x])
         if (vm.dogeiscutObject && isObject(x)) return new vm.dogeiscutObject.Type({...x})
         return x
@@ -195,6 +195,21 @@ class ArrayType {
 
     fill(value) {
         this.array.fill(ArrayType.forArray(value));
+        return this;
+    }
+
+    reverse() {
+        this.array.reverse();
+        return this;
+    }
+
+    splice(index, items) {
+        this.array.splice(index - 1, items);
+        return this;
+    }
+
+    repeat(times) {
+        this.array = this.array.repeat(times);
         return this;
     }
 }
@@ -642,6 +657,11 @@ class Extension {
             APPEND: 'jwArray.append',
             CONCAT: 'jwArray.concat',
             FILL: 'jwArray.fill',
+
+            REVERSE: 'jwArray.reverse',
+            SPLICE: 'jwArray.splice',
+            REPEAT: 'jwArray.repeat',
+            FLAT: 'jwArray.flat',
         }
 
         return {
@@ -724,6 +744,27 @@ class Extension {
                                 array: this.descendInputOfBlock(block, 'ARRAY'),
                                 value: this.descendInputOfBlock(block, 'VALUE')
                             });
+                        
+                        case 'jwArray_reverse':
+                            return new IntermediateInput(opcodes.REVERSE, InputType.CUSTOM_TYPE, {
+                                array: this.descendInputOfBlock(block, 'ARRAY')
+                            });
+                        case 'jwArray_splice':
+                            return new IntermediateInput(opcodes.SPLICE, InputType.CUSTOM_TYPE, {
+                                array: this.descendInputOfBlock(block, 'ARRAY'),
+                                index: this.descendInputOfBlock(block, 'INDEX').toType(InputType.NUMBER),
+                                items: this.descendInputOfBlock(block, 'ITEMS').toType(InputType.NUMBER)
+                            });
+                        case 'jwArray_repeat':
+                            return new IntermediateInput(opcodes.REPEAT, InputType.CUSTOM_TYPE, {
+                                array: this.descendInputOfBlock(block, 'ARRAY'),
+                                times: this.descendInputOfBlock(block, 'TIMES').toType(InputType.NUMBER)
+                            });
+                        case 'jwArray_flat':
+                            return new IntermediateInput(opcodes.FLAT, InputType.CUSTOM_TYPE, {
+                                array: this.descendInputOfBlock(block, 'ARRAY'),
+                                depth: this.descendInputOfBlock(block, 'DEPTH').toType(InputType.NUMBER)
+                            });
                     }
                 },
                 command(block) {
@@ -790,6 +831,15 @@ class Extension {
                             return `vm.jwArray.Type.toArray(${this.descendInput(node.array1)}).concat(vm.jwArray.Type.toArray(${this.descendInput(node.array2)}, true))`;
                         case opcodes.FILL:
                             return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).fill(${this.descendInput(node.value)})`;
+                        
+                        case opcodes.REVERSE:
+                            return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).reverse()`;
+                        case opcodes.SPLICE:
+                            return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).splice(${this.descendInput(node.index)}, ${this.descendInput(node.items)})`;
+                        case opcodes.REPEAT:
+                            return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).repeat(${this.descendInput(node.times)})`;
+                        case opcodes.FLAT:
+                            return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).flat(${this.descendInput(node.depth)})`;
                     }
                 },
                 command(block) {
