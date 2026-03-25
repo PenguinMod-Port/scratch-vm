@@ -619,7 +619,7 @@ class ExtensionManager {
                 const serviceObject = dispatch.services[serviceName];
                 if (!serviceObject[funcName]) {
                     // The function might show up later as a dynamic property of the service object
-                    log.warn(`Could not find extension block function called ${funcName}`);
+                    // log.warn(`Could not find extension block function called ${funcName}`);
                 }
                 return (args, util, realBlockInfo) =>
                     serviceObject[funcName](args, util, realBlockInfo);
