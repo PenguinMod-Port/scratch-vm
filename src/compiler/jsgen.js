@@ -1579,7 +1579,7 @@ class JSGenerator {
         if (this.script.arguments.length) {
             const args = [];
             for (let i = 0; i < this.script.arguments.length; i++) {
-                args.push(`px${i}`);
+                args.push(this.script.argumentIds[i].startsWith("SUBSTACK") ? `p${i}` : `px${i}`);
             }
             script += args.join(',');
         }
@@ -1588,6 +1588,7 @@ class JSGenerator {
         if (!this.isProcedure) script += `try {\n`
 
         for (let i in this.script.arguments) {
+            if (this.script.argumentIds[i].startsWith("SUBSTACK")) continue;
             script += `let p${i} = yield* px${i}();\n`;
         }        
 

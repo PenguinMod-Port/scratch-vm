@@ -122,8 +122,9 @@ class ScriptTreeGenerator {
             throw new Error(`IR: cannot find procedure: ${procedureVariant}`);
         }
 
-        const [paramNames, _paramIds, _paramDefaults] = paramNamesIdsAndDefaults;
+        const [paramNames, paramIds, _paramDefaults] = paramNamesIdsAndDefaults;
         this.script.arguments = paramNames;
+        this.script.argumentIds = paramIds;
     }
 
     enableWarp () {
@@ -2103,6 +2104,9 @@ class IRGenerator {
                     generator.setProcedureVariant(procedureVariant);
                     if (isWarp) generator.enableWarp();
                     const compiledProcedure = this.generateScriptTree(generator, definitionId);
+                    if (this.debug) {
+                        log.info(`IR: ${this.thread.target.getName()}: interpreted ${compiledProcedure.procedureCode}`, compiledProcedure);
+                    }
                     this.procedures[procedureVariant] = compiledProcedure;
                     procedureTreeCache[procedureVariant] = compiledProcedure;
                 }
@@ -2115,7 +2119,7 @@ class IRGenerator {
         let output = new IntermediateRepresentation(entry, this.procedures);
 
         if (this.debug) {
-            log.info(`IR: ${this.thread.target.getName()}: interpreted ${entry.procedureCode || 'script'}`, output);
+            log.info(`IR: ${this.thread.target.getName()}: interpreted script`, entry);
         }
 
         return output;

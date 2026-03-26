@@ -325,6 +325,7 @@ class IntermediateScript {
          * @type {string[]}
          */
         this.arguments = [];
+        this.argumentIds = [];
 
         /**
          * Whether this script should be run in warp mode.
