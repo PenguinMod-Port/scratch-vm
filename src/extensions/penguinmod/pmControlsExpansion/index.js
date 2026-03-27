@@ -16,6 +16,18 @@ class Extension {
             color3: "#cf8b17",
             blocks: [
                 {
+                    blockType: BlockType.XML,
+                    xml: `
+                    <block type="control_repeatForSeconds">
+                        <value name="TIMES">
+                            <shadow type="math_number" />
+                        </value>
+                    </block>
+                    <block type="control_waittick" />
+                    `
+                },
+                "---",
+                {
                     opcode: 'asNewBroadcast',
                     text: "new thread",
                     blockType: BlockType.COMMAND,
@@ -57,6 +69,23 @@ class Extension {
                     hideFromPalette: true,
                     allowDropAnywhere: true,
                     canDragDuplicate: true
+                },
+                "---",
+                {
+                    blockType: BlockType.XML,
+                    xml: `
+                    <block type="control_get_counter" />
+                    <block type="control_incr_counter" />
+                    <block type="control_decr_counter" />
+                    <block type="control_set_counter">
+                        <value name="VALUE">
+                            <shadow type="math_integer">
+                                <field name="NUM">1</field>
+                            </shadow>
+                        </value>
+                    </block>
+                    <block type="control_clear_counter" />
+                    `
                 }
             ]
         };
