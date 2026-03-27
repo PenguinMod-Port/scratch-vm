@@ -932,6 +932,9 @@ class JSGenerator {
         case StackOpcode.PM_CONTROL_SET_COUNTER:
             this.source += `runtime.ext_scratch3_control._counter = ${this.descendInput(node.value)};\n`;
             break;
+        case StackOpcode.PM_CONTROL_STOP_SPRITE:
+            this.source += `runtime.ext_scratch3_control._stopSprite(${this.descendInput(node.sprite)}, target);\n`;
+            break;
         case StackOpcode.PM_CONTROL_SWITCH:
             const switchName = this.localVariables.next();
             this.source += `${switchName}: switch (${this.descendInput(node.condition)}) {\n`;

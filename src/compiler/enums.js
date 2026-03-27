@@ -141,6 +141,7 @@ const StackOpcode = {
     PM_CONTROL_RESTART_PROJECT: 'control.restartProject',
     PM_CONTROL_RUN_AS: 'control.runAs',
     PM_CONTROL_SET_COUNTER: 'control.counterSet',
+    PM_CONTROL_STOP_SPRITE: 'control.stopSprite',
     PM_CONTROL_SWITCH: 'control.switch',
     PM_CONTROL_THROW_ERROR: 'control.throwError',
     PM_CONTROL_TRY_CATCH: 'control.tryCatch',

@@ -245,6 +245,19 @@ class Scratch3ControlBlocks {
             this.runtime.stopForTarget(clone);
         }
     }
+
+    _stopSprite (option, myself) {
+        let target;
+        if (option === '_myself_') {
+            target = myself;
+        } else if (option === '_stage_') {
+            target = this.runtime.getTargetForStage();
+        } else {
+            target = this.runtime.getSpriteTargetByName(option);
+        }
+        if (!target) return;
+        this.runtime.stopForTarget(target);
+    }
 }
 
 module.exports = Scratch3ControlBlocks;

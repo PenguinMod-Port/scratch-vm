@@ -1072,11 +1072,15 @@ class ScriptTreeGenerator {
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_RUN_AS, {
                 sprite: this.descendInputOfBlock(block, 'RUN_AS_OPTION').toType(InputType.STRING),
                 substack: this.descendSubstack(block, 'SUBSTACK')
-            })
+            });
         case 'control_set_counter':
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_SET_COUNTER, {
                 value: this.descendInputOfBlock(block, 'VALUE').toType(InputType.NUMBER)
-            })
+            });
+        case 'control_stop_sprite':
+            return new IntermediateStackBlock(StackOpcode.PM_CONTROL_STOP_SPRITE, {
+                sprite: this.descendInputOfBlock(block, 'STOP_OPTION').toType(InputType.STRING)
+            });
         case 'control_switch':
         case 'control_switch_default':
             let cases = this.getSubstackChildren(block, block.opcode === 'control_switch_default' ? 'SUBSTACK1' : 'SUBSTACK');
