@@ -209,7 +209,7 @@ class ArrayType {
     }
 
     repeat(times) {
-        this.array = this.array.repeat(times);
+        this.array = Array(times).fill(this.array).flat();
         return this;
     }
 }
