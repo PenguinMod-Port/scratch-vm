@@ -57,7 +57,7 @@ const jwScope = {
 
     reset(array) {
         for (let i = array.length-1; i >= 0; i--) {
-            array[i] = {}
+            array[i] = Object.create(null);
         }
     },
 
@@ -260,7 +260,7 @@ class Extension {
                     this.source += "let jwScope = [];\n"
                 },
                 stackStart() {
-                    this.source += "var jwScopeT = [...jwScope, {}];\n"
+                    this.source += "var jwScopeT = [...jwScope, Object.create(null)];\n"
                     this.source += "{\n" // create scope
                     this.source += "let jwScope = jwScopeT;\n"
                 },
