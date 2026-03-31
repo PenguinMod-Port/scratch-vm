@@ -64,6 +64,7 @@ const defaultBuiltinExtensions = {
     // old ass deprecated extensions
     jwUnite: () => require('../extensions/penguinmod/jwUnite'),
     pmCamera: () => require('../extensions/penguinmod/pmCamera'),
+    jgJSON: () => require('../extensions/penguinmod/jgJSON'),
 };
 
 /**
