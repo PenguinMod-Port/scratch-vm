@@ -903,7 +903,7 @@ class Extension {
                             source += `return ${array}.map((_, i) => i)`;
                             source +=   `.sort((a, b) => ${sortValues}[a] > ${sortValues}[b] ? 1 : ${sortValues}[a] < ${sortValues}[b] ? -1 : 0)`;
                             source +=   `.map(i => ${array}[i]);\n`;
-                            source += `}()), true);\n`;
+                            source += `}()), true)\n`;
                             return source;
                         }
                     }
