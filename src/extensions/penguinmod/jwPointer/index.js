@@ -122,8 +122,34 @@ class PointerType {
     }
 }
 
+class VariablePointerType extends PointerType {
+    customId = "jwVariablePointer"
+
+    constructor(variableID) {
+        super(-1);
+        this.variableID = variableID;
+    }
+
+    _getVariable() {
+        return vm.runtime.targets.map(v => Object.values(v.variables)).flat().find(v => v.id == this.variableID);
+    }
+
+    get value() {
+        let variable = this._getVariable();
+        if (!variable) return null;
+        return variable.value;
+    }
+
+    set value(value) {
+        let variable = this._getVariable();
+        if (!variable) return;
+        variable.value = value;
+    }
+}
+
 const Pointer = {
     Type: PointerType,
+    VariableType: VariablePointerType,
     Block: {
         blockType: BlockType.REPORTER,
         forceOutputType: "Pointer",
@@ -293,6 +319,20 @@ class Extension {
                     blockShape: BlockShape.SQUARE,
                     hideFromPalette: !vm.runtime.ext_jwArray,
                     ...(vm.jwArray ? vm.jwArray.Block : {})
+                },
+                "---",
+                {
+                    opcode: "variablePointer",
+                    text: "pointer to variable [VARIABLE]",
+                    arguments: {
+                        VARIABLE: {
+                            type: ArgumentType.STRING,
+                            defaultValue: "variable",
+                            exemptFromNormalization: true
+                        }
+                    },
+                    extensions: ["colours_data"],
+                    ...Pointer.Block
                 }
             ]
         }
@@ -370,6 +410,10 @@ class Extension {
         if (!vm.jwArray) return 0;
         let array = Array.from(pointers.keys()).map(v => new Pointer.Type(v));
         return vm.jwArray.Type.toArray(array);
+    }
+
+    variablePointer({VARIABLE}) {
+        return new Pointer.VariableType('`jEk@4|i[#Fk?(8x)AV.-my variable');
     }
 }
 
