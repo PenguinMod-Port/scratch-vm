@@ -246,6 +246,14 @@ class RenderedTarget extends Target {
         return 'left-right';
     }
 
+    static get ROTATION_STYLE_UP_DOWN () {
+        return 'up-down';
+    }
+
+    static get ROTATION_STYLE_LOOK_AT () {
+        return 'look at';
+    }
+
     /**
      * Rotation style for "no rotation."
      * @type {string}
@@ -313,14 +321,28 @@ class RenderedTarget extends Target {
         // Default: no changes to `this.direction` or `this.scale`.
         let finalDirection = this.direction;
         let finalScale = [this.size, this.size];
-        if (this.rotationStyle === RenderedTarget.ROTATION_STYLE_NONE) {
-            // Force rendered direction to be 90.
-            finalDirection = 90;
-        } else if (this.rotationStyle === RenderedTarget.ROTATION_STYLE_LEFT_RIGHT) {
-            // Force rendered direction to be 90, and flip drawable if needed.
-            finalDirection = 90;
-            const scaleFlip = (this.direction < 0) ? -1 : 1;
-            finalScale = [scaleFlip * this.size, this.size];
+
+        switch (this.rotationStyle) {
+            case RenderedTarget.ROTATION_STYLE_NONE:
+                finalDirection = 90;
+                break;
+            case RenderedTarget.ROTATION_STYLE_LEFT_RIGHT: {
+                finalDirection = 90;
+                const scaleFlip = (this.direction < 0) ? -1 : 1;
+                finalScale = [scaleFlip * this.size, this.size];
+                break;
+            }
+            case RenderedTarget.ROTATION_STYLE_UP_DOWN: {
+                finalDirection = 90;
+                const scaleFlip = (Math.abs(this.direction) > 90) ? -1 : 1;
+                finalScale = [this.size, scaleFlip * this.size];
+                break;
+            }
+            case RenderedTarget.ROTATION_STYLE_LOOK_AT: {
+                const scaleFlip = (this.direction < 0) ? -1 : 1;
+                finalScale = [this.size, scaleFlip * this.size];
+                break;
+            }
         }
 
         // stretch
@@ -628,13 +650,24 @@ class RenderedTarget extends Target {
      * @param {!string} rotationStyle New rotation style.
      */
     setRotationStyle (rotationStyle) { // used by compiler
-        if (rotationStyle === RenderedTarget.ROTATION_STYLE_NONE) {
-            this.rotationStyle = RenderedTarget.ROTATION_STYLE_NONE;
-        } else if (rotationStyle === RenderedTarget.ROTATION_STYLE_ALL_AROUND) {
-            this.rotationStyle = RenderedTarget.ROTATION_STYLE_ALL_AROUND;
-        } else if (rotationStyle === RenderedTarget.ROTATION_STYLE_LEFT_RIGHT) {
-            this.rotationStyle = RenderedTarget.ROTATION_STYLE_LEFT_RIGHT;
+        switch (rotationStyle) {
+            case RenderedTarget.ROTATION_STYLE_NONE:
+                this.rotationStyle = RenderedTarget.ROTATION_STYLE_NONE;
+                break;
+            case RenderedTarget.ROTATION_STYLE_ALL_AROUND:
+                this.rotationStyle = RenderedTarget.ROTATION_STYLE_ALL_AROUND;
+                break;
+            case RenderedTarget.ROTATION_STYLE_LEFT_RIGHT:
+                this.rotationStyle = RenderedTarget.ROTATION_STYLE_LEFT_RIGHT;
+                break;
+            case RenderedTarget.ROTATION_STYLE_UP_DOWN:
+                this.rotationStyle = RenderedTarget.ROTATION_STYLE_UP_DOWN;
+                break;
+            case RenderedTarget.ROTATION_STYLE_LOOK_AT:
+                this.rotationStyle = RenderedTarget.ROTATION_STYLE_LOOK_AT;
+                break;
         }
+
         if (this.renderer) {
             const {direction, scale} = this._getRenderedDirectionAndScale();
             this.renderer.updateDrawableDirectionScale(this.drawableID, direction, scale);
