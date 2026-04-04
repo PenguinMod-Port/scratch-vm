@@ -616,7 +616,7 @@ class JSGenerator {
                     let stack = this.descendStackInline(input, {isWarp: procedureData.isWarp, allowReturns: true});
                     args.push(`function*(thread, target, runtime, stage) {${stack}}`);
                 } else {
-                    args.push(`function*() {return ${this.descendInput(input)};}`);
+                    args.push(`function*(thread, target, runtime, stage) {return ${this.descendInput(input)};}`);
                 }
             }
             const joinedArgs = args.join(',');
@@ -1230,7 +1230,7 @@ class JSGenerator {
                     let stack = this.descendStackInline(input, {isWarp: procedureData.isWarp, allowReturns: true});
                     args.push(`function*(thread, target, runtime, stage) {${stack}}`);
                 } else {
-                    args.push(this.descendInput(input));
+                    args.push(`function*(thread, target, runtime, stage) {return ${this.descendInput(input)};}`);
                 }
             }
             this.source += args.join(',');
