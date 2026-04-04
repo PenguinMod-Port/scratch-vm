@@ -616,7 +616,7 @@ class JSGenerator {
                     let stack = this.descendStackInline(input, {isWarp: procedureData.isWarp, allowReturns: true});
                     args.push(`function*(thread, target, runtime, stage) {${stack}}`);
                 } else {
-                    args.push(`function*(thread, target, runtime, stage) {return ${this.descendInput(input)};}`);
+                    args.push(`function*() {return ${this.descendInput(input)};}`);
                 }
             }
             const joinedArgs = args.join(',');
@@ -833,6 +833,7 @@ class JSGenerator {
             break;
         case StackOpcode.PM_CONTROL_CONTINUE_LOOP:
             if (this.inLoop) {
+                this.yieldLoop();
                 this.source += this.loopName ? `continue ${this.loopName};\n` : 'continue;\n';
             } else {
                 this.source += `throw 'All "continue loop" blocks must be inside of a looping block.';\n`;
@@ -858,6 +859,7 @@ class JSGenerator {
         }
         case StackOpcode.PM_CONTROL_ESCAPE_LOOP:
             if (this.inLoop) {
+                this.yieldLoop();
                 this.source += this.loopName ? `break ${this.loopName};\n` : 'break;\n';
             } else {
                 this.source += `throw 'All "escape loop" blocks must be inside of a looping block.';\n`;
@@ -1230,7 +1232,7 @@ class JSGenerator {
                     let stack = this.descendStackInline(input, {isWarp: procedureData.isWarp, allowReturns: true});
                     args.push(`function*(thread, target, runtime, stage) {${stack}}`);
                 } else {
-                    args.push(`function*(thread, target, runtime, stage) {return ${this.descendInput(input)};}`);
+                    args.push(`function*() {return ${this.descendInput(input)};}`);
                 }
             }
             this.source += args.join(',');
