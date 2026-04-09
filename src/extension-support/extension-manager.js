@@ -31,6 +31,7 @@ const defaultBuiltinExtensions = {
     // -- penguinmod --
 
     // expansions
+    pmEventsExpansion: () => require('../extensions/penguinmod/pmEventsExpansion'),
     pmControlsExpansion: () => require('../extensions/penguinmod/pmControlsExpansion'),
     pmOperatorsExpansion: () => require('../extensions/penguinmod/pmOperatorsExpansion'),
 
