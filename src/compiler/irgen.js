@@ -783,6 +783,8 @@ class ScriptTreeGenerator {
             return new IntermediateInput(InputOpcode.PM_SENSING_KEY_HIT, InputType.BOOLEAN, {
                 key: this.descendInputOfBlock(block, 'KEY_OPTION', true)
             });
+        case 'sensing_mobile':
+            return new IntermediateInput(InputOpcode.PM_SENSING_MOBILE, InputType.BOOLEAN);
         case 'sensing_mouse_button_clicked':
             return new IntermediateInput(InputOpcode.PM_SENSING_MOUSEBTN_CLICKED, InputType.BOOLEAN, {
                 button: ["left", "middle", "right"].indexOf(block.fields.BUTTON_OPTION.value)
