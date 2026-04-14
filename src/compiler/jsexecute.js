@@ -278,21 +278,6 @@ baseRuntime += `const isNotActuallyZero = val => {
 };`;
 
 /**
- * Determine if two values are equal.
- * @param {*} v1 First value
- * @param {*} v2 Second value
- * @returns {boolean} true if v1 is equal to v2
- */
-baseRuntime += `const compareEqualSlow = (v1, v2) => {
-    const n1 = +v1;
-    if (Number.isNaN(n1) || (n1 === 0 && isNotActuallyZero(v1))) return ('' + v1).toLowerCase() === ('' + v2).toLowerCase();
-    const n2 = +v2;
-    if (Number.isNaN(n2) || (n2 === 0 && isNotActuallyZero(v2))) return ('' + v1).toLowerCase() === ('' + v2).toLowerCase();
-    return n1 === n2;
-};
-const compareEqual = (v1, v2) => (typeof v1 === 'number' && typeof v2 === 'number' && !Number.isNaN(v1) && !Number.isNaN(v2) || v1 === v2) ? v1 === v2 : compareEqualSlow(v1, v2);`;
-
-/**
  * Determine if one value is greater than another.
  * @param {*} v1 First value
  * @param {*} v2 Second value
@@ -505,7 +490,7 @@ runtimeFunctions.listContains = `const listContains = (list, item) => {
         return true;
     }
     for (let i = 0; i < list.value.length; i++) {
-        if (compareEqual(list.value[i], item)) {
+        if (vm.runtime.equals(list.value[i], item)) {
             return true;
         }
     }
@@ -520,7 +505,7 @@ runtimeFunctions.listContains = `const listContains = (list, item) => {
  */
 runtimeFunctions.listIndexOf = `const listIndexOf = (list, item) => {
     for (let i = 0; i < list.value.length; i++) {
-        if (compareEqual(list.value[i], item)) {
+        if (vm.runtime.equals(list.value[i], item)) {
             return i + 1;
         }
     }

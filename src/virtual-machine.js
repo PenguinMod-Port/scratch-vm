@@ -27,6 +27,7 @@ const {serializeSounds, serializeCostumes} = require('./serialization/serialize-
 require('canvas-toBlob');
 const {exportCostume} = require('./serialization/tw-costume-import-export');
 const Base64Util = require('./util/base64-util');
+const pmSymbol = require('./util/symbol');
 
 const RESERVED_NAMES = ['_mouse_', '_stage_', '_edge_', '_myself_', '_random_'];
 
@@ -231,6 +232,7 @@ class VirtualMachine extends EventEmitter {
             RenderedTarget,
             JSZip,
             Variable,
+            pmSymbol,
 
             these_broke_before_and_will_break_again: () => {
                 console.warn('You are using unsupported APIs. WHEN your code breaks, do not expect help.');

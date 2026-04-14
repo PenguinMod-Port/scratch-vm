@@ -1,9 +1,10 @@
-const BlockType = require('../../../extension-support/block-type')
-const BlockShape = require('../../../extension-support/block-shape')
-const ArgumentType = require('../../../extension-support/argument-type')
-const Cast = require('../../../util/cast')
+const BlockType = require('../../../extension-support/block-type');
+const BlockShape = require('../../../extension-support/block-shape');
+const ArgumentType = require('../../../extension-support/argument-type');
+const Cast = require('../../../util/cast');
+const pmSymbol = require('../../../util/symbol.js');
 
-let arrayLimit = 2 ** 32 - 1
+let arrayLimit = 2 ** 32 - 1;
 
 /**
 * @param {number} x
@@ -11,10 +12,10 @@ let arrayLimit = 2 ** 32 - 1
 */
 function formatNumber(x) {
     if (x >= 1e6) {
-        return x.toExponential(4)
+        return x.toExponential(4);
     } else {
-        x = Math.floor(x * 1000) / 1000
-        return x.toFixed(Math.min(3, (String(x).split('.')[1] || '').length))
+        x = Math.floor(x * 1000) / 1000;
+        return x.toFixed(Math.min(3, (String(x).split('.')[1] || '').length));
     }
 }
 
@@ -24,11 +25,11 @@ const escapeHTML = unsafe => {
         .replaceAll("<", "&lt;")
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;")
+        .replaceAll("'", "&#039;");
 };
 
 function clampIndex(x) {
-    return Math.min(Math.max(Math.floor(x), 0), arrayLimit)
+    return Math.min(Math.max(Math.floor(x), 0), arrayLimit);
 }
 
 function span(text) {
@@ -161,21 +162,11 @@ class ArrayType {
     }
 
     indexOf(value) {
-        if (![null, Object.prototype].includes(Object.getPrototypeOf(value)) && value.customId) {
-            // custom type
-            return this.array.findIndex(v => v.customId == value.customId && Cast.toString(v) == Cast.toString(value)) + 1;
-        } else {
-            return this.array.indexOf(value) + 1;
-        }
+        return this.array.findIndex(v => vm.runtime.equals(v, value)) + 1;
     }
 
     has(value) {
-        if (![null, Object.prototype].includes(Object.getPrototypeOf(value)) && value.customId) {
-            // custom type
-            return this.array.some(v => v.customId == value.customId && Cast.toString(v) == Cast.toString(value));
-        } else {
-            return this.array.includes(value);
-        }
+        return this.array.some(v => vm.runtime.equals(v, value)) + 1;
     }
 
     set(index, value) {
@@ -211,6 +202,10 @@ class ArrayType {
     repeat(times) {
         this.array = Array(times).fill(this.array).flat();
         return this;
+    }
+
+    [pmSymbol.equals](other) {
+        return this.array.length == other.array.length && this.array.every((v, i) => vm.runtime.equals(v, other.array[i]));
     }
 }
 

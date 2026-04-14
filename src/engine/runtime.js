@@ -26,6 +26,7 @@ const safeStringify = require('../util/tw-safe-stringify.js');
 const MonitorState = require('./tw-monitor-state.js');
 const SemVer = require('../util/semver.js');
 const MathUtil = require('../util/math-util.js');
+const pmSymbol = require('../util/symbol.js');
 
 // Virtual I/O devices.
 const ClipboardIO = require('../io/clipboard');
@@ -3762,6 +3763,48 @@ class Runtime extends EventEmitter {
         this.renderer.camera.setSize(state.scale * 100, state.scale * 100, screen);
         this.renderer.camera.setDirection(state.dir + 90, screen);
         this.requestRedraw();
+    }
+
+    equals(a, b) {
+        const isCustomType = v => {
+            let prototype = Object.getPrototypeOf(v)
+            return prototype !== Object.prototype && prototype !== null && v.customId
+        };
+        const isNotActuallyZero = val => {
+            if (typeof val !== 'string') return false;
+            for (let i = 0; i < val.length; i++) {
+                const code = val.charCodeAt(i);
+                if (code === 48 || code === 9) {
+                    return false;
+                }
+            }
+            return true;
+        };
+
+        if (a === null || (typeof a === 'number' && !isNaN(a) && typeof b === 'number' && !isNaN(b))) return a === b;
+
+        if (this.compilerOptions.strictEquality) {
+            let aC = isCustomType(a);
+            let bC = isCustomType(b);
+            if (aC !== bC) return false;
+            if (aC && bC) {
+                if (a.customId !== b.customId) return false;
+                if (a[pmSymbol.equals]) return a[pmSymbol.equals](b);
+                return false;
+            }
+
+            return a == b;
+        } else {
+            if (isCustomType(a) && isCustomType(b) && a.customId === b.customId) {
+                if (a[pmSymbol.equals] && a[pmSymbol.equals](b)) return true;
+            }
+
+            const n1 = +a;
+            if (Number.isNaN(n1) || (n1 === 0 && isNotActuallyZero(a))) return ('' + a).toLowerCase() === ('' + b).toLowerCase();
+            const n2 = +b;
+            if (Number.isNaN(n2) || (n2 === 0 && isNotActuallyZero(b))) return ('' + b).toLowerCase() === ('' + b).toLowerCase();
+            return n1 === n2;
+        }
     }
 }
 
