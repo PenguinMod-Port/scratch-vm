@@ -166,7 +166,7 @@ class ArrayType {
     }
 
     has(value) {
-        return this.array.some(v => vm.runtime.equals(v, value)) + 1;
+        return this.array.some(v => vm.runtime.equals(v, value));
     }
 
     set(index, value) {
