@@ -50,6 +50,7 @@ const defaultBuiltinExtensions = {
     jwFragment: () => require('../extensions/penguinmod/jwFragment'),
     jwPromise: () => require('../extensions/penguinmod/jwPromise'),
     jwCamera: () => require('../extensions/penguinmod/jwCamera'),
+    jwClass: () => require('../extensions/penguinmod/jwClass'),
 
     // jeremy
     jgStorage: () => require('../extensions/penguinmod/jgStorage'),
@@ -219,7 +220,7 @@ class ExtensionManager {
         const extension = this.builtinExtensions[extensionId]();
         const extensionInstance = new extension(this.runtime);
         this._loadedExtensions.set(extensionId, 'fakeServiceName');
-        this.loadNewDependencies().then(() => {
+        return this.loadNewDependencies(extensionId).then(() => {
             const serviceName = this._registerInternalExtension(extensionInstance);
             this._loadedExtensions.set(extensionId, serviceName);
             this.runtime.compilerRegisterExtension(extensionId, extensionInstance);
@@ -284,9 +285,9 @@ class ExtensionManager {
                 dispatch.setServiceSync(serviceName, extensionObject);
                 dispatch.callSync('extensions', 'registerExtensionServiceSync', serviceName);
                 this._loadedExtensions.set(extensionInfo.id, serviceName);
-            }
 
-            await this.loadNewDependencies();
+                await this.loadNewDependencies(extensionInfo.id);
+            }
 
             this._finishedLoadingExtensionScript();
             return;
@@ -686,18 +687,17 @@ class ExtensionManager {
         return Object.entries(this._extensionDependencies).filter(([id, deps]) => deps.map(v => v[0]).includes(extensionId)).map(([id]) => id);
     }
 
-    async loadNewDependencies() {
-        const allDependencies = Object.values(this._extensionDependencies).flat();
-        const newDependencies = allDependencies.filter(([id]) => !this._loadedExtensions.has(id));
-        
-        for (const v of allDependencies) {
+    async loadNewDependencies(extensionId) {
+        const dependencies = this._extensionDependencies[extensionId];
+        if (!dependencies) return;
+
+        for (const v of dependencies) {
             let id = v[0];
             let callback = v[1];
             if (!this._loadedExtensions.has(id)) {
                 await this.loadExtensionURL(id);
             }
             callback();
-            v[1] = () => {};
         }
     }
 

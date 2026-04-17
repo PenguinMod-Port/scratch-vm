@@ -801,7 +801,7 @@ class VirtualMachine extends EventEmitter {
                 // Already loaded
             } else if (this.extensionManager.isBuiltinExtension(extensionID)) {
                 // Builtin extension
-                this.extensionManager.loadExtensionIdSync(extensionID);
+                await this.extensionManager.loadExtensionIdSync(extensionID);
             } else {
                 // Custom extension
                 let url = extensionURLs.get(extensionID);
