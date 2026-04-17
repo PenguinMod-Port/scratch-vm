@@ -2,12 +2,17 @@ const BlockType = require('../../../extension-support/block-type');
 const BlockShape = require('../../../extension-support/block-shape');
 const ArgumentType = require('../../../extension-support/argument-type');
 const Cast = require('../../../util/cast');
+const pmSymbol = require('../../../util/symbol.js');
 
 class ClassType {
     constructor(construct = function*(){}, extension = null) {
         this.construct = construct;
         /** @type {ClassType?} */
         this.extension = extension;
+    }
+
+    toString() {
+        return "Class";
     }
 
     static toClass(v) {
@@ -34,6 +39,10 @@ class ClassType {
 
     extend(extension) {
         return new ClassType(this.construct, extension);
+    }
+    
+    [pmSymbol.equals](other) {
+        return this === other;
     }
 }
 
