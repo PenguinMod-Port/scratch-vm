@@ -40,6 +40,17 @@ export function compatBlock(block, pmVersion) {
             delete block.mutation;
         }
 
+        //operator_expandableBool
+        if (block.opcode === "operator_expandableBool" && block.mutation) {
+            block.fields.EXPANDABLE = {name: "EXPANDABLE", value: block.mutation.inputcount};
+
+            for (let i in String(block.mutation.menuvalues).split("")) {
+                block.fields[`OP${Number(i) + 2}`] = {name: `OP${Number(i) + 2}`, value: block.mutation.menuvalues[i]};
+            }
+
+            delete block.mutation;
+        }
+
         //procedures_definition_return
         if (block.opcode === "procedures_definition_return") {
             block.opcode = "procedures_definition";
