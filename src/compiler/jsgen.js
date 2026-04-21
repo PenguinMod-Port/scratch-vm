@@ -437,6 +437,43 @@ class JSGenerator {
             let array = this.localVariables.next();
             return `([${node.inputs.map(input => this.descendInput(input)).join(', ')}].reduce((${accumulator}, ${value}, _, ${array}) => ${accumulator} + ${value} / ${array}.length, 0))`;
         }
+        case InputOpcode.PM_OP_BOOL_EXPANDABLE: {
+            const opMap = {
+                "a": " && ",
+                "n": " && ",
+                "o": " || ",
+                "N": " || ",
+                "x": " != ",
+                "X": " != ",
+            };
+            const isAbnormal = op => op === "n" || op === "N" || op === "X";
+
+            let abnormalCount = 0;
+            let output = "(";
+
+            for (let i in node.inputs) {
+                let op = node.operations[i];
+                let abnormal = isAbnormal(op);
+
+                if (abnormal) {
+                    output += "!(";
+                    abnormalCount++;
+                }
+                output += this.descendInput(node.inputs[i]);
+                if (!abnormal && abnormalCount > 0) {
+                    output += ")";
+                    abnormalCount--;
+                }
+                output += opMap[op] ?? "";
+            }
+
+            while (abnormalCount > 0) {
+                output += ")";
+                abnormalCount--;
+            }
+            output += ")";
+            return output;
+        }
         case InputOpcode.PM_OP_CONSTRAIN:
             return `Math.min(Math.max(${this.descendInput(node.min)}, ${this.descendInput(node.input)}), ${this.descendInput(node.max)})`;
         case InputOpcode.PM_OP_INTERPOLATE:

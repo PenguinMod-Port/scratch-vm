@@ -538,6 +538,19 @@ class ScriptTreeGenerator {
                 min: this.descendInputOfBlock(block, 'min').toType(InputType.NUMBER),
                 max: this.descendInputOfBlock(block, 'max').toType(InputType.NUMBER)
             });
+        case 'operator_expandableBool': {
+            let amount = Number(block.fields.EXPANDABLE.value);
+            let inputs = [];
+            let operations = [];
+            for (let i = 0; i < amount; i++) {
+                inputs.push(this.descendInputOfBlock(block, 'BOOL' + (i + 1)).toType(InputType.BOOLEAN));
+                if (i >= 1) operations.push(block.fields['OP' + (i + 1)].value);
+            }
+            return new IntermediateInput(InputOpcode.PM_OP_BOOL_EXPANDABLE, InputType.BOOLEAN, {
+                inputs,
+                operations
+            })
+        }
         case 'operator_expandableMath': {
             let amount = Number(block.fields.EXPANDABLE.value);
             let inputs = [];
