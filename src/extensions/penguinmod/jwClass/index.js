@@ -4,19 +4,29 @@ const ArgumentType = require('../../../extension-support/argument-type');
 const Cast = require('../../../util/cast');
 const pmSymbol = require('../../../util/symbol.js');
 
+const escapeHTML = unsafe => {
+    return unsafe
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+};
+
 class ClassType {
-    constructor(construct = function*(){}, extension = null) {
+    constructor(construct = function*(){}, name = '', extension = null) {
         this.construct = construct;
+        this.name = name;
         /** @type {ClassType?} */
         this.extension = extension;
     }
 
     toString() {
-        return "Class";
+        return this.name.length > 0 ? `Class<${this.name}>` : 'Class';
     }
 
     jwArrayHandler() {
-        return "Class";
+        return escapeHTML(this.toString());
     }
 
     static toClass(v) {
@@ -114,8 +124,8 @@ class Extension {
         vm.jwClass = jwClass;
         vm.runtime.registerSerializer(
             "jwClass", 
-            v => null, 
-            v => new jwClass.Type()
+            v => v.name, 
+            v => new jwClass.Type(function*(){}, v.name)
         );
     }
 
@@ -128,8 +138,12 @@ class Extension {
             blocks: [
                 {
                     opcode: "class",
-                    text: "class [SELF]",
+                    text: "class [NAME] [SELF]",
                     arguments: {
+                        NAME: {
+                            type: ArgumentType.STRING,
+                            defaultValue: ""
+                        },
                         SELF: {
                             fillIn: "self"
                         }
@@ -200,6 +214,14 @@ class Extension {
                     },
                     ...jwPointer.Block
                 },
+                {
+                    opcode: "getName",
+                    text: "name of [CLASS]",
+                    arguments: {
+                        CLASS: jwClass.Argument
+                    },
+                    ...jwClass.Block
+                },
                 "---",
                 {
                     opcode: "instanceof",
@@ -224,6 +246,7 @@ class Extension {
             GET: 'jwClass.get',
 
             NEW: 'jwClass.new',
+            NAME: 'jwClass.name',
 
             INSTANCEOF: 'jwClass.instanceof'
         };
@@ -234,6 +257,7 @@ class Extension {
                     switch (block.opcode) {
                         case 'jwClass_class':
                             return new IntermediateInput(opcodes.CLASS, InputType.CUSTOM_TYPE, {
+                                name: this.descendInputOfBlock(block, 'NAME').toType(InputType.STRING),
                                 substack: this.descendSubstack(block, 'SUBSTACK')
                             }, true);
                         case 'jwClass_self':
@@ -259,6 +283,10 @@ class Extension {
                             return new IntermediateInput(opcodes.NEW, InputType.CUSTOM_TYPE, {
                                 class: this.descendInputOfBlock(block, 'CLASS')
                             }, true);
+                        case 'jwClass_getName':
+                            return new IntermediateInput(opcodes.NAME, InputType.STRING, {
+                                class: this.descendInputOfBlock(block, 'CLASS')
+                            });
 
                         case 'jwClass_instanceof':
                             return new IntermediateInput(opcodes.INSTANCEOF, InputType.BOOLEAN, {
@@ -287,7 +315,7 @@ class Extension {
                             let source = "";
                             source += `(new vm.jwClass.Type(function*(_jwClassSelf, thread, target) {\n`;
                             source += this.descendStackInline(node.substack, {allowReturns: true, inLoop: false});
-                            source += `}))`;
+                            source += `}, ${this.descendInput(node.name)}))`;
                             return source;
                         case opcodes.SELF:
                             return `(typeof _jwClassSelf !== "undefined" ? _jwClassSelf : new vm.jwPointer.Type(0))`;
@@ -299,6 +327,8 @@ class Extension {
 
                         case opcodes.NEW:
                             return `(yield* vm.jwClass.Type.toClass(${this.descendInput(node.class)}).createInstance(thread, target))`;
+                        case opcodes.NAME:
+                            return `vm.jwClass.Type.toClass(${this.descendInput(node.class)}).name`;
 
                         case opcodes.INSTANCEOF:
                             return `vm.jwClass.instanceOf(${this.descendInput(node.pointer)}, vm.jwClass.Type.toClass(${this.descendInput(node.class)}))`;
