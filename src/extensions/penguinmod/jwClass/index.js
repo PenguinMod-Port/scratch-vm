@@ -14,11 +14,12 @@ const escapeHTML = unsafe => {
 };
 
 class ClassType {
-    constructor(construct = function*(){}, name = '', extension = null) {
+    constructor(construct = function*(){}, name = '', extension = null, proc = null) {
         this.construct = construct;
         this.name = name;
         /** @type {ClassType?} */
         this.extension = extension;
+        this.proc = proc ?? {};
     }
 
     toString() {
@@ -35,6 +36,7 @@ class ClassType {
     }
 
     createInstance = function* (thread, target) {
+        if (this.proc) thread.procedures = {...this.proc, ...thread.procedures}
         if (!this.extension) {
             let object = new dogeiscutObject.Type();
             object.map.set("__class__", this);
@@ -52,7 +54,7 @@ class ClassType {
     }
 
     extend(extension) {
-        return new ClassType(this.construct, extension);
+        return new ClassType(this.construct, this.name, extension);
     }
     
     [pmSymbol.equals](other) {
@@ -315,7 +317,7 @@ class Extension {
                             let source = "";
                             source += `(new vm.jwClass.Type(function*(_jwClassSelf, thread, target) {\n`;
                             source += this.descendStackInline(node.substack, {allowReturns: true, inLoop: false});
-                            source += `}, ${this.descendInput(node.name)}))`;
+                            source += `}, ${this.descendInput(node.name)}, null, thread.procedures))`;
                             return source;
                         case opcodes.SELF:
                             return `(typeof _jwClassSelf !== "undefined" ? _jwClassSelf : new vm.jwPointer.Type(0))`;
