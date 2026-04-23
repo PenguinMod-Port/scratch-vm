@@ -583,6 +583,8 @@ runtimeFunctions.yieldThenCallGenerator = `const yieldThenCallGenerator = functi
 
 runtimeFunctions.rangeOfNumbers = `const rangeOfNumbers = (...args) => Math.max(...args) - Math.min(...args)`;
 
+runtimeFunctions.stringify = `const stringify = (value) => value === null ? '' : '' + value`;
+
 /**
  * Step a compiled thread.
  * @param {import("../engine/thread")} thread The thread to step.

@@ -92,6 +92,7 @@ class Cast {
      * @return {string} The Scratch-casted string value.
      */
     static toString (value) {
+        if (value === null) return "";
         return String(value);
     }
 

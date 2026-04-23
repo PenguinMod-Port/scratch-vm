@@ -203,7 +203,11 @@ class IntermediateInput {
                 break;
             }
             case InputOpcode.CAST_STRING:
-                this.inputs.value += '';
+                if (this.type === InputType.NULL) {
+                    this.inputs.value = '';
+                } else {
+                    this.inputs.value += '';
+                }
                 this.type = InputType.STRING;
                 break;
             case InputOpcode.CAST_COLOR:

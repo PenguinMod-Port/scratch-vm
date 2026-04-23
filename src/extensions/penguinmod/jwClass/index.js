@@ -93,7 +93,7 @@ let jwClass = {
         }
         return false;
     }
-}
+};
 
 let jwArray = {
     Type: class {},

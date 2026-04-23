@@ -3781,9 +3781,12 @@ class Runtime extends EventEmitter {
             return true;
         };
 
-        if (a === null || (typeof a === 'number' && !isNaN(a) && typeof b === 'number' && !isNaN(b))) return a === b;
+        if (a === null && b === null) return true;
+        if (typeof a === 'number' && !isNaN(a) && typeof b === 'number' && !isNaN(b)) return a === b;
 
         if (this.compilerOptions.strictEquality) {
+            if (a === null || b === null) return false;
+            
             let aC = isCustomType(a);
             let bC = isCustomType(b);
             if (aC !== bC) return false;
@@ -3795,6 +3798,10 @@ class Runtime extends EventEmitter {
 
             return a == b;
         } else {
+            if (a === null && (b === "" || b === 0 || b === false)) return true;
+            if (b === null && (a === "" || a === 0 || a === false)) return true;
+            if (a === null || b === null) return false;
+
             if (isCustomType(a) && isCustomType(b) && a.customId === b.customId) {
                 if (a[pmSymbol.equals] && a[pmSymbol.equals](b)) return true;
             }

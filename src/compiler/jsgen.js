@@ -212,7 +212,7 @@ class JSGenerator {
         case InputOpcode.CAST_NUMBER_INDEX:
             return `(${this.descendInput(node.target.toType(InputType.NUMBER_OR_NAN))} | 0)`;
         case InputOpcode.CAST_STRING:
-            return `("" + ${this.descendInput(node.target)})`;
+            return `stringify(${this.descendInput(node.target)})`;
         case InputOpcode.CAST_COLOR:
             return `colorToList(${this.descendInput(node.target)})`;
 
@@ -334,7 +334,7 @@ class JSGenerator {
             const left = node.left;
             const right = node.right;
 
-            if (!this.runtime.compilerOptions.strictEquality) {
+            if (!this.runtime.compilerOptions.strictEquality && !(left.isSometimesType(InputType.NULL) || right.isSometimesType(InputType.NULL))) {
                 // When either operand is known to never be a number, only use string comparison to avoid all number parsing.
                 if (!left.isSometimesType(InputType.NUMBER_INTERPRETABLE) || !right.isSometimesType(InputType.NUMBER_INTERPRETABLE)) {
                     return `(${this.descendInput(left.toType(InputType.STRING))}.toLowerCase() === ${this.descendInput(right.toType(InputType.STRING))}.toLowerCase())`;
