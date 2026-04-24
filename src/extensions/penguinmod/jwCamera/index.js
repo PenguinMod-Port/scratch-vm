@@ -323,7 +323,6 @@ class Extension {
     setPosition({CAMERA, VECTOR}) {
         CAMERA = jwCamera.Type.toCamera(CAMERA);
         VECTOR = jwVector.Type.toVector(VECTOR);
-        console.log(CAMERA, VECTOR)
 
         CAMERA.setPosition(VECTOR.x, VECTOR.y);
     }

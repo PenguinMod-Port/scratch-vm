@@ -512,7 +512,6 @@ class Extension {
             let c = POLYGON.points[(i + 2) % POLYGON.points.length];
 
             let crossProduct = (b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x);
-            console.log(crossProduct);
 
             if (crossProduct != 0) {
                 if (sign == 0) sign = crossProduct > 0 ? 1 : -1;

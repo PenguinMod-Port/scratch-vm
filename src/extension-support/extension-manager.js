@@ -579,7 +579,6 @@ class ExtensionManager {
             break;
         case BlockType.BUTTON:
             const func = blockInfo.func ?? blockInfo.opcode;
-            console.log(func);
             blockInfo.callFunc = () => {
                 dispatch.call(serviceName, func);
             };

@@ -13,6 +13,8 @@ const escapeHTML = unsafe => {
         .replaceAll("'", "&#039;");
 };
 
+const classSymbol = Symbol('class');
+
 class ClassType {
     constructor(construct = function*(){}, name = '', extension = null, proc = null) {
         this.construct = construct;
@@ -39,7 +41,7 @@ class ClassType {
         if (this.proc) thread.procedures = {...this.proc, ...thread.procedures}
         if (!this.extension) {
             let object = new dogeiscutObject.Type();
-            object.map.set("__class__", this);
+            object.map.set(classSymbol, this);
             let pointer = jwPointer.Type.create();
             pointer.value = object;
             yield* this.construct(pointer, thread, target);
@@ -47,7 +49,7 @@ class ClassType {
         } else {
             let pointer = yield* this.extension.createInstance(thread, target);
             let object = pointer.value;
-            if (object instanceof dogeiscutObject.Type) object.map.set("__class__", this);
+            if (object instanceof dogeiscutObject.Type) object.map.set(classSymbol, this);
             yield* this.construct(pointer, thread, target);
             return pointer;
         }
@@ -75,6 +77,8 @@ let jwClass = {
         check: ["jwClass"]
     },
 
+    classSymbol,
+
     setProp(name, pointer, value) {
         if (!(pointer instanceof jwPointer.Type)) return;
         if (!(pointer.value instanceof dogeiscutObject.Type)) return;
@@ -87,20 +91,13 @@ let jwClass = {
         return pointer.value.map.get(name);
     },
     instanceOf(pointer, otherClass) {
-        let __class__ = jwClass.getProp("__class__", pointer);
+        let __class__ = jwClass.getProp(classSymbol, pointer);
         while (__class__) {
-            console.log(__class__, otherClass);
             if (__class__ === otherClass) return true;
             __class__ = __class__.extension;
         }
         return false;
     }
-};
-
-let jwArray = {
-    Type: class {},
-    Block: {},
-    Argument: {}
 };
 
 let dogeiscutObject = {
@@ -117,7 +114,6 @@ let jwPointer = {
 
 class Extension {
     constructor() {
-        vm.extensionManager.addExtensionDependency("jwClass", "jwArray", () => jwArray = vm.jwArray);
         vm.extensionManager.addExtensionDependency("jwClass", "https://extensions.penguinmod.com/extensions/DogeisCut/dogeiscutObject.js", () => dogeiscutObject = vm.dogeiscutObject);
         vm.extensionManager.addExtensionDependency("jwClass", "jwPointer", () => jwPointer = vm.jwPointer);
 
@@ -246,6 +242,7 @@ class Extension {
 
             SET: 'jwClass.set',
             GET: 'jwClass.get',
+            GETCLASS: 'jwClass.getClass',
 
             NEW: 'jwClass.new',
             NAME: 'jwClass.name',
@@ -276,8 +273,7 @@ class Extension {
                                 pointer: this.descendInputOfBlock(block, 'POINTER')
                             });
                         case 'jwClass_getClass':
-                            return new IntermediateInput(opcodes.GET, InputType.CUSTOM_TYPE, {
-                                name: this.createConstantInput('__class__'),
+                            return new IntermediateInput(opcodes.GETCLASS, InputType.CUSTOM_TYPE, {
                                 pointer: this.descendInputOfBlock(block, 'POINTER')
                             });
 
@@ -326,6 +322,8 @@ class Extension {
 
                         case opcodes.GET:
                             return `vm.jwClass.getProp(${this.descendInput(node.name)}, ${this.descendInput(node.pointer)})`;
+                        case opcodes.GETCLASS:
+                            return `vm.jwClass.getProp(vm.jwClass.classSymbol, ${this.descendInput(node.pointer)})`;
 
                         case opcodes.NEW:
                             return `(yield* vm.jwClass.Type.toClass(${this.descendInput(node.class)}).createInstance(thread, target))`;
