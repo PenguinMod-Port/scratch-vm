@@ -489,46 +489,10 @@ const serializeSound = function (sound) {
     return obj;
 };
 
-// Using some bugs, it can be possible to get values like undefined, null, or complex objects into
-// variables or lists. This will cause make the project unusable after exporting without JSON editing
-// as it will fail validation in scratch-parser.
-// To avoid this, we'll convert those objects to strings before saving them.
-const isVariableValueSafeForJSON = value => (
-    typeof value === 'number' ||
-    typeof value === 'string' ||
-    typeof value === 'boolean' ||
-    value === null
-);
-const makeSafeForJSON = (value, runtime) => {
-    if (Array.isArray(value)) {
-        let copy = null;
-        for (let i = 0; i < value.length; i++) {
-            if (value[i]?.customId) {
-                if (!copy) {
-                    // Only copy the list when needed
-                    copy = value.slice();
-                }
-                const {serialize} = runtime.serializers[copy[i].customId];
-                copy[i] = {
-                    customType: true,
-                    typeId: copy[i].customId,
-                    serialized: serialize(copy[i])
-                };
-                continue;
-            }
-            if (!isVariableValueSafeForJSON(value[i])) {
-                if (!copy) {
-                    // Only copy the list when needed
-                    copy = value.slice();
-                }
-                copy[i] = `${copy[i]}`;
-            }
-        }
-        if (copy) {
-            return copy;
-        }
-        return value;
-    }
+/**
+ * Serializes the value of a variable (handles custom types)
+ */
+const serializeVariableValue = function(value, runtime) {
     if (value.customId) {
         const {serialize} = runtime.serializers[value.customId];
         return {
@@ -537,11 +501,9 @@ const makeSafeForJSON = (value, runtime) => {
             serialized: serialize(value)
         };
     }
-    if (isVariableValueSafeForJSON(value)) {
-        return value;
-    }
-    return `${value}`;
-};
+
+    return value;
+}
 
 /**
  * Serialize the given variables object.
@@ -564,12 +526,12 @@ const serializeVariables = function (variables, runtime) {
             continue;
         }
         if (v.type === Variable.LIST_TYPE) {
-            obj.lists[varId] = [v.name, makeSafeForJSON(v.value, runtime)];
+            obj.lists[varId] = [v.name, v.value.map(w => serializeVariableValue(w, runtime))];
             continue;
         }
 
         // otherwise should be a scalar type
-        obj.variables[varId] = [v.name, makeSafeForJSON(v.value, runtime)];
+        obj.variables[varId] = [v.name, serializeVariableValue(v.value)];
         // only scalar vars have the potential to be cloud vars
         if (v.isCloud) obj.variables[varId].push(true);
     }
@@ -1217,6 +1179,31 @@ const parseScratchAssets = function (object, runtime, zip) {
 };
 
 /**
+ * Fix various backwards-incompatible changes that Scratch made in the spork migration.
+ * @param {object} blocks Blocks, mutated in-place.
+ */
+const fixSporkCompatibility = function (blocks) {
+    for (const blockId in blocks) {
+        if (!Object.prototype.hasOwnProperty.call(blocks, blockId)) continue;
+        const block = blocks[blockId];
+
+        // Custom block definition prototype blocks used to be marked as shadow: true, but spork marks as shadow: true.
+        // Our scratch-blocks relies on it being shadow: true to prevent moving, so we'll force it to be that way.
+        if (block.opcode === 'procedures_prototype') {
+            block.shadow = true;
+        } else if (
+            block.opcode === 'argument_reporter_string_number' ||
+            block.opcode === 'argument_reporter_boolean'
+        ) {
+            const parent = blocks[block.parent];
+            if (parent && parent.opcode === 'procedures_prototype') {
+                block.shadow = true;
+            }
+        }
+    }
+};
+
+/**
  * Parse a single "Scratch object" and create all its in-memory VM objects.
  * @param {!object} object From-JSON "Scratch object:" sprite, stage, watcher.
  * @param {!Runtime} runtime Runtime object to load all structures into.
@@ -1256,6 +1243,8 @@ const parseScratchObject = function (object, runtime, pmVersion, extensions, zip
                 extensions.extensionIDs.add(extensionID);
             }
         }
+        // Take a third pass to fix various things that spork broke.
+        fixSporkCompatibility(object.blocks);
     }
     // Costumes from JSON.
     const {costumePromises} = assets;

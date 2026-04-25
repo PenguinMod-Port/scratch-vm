@@ -2036,7 +2036,7 @@ class IRGenerator {
         /** @type {Object.<string, IntermediateScript>} */
         this.procedures = {};
 
-        this.analyzedProcedures = [];
+        this.analyzedProcedures = new Set();
     }
 
     /** @type {Object.<string, Object.<string, Function>>} */
@@ -2080,12 +2080,11 @@ class IRGenerator {
             const procedureData = this.procedures[procedureCode];
 
             // Analyze newly found procedures.
-            if (!this.analyzedProcedures.includes(procedureCode)) {
-                this.analyzedProcedures.push(procedureCode);
+            if (!this.analyzedProcedures.has(procedureCode)) {
+                this.analyzedProcedures.add(procedureCode);
                 if (this.analyzeScript(procedureData)) {
                     madeChanges = true;
                 }
-                this.analyzedProcedures.pop();
             }
 
             // If a procedure used by a script may yield, the script itself may yield.
@@ -2131,7 +2130,10 @@ class IRGenerator {
         }
 
         // Analyze scripts until no changes are made.
-        while (this.analyzeScript(entry));
+        while (this.analyzeScript(entry)) {
+            // Reset so all procedures get re-examined each pass.
+            this.analyzedProcedures = new Set();
+        }
 
         let output = new IntermediateRepresentation(entry, this.procedures);
 
