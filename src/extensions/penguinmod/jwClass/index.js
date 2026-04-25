@@ -215,10 +215,10 @@ class Extension {
                 {
                     opcode: "getName",
                     text: "name of [CLASS]",
+                    blockType: BlockType.REPORTER,
                     arguments: {
                         CLASS: jwClass.Argument
-                    },
-                    ...jwClass.Block
+                    }
                 },
                 "---",
                 {
