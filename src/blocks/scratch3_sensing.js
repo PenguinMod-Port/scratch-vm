@@ -73,7 +73,15 @@ class Scratch3SensingBlocks {
             sensing_answer: this.getAnswer,
             sensing_username: this.getUsername,
             sensing_userid: () => {}, // legacy no-op block
-            sensing_online: this.isOnline
+            sensing_online: this.isOnline,
+
+            // pm
+            sensing_getclipboard: this.getClipboard,
+            sensing_mouse_button_clicked: (args, util) => util.ioQuery('mouse', 'getButtonIsClicked', [(['left', 'middle', 'right'].indexOf(args.BUTTON_OPTION))]),
+            sensing_mouse_button_down: (args, util) => util.ioQuery('mouse', 'getButtonIsDown', [(['left', 'middle', 'right'].indexOf(args.BUTTON_OPTION))]),
+            sensing_mouse_button_released: (args, util) => util.ioQuery('mouse', 'getButtonIsReleased', [(['left', 'middle', 'right'].indexOf(args.BUTTON_OPTION))]),
+            sensing_mouseclicked: (_, util) => util.ioQuery('mouse', 'getButtonIsClicked', [-1]),
+            sensing_setclipboard: this.setClipboard,
         };
     }
 
@@ -108,6 +116,23 @@ class Scratch3SensingBlocks {
             },
             sensing_online: {
                 getId: () => 'online'
+            },
+
+            //pm
+            sensing_getclipboard: {
+                getId: () => 'clipboard'
+            },
+            sensing_mouse_button_clicked: {
+                getId: (_, fields) => getMonitorIdForBlockWithArgs('mouse_button_clicked', fields)
+            },
+            sensing_mouse_button_down: {
+                getId: (_, fields) => getMonitorIdForBlockWithArgs('mouse_button_down', fields)
+            },
+            sensing_mouse_button_released: {
+                getId: (_, fields) => getMonitorIdForBlockWithArgs('mouse_button_released', fields)
+            },
+            sensing_mouseclicked: {
+                getId: () => 'mouseclicked'
             }
         };
     }
@@ -257,6 +282,7 @@ class Scratch3SensingBlocks {
         case 'hour': return date.getHours();
         case 'minute': return date.getMinutes();
         case 'second': return date.getSeconds();
+        case 'timestamp': return Date.now();
         }
         return 0;
     }
@@ -355,6 +381,25 @@ class Scratch3SensingBlocks {
         }
         // We're running in some non-browser environment. We probably have internet.
         return true;
+    }
+
+    _mouseScrolling (option, delta) {
+        switch (option) {
+            case "up":
+                return delta < 0;
+            case "down":
+                return delta > 0;
+            default:
+                return false;
+        }
+    }
+
+    async getClipboard (args, util) {
+        return await util.ioQuery('clipboard', 'readText');
+    }
+
+    async setClipboard (args, util) {
+        await util.ioQuery('clipboard', 'writeText', [Cast.toString(args.ITEM)]);
     }
 }
 

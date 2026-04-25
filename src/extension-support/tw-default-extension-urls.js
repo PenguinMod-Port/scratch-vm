@@ -12,7 +12,10 @@ const defaults = {
     audiostr: 'https://extensions.turbowarp.org/turboloader/audiostream.js',
 
     // https://scratch.mit.edu/discuss/topic/842592/
-    faceSensing: 'https://extensions.turbowarp.org/lab/face-sensing.js'
+    faceSensing: 'https://extensions.turbowarp.org/lab/face-sensing.js',
+
+    // pm pre-port unmodified extensions
+    xeltallivclipblend: 'https://extensions.turbowarp.org/Xeltalliv/clippingblending.js'
 };
 
 module.exports = defaults;
