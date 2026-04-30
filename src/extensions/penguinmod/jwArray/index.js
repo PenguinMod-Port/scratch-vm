@@ -161,6 +161,15 @@ class ArrayType {
         return new ArrayType(array, true);
     }
 
+    static splitChars(string, chars) {
+        chars = Math.max(1, Math.floor(chars));
+        let array = [];
+        for (let i = 0; i < string.length; i += chars) {
+            array.push(string.slice(i, i + chars));
+        }
+        return new ArrayType(array, true);
+    }
+
     indexOf(value) {
         return this.array.findIndex(v => vm.runtime.equals(v, value)) + 1;
     }
@@ -322,6 +331,21 @@ class Extension {
                         },
                         DIVIDER: {
                             type: ArgumentType.STRING
+                        }
+                    },
+                    ...jwArray.Block
+                },
+                {
+                    opcode: 'splitChars',
+                    text: 'split [STRING] into [CHARS] length items',
+                    arguments: {
+                        STRING: {
+                            type: ArgumentType.STRING,
+                            defaultValue: "foo"
+                        },
+                        CHARS: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 1
                         }
                     },
                     ...jwArray.Block
@@ -636,6 +660,7 @@ class Extension {
             BLANK_LENGTH: 'jwArray.blankLength',
             RANGE: 'jwArray.range',
             SPLIT: 'jwArray.split',
+            SPLIT_CHARS: 'jwArray.splitChars',
 
             BUILDER: 'jwArray.builder',
             BUILDER_CURRENT: 'jwArray.builderCurrent',
@@ -692,6 +717,11 @@ class Extension {
                             return new IntermediateInput(opcodes.SPLIT, InputType.CUSTOM_TYPE, {
                                 string: this.descendInputOfBlock(block, 'STRING').toType(InputType.STRING),
                                 divider: this.descendInputOfBlock(block, 'DIVIDER').toType(InputType.STRING)
+                            });
+                        case 'jwArray_splitChars':
+                            return new IntermediateInput(opcodes.SPLIT_CHARS, InputType.CUSTOM_TYPE, {
+                                string: this.descendInputOfBlock(block, 'STRING').toType(InputType.STRING),
+                                chars: this.descendInputOfBlock(block, 'CHARS').toType(InputType.NUMBER)
                             });
 
                         case 'jwArray_builder':
@@ -831,6 +861,8 @@ class Extension {
                             return `vm.jwArray.Type.range(${this.descendInput(node.start)}, ${this.descendInput(node.end)})`;
                         case opcodes.SPLIT:
                             return `(new vm.jwArray.Type(${this.descendInput(node.string)}.split(${this.descendInput(node.divider)}), true))`;
+                        case opcodes.SPLIT_CHARS:
+                            return `vm.jwArray.Type.splitChars(${this.descendInput(node.string)}, ${this.descendInput(node.chars)})`;
                         
                         case opcodes.BUILDER: {
                             let source = "";
