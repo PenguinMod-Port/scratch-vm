@@ -474,6 +474,43 @@ class JSGenerator {
             output += ")";
             return output;
         }
+        case InputOpcode.PM_OP_COMPARE_EXPANDABLE: {
+            const opMap = {
+                "e": (a, b) => `vm.runtime.equals(${a}, ${b})`,
+                "n": (a, b) => `!vm.runtime.equals(${a}, ${b})`,
+                "m": (a, b) => `compareGreaterThan(${a}, ${b})`,
+                "M": (a, b) => `!compareLessThan(${a}, ${b})`,
+                "l": (a, b) => `compareLessThan(${a}, ${b})`,
+                "L": (a, b) => `!compareGreaterThan(${a}, ${b})`
+            };
+
+            /*
+                example output:
+                1 < 2 < 3 < 4
+                (function*(a){ return 1 < a && (function*(b){ return a < b && (function*(c){ return b < c })(4) })(3) })(2)
+            */
+
+            const variables = []
+            const recursive = (i) => {
+                variables[i] = this.localVariables.next();
+                const op = opMap[node.operations[i - 1]];
+                const left = i === 1 ? this.descendInput(node.inputs[0]) : variables[i - 1];
+                const right = variables[i];
+
+                let source = "";
+                source += "(yield* (function* (" + variables[i] + ") {\n";
+                source += "return " + op(left, right);
+                if (i < node.inputs.length - 1) {
+                    source += " && " + recursive(i + 1);
+                }
+                source += ";\n";
+                source += "})(" + this.descendInput(node.inputs[i]) + "))";
+
+                return source;
+            }
+
+            return recursive(1);
+        }
         case InputOpcode.PM_OP_CONSTRAIN:
             return `Math.min(Math.max(${this.descendInput(node.min)}, ${this.descendInput(node.input)}), ${this.descendInput(node.max)})`;
         case InputOpcode.PM_OP_INTERPOLATE:

@@ -313,6 +313,7 @@ const InputOpcode = {
 
     PM_OP_AVERAGE: 'op.average',
     PM_OP_BOOL_EXPANDABLE: 'op.boolExpandable',
+    PM_OP_COMPARE_EXPANDABLE: 'op.compareExpandable',
     PM_OP_CONSTRAIN: 'op.constrain',
     PM_OP_INTERPOLATE: 'op.interpolate',
     PM_OP_IS_BOOLEAN: 'op.isBoolean',

@@ -549,7 +549,21 @@ class ScriptTreeGenerator {
             return new IntermediateInput(InputOpcode.PM_OP_BOOL_EXPANDABLE, InputType.BOOLEAN, {
                 inputs,
                 operations
-            })
+            });
+        }
+        case 'operator_expandableCompare': {
+            let amount = Number(block.fields.EXPANDABLE.value);
+            let inputs = [];
+            let operations = [];
+            for (let i = 0; i < amount; i++) {
+                inputs.push(this.descendInputOfBlock(block, 'INPUT' + (i + 1)));
+                if (i >= 1) operations.push(block.fields['OP' + (i + 1)].value);
+            }
+            if (inputs.length <= 1) return this.createConstantInput(false);
+            return new IntermediateInput(InputOpcode.PM_OP_COMPARE_EXPANDABLE, InputType.BOOLEAN, {
+                inputs,
+                operations
+            }, true);
         }
         case 'operator_expandableMath': {
             let amount = Number(block.fields.EXPANDABLE.value);
@@ -572,7 +586,7 @@ class ScriptTreeGenerator {
             }
             return new IntermediateInput(InputOpcode.PM_OP_JOIN_EXPANDABLE, InputType.STRING, {
                 inputs
-            })
+            });
         }
         case 'operator_falseBoolean':
             return this.createConstantInput(false);

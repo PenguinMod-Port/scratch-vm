@@ -113,6 +113,7 @@ class Cast {
      */
     static toRgbColorObject (value) {
         let color;
+        if (typeof value === 'object') value += ''; // custom type convert pls pls
         if (typeof value === 'string' && value.substring(0, 1) === '#') {
             color = Color.hexToRgb(value);
 
