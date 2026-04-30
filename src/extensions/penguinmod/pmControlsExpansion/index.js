@@ -53,8 +53,7 @@ class Extension {
                     arguments: {
                         DATA: {
                             type: ArgumentType.STRING,
-                            defaultValue: "foo",
-                            exemptFromNormalization: true
+                            defaultValue: "foo"
                         },
                         SHADOW: {
                             fillIn: 'asNewBroadcastArgBlock'
@@ -68,7 +67,8 @@ class Extension {
                     blockType: BlockType.REPORTER,
                     hideFromPalette: true,
                     allowDropAnywhere: true,
-                    canDragDuplicate: true
+                    canDragDuplicate: true,
+                    ...template
                 },
                 "---",
                 {
@@ -86,6 +86,16 @@ class Extension {
                     </block>
                     <block type="control_clear_counter" />
                     `
+                },
+                "---",
+                {
+                    opcode: 'void',
+                    text: "void [INPUT]",
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        INPUT: {}
+                    },
+                    ...template
                 }
             ]
         };
@@ -117,6 +127,10 @@ class Extension {
 
     asNewBroadcastArgBlock(_, util) {
         return util.thread._pmControlsExpansionThreadData ?? null;
+    }
+
+    void(args, util) {
+        // do nothing
     }
 }
 
