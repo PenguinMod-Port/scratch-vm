@@ -282,6 +282,14 @@ class JSGenerator {
         case InputOpcode.LIST_LENGTH:
             return `${this.referenceVariable(node.list)}.value.length`;
 
+        //pm lists
+        case InputOpcode.PM_LIST_ARRAY_GET:
+            return `JSON.stringify(${this.referenceVariable(node.list)}.value)`;
+        case InputOpcode.PM_LIST_EMPTY:
+            return `(${this.referenceVariable(node.list)}.value.length === 0)`;
+        case InputOpcode.PM_LIST_INDEX_EXISTS:
+            return `(${this.referenceVariable(node.list)}.value.length >= ${this.descendInput(node.index)})`;
+
         case InputOpcode.LOOKS_SIZE_GET:
             return 'Math.round(target.size)';
         case InputOpcode.LOOKS_BACKDROP_NAME:

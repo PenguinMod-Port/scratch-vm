@@ -327,6 +327,21 @@ class ScriptTreeGenerator {
             return new IntermediateInput(InputOpcode.PM_VAR_VISIBLE, InputType.BOOLEAN, {
                 variable: this.descendVariable(block, 'VARIABLE', SCALAR_TYPE)
             });
+        
+        //pm lists
+        case 'data_itemexistslist':
+            return new IntermediateInput(InputOpcode.PM_LIST_INDEX_EXISTS, InputType.BOOLEAN, {
+                list: this.descendVariable(block, 'LIST', LIST_TYPE),
+                index: this.descendInputOfBlock(block, 'INDEX').toType(InputType.NUMBER)
+            });
+        case 'data_listarray':
+            return new IntermediateInput(InputOpcode.PM_LIST_ARRAY_GET, InputType.STRING, {
+                list: this.descendVariable(block, 'LIST', LIST_TYPE)
+            })
+        case 'data_listisempty':
+            return new IntermediateInput(InputOpcode.PM_LIST_EMPTY, InputType.BOOLEAN, {
+                list: this.descendVariable(block, 'LIST', LIST_TYPE)
+            })
 
         case 'event_broadcast_menu': {
             const broadcastOption = block.fields.BROADCAST_OPTION;

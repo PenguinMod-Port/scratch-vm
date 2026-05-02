@@ -278,6 +278,10 @@ const InputOpcode = {
     LIST_INDEX_OF: 'list.indexOf',
     LIST_CONTENTS: 'list.contents',
 
+    PM_LIST_ARRAY_GET: 'list.arrayGet',
+    PM_LIST_EMPTY: 'list.empty',
+    PM_LIST_INDEX_EXISTS: 'list.indexExists',
+
     MOTION_X_GET: 'motion.x',
     MOTION_Y_GET: 'motion.y',
     MOTION_DIRECTION_GET: 'motion.direction',
