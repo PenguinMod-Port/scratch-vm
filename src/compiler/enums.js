@@ -158,6 +158,7 @@ const StackOpcode = {
 
     PM_LIST_ARRAY_SET: 'list.arraySet',
     PM_LIST_FILTER: 'list.filter',
+    PM_LIST_FOREACH: 'list.forEach',
     PM_LIST_REVERSE: 'list.reverse',
     PM_LIST_SHIFT: 'list.shift',
 

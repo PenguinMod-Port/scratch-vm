@@ -1253,7 +1253,19 @@ class ScriptTreeGenerator {
             return new IntermediateStackBlock(StackOpcode.PM_LIST_FILTER, {
                 list: this.descendVariable(block, 'LIST', LIST_TYPE),
                 condition: this.descendInputOfBlock(block, 'BOOL').toType(InputType.BOOLEAN)
-            })
+            });
+        case 'data_listforeachitem':
+            return new IntermediateStackBlock(StackOpcode.PM_LIST_FOREACH, {
+                list: this.descendVariable(block, 'LIST', LIST_TYPE),
+                itemVariable: this.descendVariable(block, 'VARIABLE', SCALAR_TYPE),
+                do: this.descendSubstack(block, 'SUBSTACK')
+            });
+        case 'data_listforeachnum':
+            return new IntermediateStackBlock(StackOpcode.PM_LIST_FOREACH, {
+                list: this.descendVariable(block, 'LIST', LIST_TYPE),
+                indexVariable: this.descendVariable(block, 'VARIABLE', SCALAR_TYPE),
+                do: this.descendSubstack(block, 'SUBSTACK')
+            });
         case 'data_reverselist':
             return new IntermediateStackBlock(StackOpcode.PM_LIST_REVERSE, {
                 list: this.descendVariable(block, 'LIST', LIST_TYPE)
