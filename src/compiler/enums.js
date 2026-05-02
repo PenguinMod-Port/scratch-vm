@@ -157,6 +157,7 @@ const StackOpcode = {
     LIST_HIDE: 'list.hide',
 
     PM_LIST_ARRAY_SET: 'list.arraySet',
+    PM_LIST_FILTER: 'list.filter',
     PM_LIST_REVERSE: 'list.reverse',
     PM_LIST_SHIFT: 'list.shift',
 
@@ -279,9 +280,12 @@ const InputOpcode = {
     LIST_INDEX_OF: 'list.indexOf',
     LIST_CONTENTS: 'list.contents',
 
+    PM_LIST_AMOUNT: 'list.amount',
     PM_LIST_ARRAY_GET: 'list.arrayGet',
     PM_LIST_EMPTY: 'list.empty',
     PM_LIST_INDEX_EXISTS: 'list.indexExists',
+    PM_LIST_UPVAR_INDEX: 'list.upvarIndex',
+    PM_LIST_UPVAR_ITEM: 'list.upvarItem',
 
     MOTION_X_GET: 'motion.x',
     MOTION_Y_GET: 'motion.y',

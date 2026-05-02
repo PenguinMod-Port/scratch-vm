@@ -255,6 +255,16 @@ class Scratch3DataBlocks {
             list.value = [];
         }
     }
+
+    _listAmountOf(list, item) {
+        let count = 0;
+        for (let i = 0; i < list.value.length; i++) {
+            if (this.runtime.equals(list.value[i], item)) {
+                count++;
+            }
+        }
+        return count;
+    }
 }
 
 module.exports = Scratch3DataBlocks;

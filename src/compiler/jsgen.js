@@ -283,12 +283,18 @@ class JSGenerator {
             return `${this.referenceVariable(node.list)}.value.length`;
 
         //pm lists
+        case InputOpcode.PM_LIST_AMOUNT:
+            return `runtime.ext_scratch3_data._listAmountOf(${this.referenceVariable(node.list)}, ${this.descendInput(node.item)})`;
         case InputOpcode.PM_LIST_ARRAY_GET:
             return `JSON.stringify(${this.referenceVariable(node.list)}.value)`;
         case InputOpcode.PM_LIST_EMPTY:
             return `(${this.referenceVariable(node.list)}.value.length === 0)`;
         case InputOpcode.PM_LIST_INDEX_EXISTS:
             return `(${this.referenceVariable(node.list)}.value.length >= ${this.descendInput(node.index)})`;
+        case InputOpcode.PM_LIST_UPVAR_INDEX:
+            return `(typeof _scratch3DataIndex !== "undefined" ? _scratch3DataIndex : 0)`;
+        case InputOpcode.PM_LIST_UPVAR_ITEM:
+            return `(typeof _scratch3DataItem !== "undefined" ? _scratch3DataItem : "")`;
 
         case InputOpcode.LOOKS_SIZE_GET:
             return 'Math.round(target.size)';
@@ -1127,6 +1133,18 @@ class JSGenerator {
         case StackOpcode.PM_LIST_ARRAY_SET: 
             this.source += `runtime.ext_scratch3_data._listSetArray(${this.referenceVariable(node.list)}, ${this.descendInput(node.array)});\n`;
             break;
+        case StackOpcode.PM_LIST_FILTER: {
+            const list = this.referenceVariable(node.list);
+            const output = this.localVariables.next();
+            this.source += `const ${output} = [];\n`;
+            this.source += `for (let _scratch3DataIndex = 1; _scratch3DataIndex <= ${list}.value.length; _scratch3DataIndex++) {\n`;
+            this.source += `const _scratch3DataItem = ${list}.value[_scratch3DataIndex - 1];\n`;
+            this.source += `if (${this.descendInput(node.condition)}) ${output}.push(_scratch3DataItem);\n`;
+            this.yieldLoop();
+            this.source += `}\n`;
+            this.source += `${list}.value = ${output};\n`;
+            break;
+        }
         case StackOpcode.PM_LIST_REVERSE: {
             const list = this.referenceVariable(node.list);
             this.source += `${list}.value.reverse();\n`;

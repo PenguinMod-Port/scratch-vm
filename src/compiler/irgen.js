@@ -329,6 +329,15 @@ class ScriptTreeGenerator {
             });
         
         //pm lists
+        case 'data_amountinlist':
+            return new IntermediateStackBlock(InputOpcode.PM_LIST_AMOUNT, {
+                list: this.descendVariable(block, 'LIST', LIST_TYPE),
+                item: this.descendInputOfBlock(block, 'VALUE', true)
+            });
+        case 'data_filterlistindex':
+            return new IntermediateInput(InputOpcode.PM_LIST_UPVAR_INDEX, InputType.NUMBER_WHOLE);
+        case 'data_filterlistitem':
+            return new IntermediateInput(InputOpcode.PM_LIST_UPVAR_ITEM, InputType.ANY);
         case 'data_itemexistslist':
             return new IntermediateInput(InputOpcode.PM_LIST_INDEX_EXISTS, InputType.BOOLEAN, {
                 list: this.descendVariable(block, 'LIST', LIST_TYPE),
@@ -1240,6 +1249,11 @@ class ScriptTreeGenerator {
                 list: this.descendVariable(block, 'LIST', LIST_TYPE),
                 array: this.descendInputOfBlock(block, 'VALUE')
             });
+        case 'data_filterlist':
+            return new IntermediateStackBlock(StackOpcode.PM_LIST_FILTER, {
+                list: this.descendVariable(block, 'LIST', LIST_TYPE),
+                condition: this.descendInputOfBlock(block, 'BOOL').toType(InputType.BOOLEAN)
+            })
         case 'data_reverselist':
             return new IntermediateStackBlock(StackOpcode.PM_LIST_REVERSE, {
                 list: this.descendVariable(block, 'LIST', LIST_TYPE)
