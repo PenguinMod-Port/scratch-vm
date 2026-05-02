@@ -156,6 +156,7 @@ const StackOpcode = {
     LIST_SHOW: 'list.show',
     LIST_HIDE: 'list.hide',
 
+    PM_LIST_ARRAY_SET: 'list.arraySet',
     PM_LIST_REVERSE: 'list.reverse',
     PM_LIST_SHIFT: 'list.shift',
 

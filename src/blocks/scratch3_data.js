@@ -235,6 +235,26 @@ class Scratch3DataBlocks {
         }
         return false;
     }
+
+    _listSetArray(list, array) {
+        try {
+            if (array instanceof Array) {
+                list.value = array;
+            } else if (typeof array === 'object') {
+                if (typeof array.toJSON === 'function') {
+                    const json = array.toJSON();
+                    list.value = json instanceof Array ? json : Object.values(json);
+                } else {
+                    list.value = Object.values(array);
+                }
+            } else {
+                const json = JSON.parse(array);
+                list.value = json instanceof Array ? json : Object.values(json);
+            }
+        } catch {
+            list.value = [];
+        }
+    }
 }
 
 module.exports = Scratch3DataBlocks;

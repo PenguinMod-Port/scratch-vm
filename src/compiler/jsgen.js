@@ -1123,7 +1123,10 @@ class JSGenerator {
             this.source += `runtime.monitorBlocks.changeBlock({ id: "${sanitize(node.list.id)}", element: "checkbox", value: true }, runtime);\n`;
             break;
 
-        // pm list
+        // pm lists
+        case StackOpcode.PM_LIST_ARRAY_SET: 
+            this.source += `runtime.ext_scratch3_data._listSetArray(${this.referenceVariable(node.list)}, ${this.descendInput(node.array)});\n`;
+            break;
         case StackOpcode.PM_LIST_REVERSE: {
             const list = this.referenceVariable(node.list);
             this.source += `${list}.value.reverse();\n`;

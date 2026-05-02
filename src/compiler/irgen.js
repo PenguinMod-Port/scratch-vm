@@ -1235,10 +1235,15 @@ class ScriptTreeGenerator {
             });
 
         //pm lists
+        case 'data_arraylist':
+            return new IntermediateStackBlock(StackOpcode.PM_LIST_ARRAY_SET, {
+                list: this.descendVariable(block, 'LIST', LIST_TYPE),
+                array: this.descendInputOfBlock(block, 'VALUE')
+            });
         case 'data_reverselist':
             return new IntermediateStackBlock(StackOpcode.PM_LIST_REVERSE, {
                 list: this.descendVariable(block, 'LIST', LIST_TYPE)
-            })
+            });
         case 'data_shiftlist':
             return new IntermediateStackBlock(StackOpcode.PM_LIST_SHIFT, {
                 list: this.descendVariable(block, 'LIST', LIST_TYPE),
