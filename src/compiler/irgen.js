@@ -1219,6 +1219,17 @@ class ScriptTreeGenerator {
                 visible: this.descendInputOfBlock(block, 'VISIBILITY').toType(InputType.BOOLEAN)
             });
 
+        //pm lists
+        case 'data_reverselist':
+            return new IntermediateStackBlock(StackOpcode.PM_LIST_REVERSE, {
+                list: this.descendVariable(block, 'LIST', LIST_TYPE)
+            })
+        case 'data_shiftlist':
+            return new IntermediateStackBlock(StackOpcode.PM_LIST_SHIFT, {
+                list: this.descendVariable(block, 'LIST', LIST_TYPE),
+                index: this.descendInputOfBlock(block, 'INDEX').toType(InputType.NUMBER)
+            });
+
         case 'event_broadcast':
             return new IntermediateStackBlock(StackOpcode.EVENT_BROADCAST, {
                 broadcast: this.descendInputOfBlock(block, 'BROADCAST_INPUT').toType(InputType.STRING)

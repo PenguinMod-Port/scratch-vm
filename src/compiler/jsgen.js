@@ -1115,6 +1115,19 @@ class JSGenerator {
             this.source += `runtime.monitorBlocks.changeBlock({ id: "${sanitize(node.list.id)}", element: "checkbox", value: true }, runtime);\n`;
             break;
 
+        // pm list
+        case StackOpcode.PM_LIST_REVERSE: {
+            const list = this.referenceVariable(node.list);
+            this.source += `${list}.value.reverse();\n`;
+            this.source += `${list}._monitorUpToDate = false;\n`;
+            break;
+        }
+        case StackOpcode.PM_LIST_SHIFT: {
+            const list = this.referenceVariable(node.list);
+            this.source += `${list}.value = ${list}.value.slice(Math.max(0, ${this.descendInput(node.index)}));\n`;
+            break;
+        }
+
         case StackOpcode.LOOKS_LAYER_BACKWARD:
             if (!this.target.isStage) {
                 this.source += `target.goBackwardLayers(${this.descendInput(node.layers)});\n`;
