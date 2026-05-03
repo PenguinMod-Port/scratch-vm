@@ -346,11 +346,15 @@ class ScriptTreeGenerator {
         case 'data_listarray':
             return new IntermediateInput(InputOpcode.PM_LIST_ARRAY_GET, InputType.STRING, {
                 list: this.descendVariable(block, 'LIST', LIST_TYPE)
-            })
+            });
         case 'data_listisempty':
             return new IntermediateInput(InputOpcode.PM_LIST_EMPTY, InputType.BOOLEAN, {
                 list: this.descendVariable(block, 'LIST', LIST_TYPE)
-            })
+            });
+        case 'data_listvisible':
+            return new IntermediateInput(InputOpcode.PM_VAR_VISIBLE, InputType.BOOLEAN, {
+                variable: this.descendVariable(block, 'LIST', LIST_TYPE)
+            });
 
         case 'event_broadcast_menu': {
             const broadcastOption = block.fields.BROADCAST_OPTION;
@@ -1254,6 +1258,11 @@ class ScriptTreeGenerator {
                 list: this.descendVariable(block, 'LIST', LIST_TYPE),
                 condition: this.descendInputOfBlock(block, 'BOOL').toType(InputType.BOOLEAN)
             });
+        case 'data_listforeach':
+            return new IntermediateStackBlock(StackOpcode.PM_LIST_FOREACH, {
+                list: this.descendVariable(block, 'LIST', LIST_TYPE),
+                do: this.descendSubstack(block, 'SUBSTACK')
+            });
         case 'data_listforeachitem':
             return new IntermediateStackBlock(StackOpcode.PM_LIST_FOREACH, {
                 list: this.descendVariable(block, 'LIST', LIST_TYPE),
@@ -1269,6 +1278,11 @@ class ScriptTreeGenerator {
         case 'data_reverselist':
             return new IntermediateStackBlock(StackOpcode.PM_LIST_REVERSE, {
                 list: this.descendVariable(block, 'LIST', LIST_TYPE)
+            });
+        case 'data_setlistvisible':
+            return new IntermediateStackBlock(StackOpcode.PM_VAR_SET_VISIBLE, {
+                variable: this.descendVariable(block, 'LIST', LIST_TYPE),
+                visible: this.descendInputOfBlock(block, 'VISIBILITY').toType(InputType.BOOLEAN)
             });
         case 'data_shiftlist':
             return new IntermediateStackBlock(StackOpcode.PM_LIST_SHIFT, {
