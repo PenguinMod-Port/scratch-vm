@@ -54,6 +54,21 @@ const ArgumentType = {
     SOUND: 'sound',
 
     /**
+     * pm: Variable menu
+     */
+    VARIABLE: 'variable',
+
+    /**
+     * pm: List menu
+     */
+    LIST: 'list',
+
+    /**
+     * pm: Broadcast menu
+     */
+    BROADCAST: 'broadcast',
+
+    /**
      * pm: custom fields
      */
     CUSTOM: 'custom'

@@ -134,6 +134,20 @@ const ArgumentTypeMap = (() => {
             fieldName: 'SOUND_MENU'
         }
     };
+    map[ArgumentType.VARIABLE] = {
+        fieldType: "field_variable",
+        fieldName: "VARIABLE"
+    };
+    map[ArgumentType.LIST] = {
+        fieldType: "field_variable",
+        fieldName: "LIST",
+        variableType: 'list'
+    };
+    map[ArgumentType.BROADCAST] = {
+        fieldType: "field_variable",
+        fieldName: "BROADCAST",
+        variableType: 'broadcast_msg'
+    };
     map[ArgumentType.CUSTOM] = {
         fieldType: 'field_custom'
     };
@@ -1772,6 +1786,12 @@ class Runtime extends EventEmitter {
         // check if this is not one of those cases. E.g. an inline image on a block.
         if (argTypeInfo.fieldType === 'field_image') {
             argJSON = this._constructInlineImageJson(argInfo);
+        } else if (argTypeInfo.fieldType === 'field_variable') {
+            argJSON = {
+                type: 'field_variable',
+                name: placeholder,
+                variableTypes: argTypeInfo.variableType ? [argTypeInfo.variableType] : ['']
+            };
         } else if (argTypeInfo.fieldType === 'field_custom') {
             argJSON = {
                 type: 'field_custom',
