@@ -1150,7 +1150,7 @@ class JSGenerator {
             const list = this.localVariables.next();
             this.source += `const ${list} = [...${this.referenceVariable(node.list)}.value];\n`;
             this.source += `for (let _scratch3DataIndex = 1; _scratch3DataIndex <= ${list}.length; _scratch3DataIndex++) {\n`;
-            this.source += `const _scratch3DataItem = ${list}.value[_scratch3DataIndex - 1];\n`;
+            this.source += `const _scratch3DataItem = ${list}[_scratch3DataIndex - 1];\n`;
             if (node.indexVariable) this.source += `${this.referenceVariable(node.indexVariable)}.value = _scratch3DataIndex;\n`;
             if (node.itemVariable) this.source += `${this.referenceVariable(node.itemVariable)}.value = _scratch3DataItem;\n`;
             this.descendStack(node.do);
