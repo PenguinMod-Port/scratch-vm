@@ -1134,24 +1134,27 @@ class JSGenerator {
             this.source += `runtime.ext_scratch3_data._listSetArray(${this.referenceVariable(node.list)}, ${this.descendInput(node.array)});\n`;
             break;
         case StackOpcode.PM_LIST_FILTER: {
-            const list = this.referenceVariable(node.list);
+            const list = this.localVariables.next();
+            this.source += `const ${list} = [...${this.referenceVariable(node.list)}.value];\n`;
             const output = this.localVariables.next();
             this.source += `const ${output} = [];\n`;
-            this.source += `for (let _scratch3DataIndex = 1; _scratch3DataIndex <= ${list}.value.length; _scratch3DataIndex++) {\n`;
-            this.source += `const _scratch3DataItem = ${list}.value[_scratch3DataIndex - 1];\n`;
+            this.source += `for (let _scratch3DataIndex = 1; _scratch3DataIndex <= ${list}.length; _scratch3DataIndex++) {\n`;
+            this.source += `const _scratch3DataItem = ${list}[_scratch3DataIndex - 1];\n`;
             this.source += `if (${this.descendInput(node.condition)}) ${output}.push(_scratch3DataItem);\n`;
             this.yieldLoop();
             this.source += `}\n`;
-            this.source += `${list}.value = ${output};\n`;
+            this.source += `${this.referenceVariable(node.list)}.value = ${output};\n`;
             break;
         }
         case StackOpcode.PM_LIST_FOREACH: {
-            const list = this.referenceVariable(node.list);
-            this.source += `for (let _scratch3DataIndex = 1; _scratch3DataIndex <= ${list}.value.length; _scratch3DataIndex++) {\n`;
+            const list = this.localVariables.next();
+            this.source += `const ${list} = [...${this.referenceVariable(node.list)}.value];\n`;
+            this.source += `for (let _scratch3DataIndex = 1; _scratch3DataIndex <= ${list}.length; _scratch3DataIndex++) {\n`;
             this.source += `const _scratch3DataItem = ${list}.value[_scratch3DataIndex - 1];\n`;
             if (node.indexVariable) this.source += `${this.referenceVariable(node.indexVariable)}.value = _scratch3DataIndex;\n`;
             if (node.itemVariable) this.source += `${this.referenceVariable(node.itemVariable)}.value = _scratch3DataItem;\n`;
             this.descendStack(node.do);
+            this.yieldLoop();
             this.source += `}\n`;
             break;
         }
