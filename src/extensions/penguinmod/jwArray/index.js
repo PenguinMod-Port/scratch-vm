@@ -121,7 +121,7 @@ class ArrayType {
         })
     }
 
-    toMonitorContent = () => span(this.toString())
+    toMonitorContent = () => span(escapeHTML(this.toString()))
 
     toReporterContent() {
         let root = document.createElement('div')
