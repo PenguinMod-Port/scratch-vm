@@ -537,6 +537,8 @@ class JSGenerator {
             return `(${this.descendInput(node.value)} !== null)`;
         case InputOpcode.PM_OP_JOIN_EXPANDABLE:
             return `String.prototype.concat(${node.inputs.map(input => this.descendInput(input)).join(', ')})`;
+        case InputOpcode.PM_OP_LOG:
+            return `(Math.log(${this.descendInput(node.right)}) / Math.log(${this.descendInput(node.left)}))`;
         case InputOpcode.PM_OP_LOG_2:
             return `(Math.log(${this.descendInput(node.value)}) / Math.LN2)`;
         case InputOpcode.PM_OP_LOWER_CASE:
@@ -571,8 +573,12 @@ class JSGenerator {
             return `Math.min(${node.inputs.map(input => this.descendInput(input)).join(', ')})`;
         case InputOpcode.PM_OP_POWER:
             return `(${this.descendInput(node.left)} ** ${this.descendInput(node.right)})`;
+        case InputOpcode.PM_OP_RANDOMBOOL:
+            return `(Math.random() < 0.5)`;
         case InputOpcode.PM_OP_RANGE:
             return `rangeOfNumbers(${node.inputs.map(input => this.descendInput(input)).join(', ')})`;
+        case InputOpcode.PM_OP_ROOT:
+            return `(${this.descendInput(node.right)} ** (1 / ${this.descendInput(node.left)}))`;
         case InputOpcode.PM_OP_SIGN:
             return `Math.sign(${this.descendInput(node.value)})`;
         case InputOpcode.PM_OP_UPPER_CASE:

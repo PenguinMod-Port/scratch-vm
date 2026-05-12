@@ -558,6 +558,25 @@ class ScriptTreeGenerator {
             });
 
         //pm operators
+        case 'operator_advMath':
+        case 'operator_advMathExpanded': {
+            const expanded = block.opcode === 'operator_advMathExpanded';
+            const left = this.descendInputOfBlock(block, expanded ? 'TWO' : 'ONE').toType(InputType.NUMBER);
+            const right = this.descendInputOfBlock(block, expanded ? 'THREE' : 'TWO').toType(InputType.NUMBER);
+
+            const output = (() => {
+                switch (block.fields.OPTION.value) {
+                    case '^': return new IntermediateInput(InputOpcode.PM_OP_POWER, InputType.NUMBER_OR_NAN, { left, right });
+                    case 'root': return new IntermediateInput(InputOpcode.PM_OP_ROOT, InputType.NUMBER_OR_NAN, { left, right });
+                    case 'log': return new IntermediateInput(InputOpcode.PM_OP_LOG, InputType.NUMBER_OR_NAN, { left, right });
+                }
+            })();
+
+            return !expanded ? output : new IntermediateInput(InputOpcode.OP_MULTIPLY, InputType.NUMBER_OR_NAN, {
+                left: output,
+                right: this.descendInputOfBlock(block, 'ONE').toType(InputType.NUMBER)
+            });
+        }
         case 'operator_boolify':
             return this.descendInputOfBlock(block, 'ONE').toType(InputType.BOOLEAN);
         case 'operator_constrainnumber':
@@ -676,6 +695,8 @@ class ScriptTreeGenerator {
                 left: this.descendInputOfBlock(block, 'NUM1').toType(InputType.NUMBER),
                 right: this.descendInputOfBlock(block, 'NUM2').toType(InputType.NUMBER)
             });
+        case 'operator_randomBoolean':
+            return new IntermediateInput(InputOpcode.PM_OP_RANDOMBOOL, InputType.BOOLEAN);
         case 'operator_range_expandable': {
             let amount = Number(block.fields.EXPANDABLE.value);
             let inputs = [];
