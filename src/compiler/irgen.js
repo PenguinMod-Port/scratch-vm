@@ -558,6 +558,11 @@ class ScriptTreeGenerator {
             });
 
         //pm operators
+        case 'operator_advlog':
+            return new IntermediateInput(InputOpcode.PM_OP_LOG, InputType.NUMBER_OR_NAN, {
+                left: this.descendInputOfBlock(block, 'NUM1').toType(InputType.NUMBER),
+                right: this.descendInputOfBlock(block, 'NUM2').toType(InputType.NUMBER)
+            });
         case 'operator_advMath':
         case 'operator_advMathExpanded': {
             const expanded = block.opcode === 'operator_advMathExpanded';
