@@ -38,6 +38,8 @@ const stacked = [
 const inputs = [
     'motion_xscroll',
     'motion_yscroll',
+    'operator_javascript_output',
+    'operator_javascript_boolean',
     'sensing_getclipboard',
     'sensing_loud',
     'sensing_loudness',

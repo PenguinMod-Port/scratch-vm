@@ -1,5 +1,6 @@
 const Cast = require('../util/cast.js');
 const MathUtil = require('../util/math-util.js');
+const SandboxRunner = require('../util/sandboxed-javascript-runner.js');
 
 class Scratch3OperatorsBlocks {
     constructor (runtime) {
@@ -33,7 +34,11 @@ class Scratch3OperatorsBlocks {
             operator_contains: this.contains,
             operator_mod: this.mod,
             operator_round: this.round,
-            operator_mathop: this.mathop
+            operator_mathop: this.mathop,
+
+            //pm
+            operator_javascript_output: async ({JS}) => (await SandboxRunner.execute(Cast.toString(JS))).value,
+            operator_javascript_boolean: async ({JS}) => Cast.toBoolean((await SandboxRunner.execute(Cast.toString(JS))).value)
         };
     }
 
