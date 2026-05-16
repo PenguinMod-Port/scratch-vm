@@ -342,6 +342,8 @@ const InputOpcode = {
     PM_OP_POWER: 'op.power',
     PM_OP_RANDOMBOOL: 'op.randomBool',
     PM_OP_RANGE: 'op.range',
+    PM_OP_REPLACEALL: 'op.replaceAll',
+    PM_OP_REPLACEFIRST: 'op.replaceFirst',
     PM_OP_ROOT: 'op.root',
     PM_OP_SIGN: 'op.sign',
     PM_OP_UPPER_CASE: 'op.upperCase',

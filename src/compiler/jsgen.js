@@ -577,6 +577,10 @@ class JSGenerator {
             return `(Math.random() < 0.5)`;
         case InputOpcode.PM_OP_RANGE:
             return `rangeOfNumbers(${node.inputs.map(input => this.descendInput(input)).join(', ')})`;
+        case InputOpcode.PM_OP_REPLACEALL:
+            return `String.prototype.replaceAll.call(${this.descendInput(node.text)}, ${this.descendInput(node.find)}, ${this.descendInput(node.replace)})`;
+        case InputOpcode.PM_OP_REPLACEFIRST:
+            return `String.prototype.replace.call(${this.descendInput(node.text)}, ${this.descendInput(node.find)}, ${this.descendInput(node.replace)})`;
         case InputOpcode.PM_OP_ROOT:
             return `(${this.descendInput(node.right)} ** (1 / ${this.descendInput(node.left)}))`;
         case InputOpcode.PM_OP_SIGN:

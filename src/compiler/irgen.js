@@ -717,6 +717,18 @@ class ScriptTreeGenerator {
                 default: return this.createConstantInput(0);
             }
         }
+        case 'operator_replaceAll':
+            return new IntermediateInput(InputOpcode.PM_OP_REPLACEALL, InputType.STRING, {
+                text: this.descendInputOfBlock(block, 'text').toType(InputType.STRING),
+                find: this.descendInputOfBlock(block, 'term').toType(InputType.STRING),
+                replace: this.descendInputOfBlock(block, 'res').toType(InputType.STRING)
+            });
+        case 'operator_replaceFirst':
+            return new IntermediateInput(InputOpcode.PM_OP_REPLACEFIRST, InputType.STRING, {
+                text: this.descendInputOfBlock(block, 'text').toType(InputType.STRING),
+                find: this.descendInputOfBlock(block, 'term').toType(InputType.STRING),
+                replace: this.descendInputOfBlock(block, 'res').toType(InputType.STRING)
+            });
         case 'operator_stringify':
             return this.descendInputOfBlock(block, 'ONE').toType(InputType.STRING);
         case 'operator_tabCharacter':
