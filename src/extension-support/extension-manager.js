@@ -51,6 +51,7 @@ const defaultBuiltinExtensions = {
     jwPromise: () => require('../extensions/penguinmod/jwPromise'),
     jwCamera: () => require('../extensions/penguinmod/jwCamera'),
     jwClass: () => require('../extensions/penguinmod/jwClass'),
+    jwPsychic: () => require('../extensions/penguinmod/jwPsychic'),
 
     // jeremy
     jgStorage: () => require('../extensions/penguinmod/jgStorage'),
