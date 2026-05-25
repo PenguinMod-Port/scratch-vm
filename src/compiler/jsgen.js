@@ -527,6 +527,8 @@ class JSGenerator {
         }
         case InputOpcode.PM_OP_CONSTRAIN:
             return `Math.min(Math.max(${this.descendInput(node.min)}, ${this.descendInput(node.input)}), ${this.descendInput(node.max)})`;
+        case InputOpcode.PM_OP_ENDS_WITH:
+            return `String.prototype.endsWith.call(${this.descendInput(node.text)}, ${this.descendInput(node.term)})`;
         case InputOpcode.PM_OP_INTERPOLATE:
             return `((a, b, c) => (b - a) * c + a)(${this.descendInput(node.from)}, ${this.descendInput(node.to)}, ${this.descendInput(node.amount)})`;
         case InputOpcode.PM_OP_IS_BOOLEAN:
@@ -585,6 +587,8 @@ class JSGenerator {
             return `(${this.descendInput(node.right)} ** (1 / ${this.descendInput(node.left)}))`;
         case InputOpcode.PM_OP_SIGN:
             return `Math.sign(${this.descendInput(node.value)})`;
+        case InputOpcode.PM_OP_STARTS_WITH:
+            return `String.prototype.startsWith.call(${this.descendInput(node.text)}, ${this.descendInput(node.term)})`;
         case InputOpcode.PM_OP_UPPER_CASE:
             return `String.prototype.toUpperCase.call(${this.descendInput(node.text)})`;
         case InputOpcode.PM_OP_XOR:

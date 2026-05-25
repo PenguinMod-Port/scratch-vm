@@ -328,6 +328,7 @@ const InputOpcode = {
     PM_OP_BOOL_EXPANDABLE: 'op.boolExpandable',
     PM_OP_COMPARE_EXPANDABLE: 'op.compareExpandable',
     PM_OP_CONSTRAIN: 'op.constrain',
+    PM_OP_ENDS_WITH: 'op.endsWith',
     PM_OP_INTERPOLATE: 'op.interpolate',
     PM_OP_IS_BOOLEAN: 'op.isBoolean',
     PM_OP_IS_NUMBER: 'op.isNumber',
@@ -346,6 +347,7 @@ const InputOpcode = {
     PM_OP_REPLACEFIRST: 'op.replaceFirst',
     PM_OP_ROOT: 'op.root',
     PM_OP_SIGN: 'op.sign',
+    PM_OP_STARTS_WITH: 'op.startsWith',
     PM_OP_UPPER_CASE: 'op.upperCase',
     PM_OP_XOR: 'op.xor',
 
