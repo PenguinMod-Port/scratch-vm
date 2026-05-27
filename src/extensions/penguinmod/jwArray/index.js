@@ -891,7 +891,7 @@ class Extension {
                         case opcodes.BUILDER: {
                             let source = "";
                             source += `vm.jwArray.Type.toArray(${this.script.yields ? "yield* (function*" : "(function"}() {\n`
-                            source += `const _jwArrayBuilder = [];`
+                            source += `let _jwArrayBuilder = [];\n`
                             source += this.descendStackInline(node.substack, {allowReturns: true, inLoop: false});
                             source += `return _jwArrayBuilder;\n`
                             source += `})(), true)`;
