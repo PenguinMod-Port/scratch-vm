@@ -341,28 +341,6 @@ class Extension {
                 },
                 "---",
                 {
-                    opcode: 'fromList',
-                    text: 'array from list [LIST]',
-                    arguments: {
-                        LIST: {
-                            type: ArgumentType.LIST
-                        }
-                    },
-                    ...jwArray.Block
-                },
-                {
-                    opcode: 'toList',
-                    text: 'set list [LIST] to [ARRAY]',
-                    blockType: BlockType.COMMAND,
-                    arguments: {
-                        LIST: {
-                            type: ArgumentType.LIST
-                        },
-                        ARRAY: jwArray.Argument
-                    }
-                },
-                "---",
-                {
                     opcode: 'builder',
                     text: 'array builder [SHADOW]',
                     branches: [{}],
@@ -645,6 +623,30 @@ class Extension {
                         }
                     },
                     ...jwArray.Block
+                },
+                "---",
+                {
+                    opcode: 'fromList',
+                    text: 'array from list [LIST]',
+                    arguments: {
+                        LIST: {
+                            type: ArgumentType.LIST
+                        }
+                    },
+                    extensions: ["colours_data_lists"],
+                    ...jwArray.Block
+                },
+                {
+                    opcode: 'toList',
+                    text: 'set list [LIST] to [ARRAY]',
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        LIST: {
+                            type: ArgumentType.LIST
+                        },
+                        ARRAY: jwArray.Argument
+                    },
+                    extensions: ["colours_data_lists"]
                 }
             ],
             menus: {
@@ -668,9 +670,6 @@ class Extension {
             RANGE: 'jwArray.range',
             SPLIT: 'jwArray.split',
             SPLIT_CHARS: 'jwArray.splitChars',
-
-            FROM_LIST: 'jwArray.fromList',
-            TO_LIST: 'jwArray.toList',
 
             BUILDER: 'jwArray.builder',
             BUILDER_CURRENT: 'jwArray.builderCurrent',
@@ -700,7 +699,10 @@ class Extension {
             LOOP_INDEX: 'jwArray.loopIndex',
             LOOP_VALUE: 'jwArray.loopValue',
             FOR_EACH: 'jwArray.forEach',
-            BASIC_SORT: 'jwArray.basicSort'
+            BASIC_SORT: 'jwArray.basicSort',
+
+            FROM_LIST: 'jwArray.fromList',
+            TO_LIST: 'jwArray.toList',
         }
 
         return {
@@ -732,11 +734,6 @@ class Extension {
                             return new IntermediateInput(opcodes.SPLIT_CHARS, InputType.CUSTOM_TYPE, {
                                 string: this.descendInputOfBlock(block, 'STRING').toType(InputType.STRING),
                                 chars: this.descendInputOfBlock(block, 'CHARS').toType(InputType.NUMBER)
-                            });
-
-                        case 'jwArray_fromList':
-                            return new IntermediateInput(opcodes.FROM_LIST, InputType.CUSTOM_TYPE, {
-                                list: this.descendVariable(block, 'LIST', 'list')
                             });
 
                         case 'jwArray_builder':
@@ -839,16 +836,15 @@ class Extension {
                                 array: this.descendInputOfBlock(block, 'ARRAY'),
                                 value: this.descendInputOfBlock(block, 'VALUE')
                             }, true);
+
+                        case 'jwArray_fromList':
+                            return new IntermediateInput(opcodes.FROM_LIST, InputType.CUSTOM_TYPE, {
+                                list: this.descendVariable(block, 'LIST', 'list')
+                            });
                     }
                 },
                 command(block) {
                     switch (block.opcode) {
-                        case 'jwArray_toList':
-                            return new IntermediateStackBlock(opcodes.TO_LIST, {
-                                list: this.descendVariable(block, 'LIST', 'list'),
-                                array: this.descendInputOfBlock(block, 'ARRAY')
-                            });
-
                         case 'jwArray_builderAppend':
                             return new IntermediateStackBlock(opcodes.BUILDER_APPEND, {
                                 value: this.descendInputOfBlock(block, 'VALUE')
@@ -862,6 +858,12 @@ class Extension {
                             return new IntermediateStackBlock(opcodes.FOR_EACH, {
                                 array: this.descendInputOfBlock(block, 'ARRAY'),
                                 substack: this.descendSubstack(block, 'SUBSTACK')
+                            });
+                            
+                        case 'jwArray_toList':
+                            return new IntermediateStackBlock(opcodes.TO_LIST, {
+                                list: this.descendVariable(block, 'LIST', 'list'),
+                                array: this.descendInputOfBlock(block, 'ARRAY')
                             });
                     }
                 }
@@ -884,9 +886,6 @@ class Extension {
                             return `(new vm.jwArray.Type(${this.descendInput(node.string)}.split(${this.descendInput(node.divider)}), true))`;
                         case opcodes.SPLIT_CHARS:
                             return `vm.jwArray.Type.splitChars(${this.descendInput(node.string)}, ${this.descendInput(node.chars)})`;
-
-                        case opcodes.FROM_LIST:
-                            return `(new vm.jwArray.Type(${this.referenceVariable(node.list)}.value, true))`;
                         
                         case opcodes.BUILDER: {
                             let source = "";
@@ -957,15 +956,14 @@ class Extension {
                             source += `}()), true)\n`;
                             return source;
                         }
+
+                        case opcodes.FROM_LIST:
+                            return `(new vm.jwArray.Type(${this.referenceVariable(node.list)}.value, true))`;
                     }
                 },
                 command(block) {
                     const node = block.inputs;
                     switch (block.opcode) {
-                        case opcodes.TO_LIST:
-                            this.source += `${this.referenceVariable(node.list)}.value = vm.jwArray.Type.toArray(${this.descendInput(node.array)}, true).array;\n`;
-                            return true;
-
                         case opcodes.BUILDER_APPEND:
                             this.source += `typeof _jwArrayBuilder !== "undefined" && _jwArrayBuilder.push(vm.jwArray.Type.forArray(${this.descendInput(node.value)}));\n`;
                             return true;
@@ -978,6 +976,10 @@ class Extension {
                             this.descendStack(node.substack);
                             this.yieldLoop();
                             this.source += `}\n`;
+                            return true;
+                            
+                        case opcodes.TO_LIST:
+                            this.source += `${this.referenceVariable(node.list)}.value = vm.jwArray.Type.toArray(${this.descendInput(node.array)}, true).array;\n`;
                             return true;
                     }
                 }
