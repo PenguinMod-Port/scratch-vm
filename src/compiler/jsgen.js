@@ -539,6 +539,8 @@ class JSGenerator {
             return `(${this.descendInput(node.value)} !== null)`;
         case InputOpcode.PM_OP_JOIN_EXPANDABLE:
             return `String.prototype.concat(${node.inputs.map(input => this.descendInput(input)).join(', ')})`;
+        case InputOpcode.PM_OP_LETTERS_OF:
+            return `${this.descendInput(node.text)}.substring(Math.max(1, ${this.descendInput(node.from)}) - 1, Math.max(1, ${this.descendInput(node.to)}) - ${node.notFixed ? 1 : 0})`;
         case InputOpcode.PM_OP_LOG:
             return `(Math.log(${this.descendInput(node.right)}) / Math.log(${this.descendInput(node.left)}))`;
         case InputOpcode.PM_OP_LOG_2:
@@ -579,6 +581,10 @@ class JSGenerator {
             return `(Math.random() < 0.5)`;
         case InputOpcode.PM_OP_RANGE:
             return `rangeOfNumbers(${node.inputs.map(input => this.descendInput(input)).join(', ')})`;
+        case InputOpcode.PM_OP_READ_LINE:
+            return `(${this.descendInput(node.text)}.split('\\n')[${this.descendInput(node.line)} - 1] ?? "")`;
+        case InputOpcode.PM_OP_REGEX_MATCH:
+            return `runtime.ext_scratch3_operators._regexMatch(${this.descendInput(node.text)}, ${this.descendInput(node.regex)}, ${this.descendInput(node.flags)})`;
         case InputOpcode.PM_OP_REPLACEALL:
             return `String.prototype.replaceAll.call(${this.descendInput(node.text)}, ${this.descendInput(node.find)}, ${this.descendInput(node.replace)})`;
         case InputOpcode.PM_OP_REPLACEFIRST:

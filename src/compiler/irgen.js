@@ -642,6 +642,14 @@ class ScriptTreeGenerator {
         }
         case 'operator_falseBoolean':
             return this.createConstantInput(false);
+        case 'operator_getLettersFromIndexToIndexInText':
+        case 'operator_getLettersFromIndexToIndexInTextFixed':
+            return new IntermediateInput(InputOpcode.PM_OP_LETTERS_OF, InputType.STRING, {
+                from: this.descendInputOfBlock(block, 'INDEX1').toType(InputType.NUMBER_INDEX),
+                to: this.descendInputOfBlock(block, 'INDEX2').toType(InputType.NUMBER_INDEX),
+                text: this.descendInputOfBlock(block, 'TEXT').toType(InputType.STRING),
+                notFixed: block.opcode === 'operator_getLettersFromIndexToIndexInText'
+            });
         case 'operator_gtorequal':
             return new IntermediateInput(InputOpcode.OP_NOT, InputType.BOOLEAN, {
                 operand: new IntermediateInput(InputOpcode.OP_LESS, InputType.BOOLEAN, {
@@ -717,6 +725,17 @@ class ScriptTreeGenerator {
                 default: return this.createConstantInput(0);
             }
         }
+        case 'operator_readLineInMultilineText':
+            return new IntermediateInput(InputOpcode.PM_OP_READ_LINE, InputType.STRING, {
+                line: this.descendInputOfBlock(block, 'LINE').toType(InputType.NUMBER_INDEX),
+                text: this.descendInputOfBlock(block, 'TEXT').toType(InputType.STRING)
+            });
+        case 'operator_regexmatch':
+            return new IntermediateInput(InputOpcode.PM_OP_REGEX_MATCH, InputType.BOOLEAN, {
+                text: this.descendInputOfBlock(block, 'text').toType(InputType.STRING),
+                regex: this.descendInputOfBlock(block, 'reg').toType(InputType.STRING),
+                flags: this.descendInputOfBlock(block, 'regrule').toType(InputType.STRING)
+            });
         case 'operator_replaceAll':
             return new IntermediateInput(InputOpcode.PM_OP_REPLACEALL, InputType.STRING, {
                 text: this.descendInputOfBlock(block, 'text').toType(InputType.STRING),
