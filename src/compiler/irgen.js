@@ -274,6 +274,8 @@ class ScriptTreeGenerator {
         }
 
         //pm control
+        case 'control_dualblock':
+            return this.createConstantInput("dual block works!");
         case 'control_error':
             return new IntermediateInput(InputOpcode.PM_CONTROL_TRY_CATCH_ERROR, InputType.STRING);
         case 'control_from_to_index':
@@ -1152,6 +1154,10 @@ class ScriptTreeGenerator {
                 // We should consider analyzing this like we do for control_repeat_until
                 warpTimer: false
             }, this.analyzeLoop());
+        case 'control_dualblock':
+            return new IntermediateStackBlock(StackOpcode.LOOKS_SAY, {
+                message: this.createConstantInput("dual block works!")
+            });
         case 'control_expandableIf': {
             const EXPANDABLE = Number(block.fields.EXPANDABLE.value);
             let ifCount = Math.ceil(EXPANDABLE / 2);
@@ -1572,14 +1578,6 @@ class ScriptTreeGenerator {
 
         case 'procedures_call': {
             const procedureCode = block.mutation.proccode;
-
-            if (block.mutation.return) {
-                const visualReport = this.descendVisualReport(block);
-                if (visualReport) {
-                    return visualReport;
-                }
-            }
-
             if (procedureCode === 'tw:debugger;') {
                 return new IntermediateStackBlock(StackOpcode.DEBUGGER);
             }
@@ -1656,11 +1654,6 @@ class ScriptTreeGenerator {
                         return this.descendCompatLayerStack(block);
                     }
                 }
-            }
-
-            const asVisualReport = this.descendVisualReport(block);
-            if (asVisualReport) {
-                return asVisualReport;
             }
 
             log.warn(`IR: Unknown stacked block: ${block.opcode}`, block);
@@ -2163,7 +2156,8 @@ class ScriptTreeGenerator {
             }
 
             if (entryBlock) {
-                this.script.stack = this.walkStack(entryBlock);
+                let visualReport = this.descendVisualReport(this.getBlockById(entryBlock))
+                this.script.stack = visualReport ? new IntermediateStack([visualReport]) : this.walkStack(entryBlock);
             }
         }
 
