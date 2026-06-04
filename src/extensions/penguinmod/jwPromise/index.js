@@ -212,6 +212,7 @@ class Extension {
                     opcode: "await",
                     text: "await [PROMISE]",
                     blockType: BlockType.REPORTER,
+                    allowDropAnywhere: true,
                     dualBlock: true,
                     arguments: {
                         PROMISE: jwPromise.Argument
