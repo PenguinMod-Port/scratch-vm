@@ -772,9 +772,7 @@ class JSGenerator {
             const isLastInLoop = this.isLastBlock && this.inLoop;
 
             const blockType = node.blockType;
-            if (blockType === BlockType.COMMAND || blockType === BlockType.HAT) {
-                this.source += `${this.generateCompatibilityLayerCall(node, isLastInLoop)};\n`;
-            } else if (blockType === BlockType.CONDITIONAL || blockType === BlockType.LOOP) {
+            if (blockType === BlockType.CONDITIONAL || blockType === BlockType.LOOP) {
                 const branchVariable = this.localVariables.next();
                 const oldLoopName = this.loopName;
                 this.loopName = this.localVariables.next();
@@ -793,7 +791,7 @@ class JSGenerator {
                 this.source += '}\n'; // close while
                 this.loopName = oldLoopName;
             } else {
-                throw new Error(`Unknown block type: ${blockType}`);
+                this.source += `${this.generateCompatibilityLayerCall(node, isLastInLoop)};\n`;
             }
 
             if (isLastInLoop) {

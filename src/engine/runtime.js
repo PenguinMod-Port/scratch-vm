@@ -1578,6 +1578,12 @@ class Runtime extends EventEmitter {
         if (blockInfo.forceOutputType !== undefined) blockJSON.output = blockInfo.forceOutputType; // Allow extensions to override output type
         if (blockInfo.outputCheck !== undefined) blockJSON.output = blockInfo.outputCheck; // ditto for above but i wanted a nicer name
         if (blockInfo.canDragDuplicate) blockJSON.canDragDuplicate = true;
+        if (blockInfo.dualBlock) {
+            blockJSON.previousStatement = null;
+            if (!blockInfo.isTerminal) {
+                blockJSON.nextStatement = null;
+            }
+        }
 
         const blockText = Array.isArray(blockInfo.text) ? blockInfo.text : [blockInfo.text];
         let inTextNum = 0; // text for the next block "arm" is blockText[inTextNum]

@@ -161,16 +161,19 @@ class Extension {
                 {
                     opcode: "create",
                     text: "create pointer",
+                    dualBlock: true,
                     ...Pointer.Block
                 },
                 {
                     opcode: "createC",
                     text: "create pointer",
                     blockType: BlockType.COMMAND,
+                    hideFromPalette: true
                 },
                 {
                     opcode: "createData",
                     text: "create pointer to data [DATA]",
+                    dualBlock: true,
                     arguments: {
                         DATA: {
                             type: ArgumentType.STRING,
@@ -190,7 +193,8 @@ class Extension {
                             defaultValue: "data",
                             exemptFromNormalization: true
                         }
-                    }
+                    },
+                    hideFromPalette: true
                 },
                 "---",
                 {

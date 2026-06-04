@@ -211,7 +211,8 @@ class Extension {
                 {
                     opcode: "await",
                     text: "await [PROMISE]",
-                    blockType: BlockType.COMMAND,
+                    blockType: BlockType.REPORTER,
+                    dualBlock: true,
                     arguments: {
                         PROMISE: jwPromise.Argument
                     }
@@ -221,6 +222,7 @@ class Extension {
                     text: "await [PROMISE]",
                     blockType: BlockType.REPORTER,
                     allowDropAnywhere: true,
+                    hideFromPalette: true,
                     arguments: {
                         PROMISE: jwPromise.Argument
                     }
@@ -289,6 +291,7 @@ class Extension {
                                 blockID: block.inputs.SUBSTACK?.block,
                                 substack: this.descendSubstack(block, 'SUBSTACK')
                             });
+                        case 'jwPromise_await':
                         case 'jwPromise_awaitR':
                             return new IntermediateInput(opcodes.AWAIT_R, InputType.ANY, {
                                 promise: this.descendInputOfBlock(block, 'PROMISE')

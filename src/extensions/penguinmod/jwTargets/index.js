@@ -265,6 +265,7 @@ class Extension {
                     opcode: 'clone',
                     text: 'create clone of [TARGET]',
                     blockType: BlockType.COMMAND,
+                    hideFromPalette: true,
                     arguments: {
                         TARGET: Target.Argument
                     }
@@ -272,6 +273,7 @@ class Extension {
                 {
                     opcode: 'cloneR',
                     text: 'create clone of [TARGET]',
+                    dualBlock: true,
                     arguments: {
                         TARGET: Target.Argument
                     },

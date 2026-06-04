@@ -1010,7 +1010,6 @@ class ScriptTreeGenerator {
                 return this.createConstantInput(block.fields[fields[0]].value, preserveStrings);
             }
 
-            log.warn(`IR: Unknown input: ${block.opcode}`, block);
             throw new Error(`IR: Unknown input: ${block.opcode}`);
         }
         }
@@ -1650,13 +1649,12 @@ class ScriptTreeGenerator {
                 const blockInfo = this.getBlockInfo(block.opcode);
                 if (blockInfo) {
                     const type = blockInfo.info.blockType;
-                    if (type === BlockType.COMMAND || type === BlockType.CONDITIONAL || type === BlockType.LOOP) {
+                    if (type === BlockType.COMMAND || type === BlockType.CONDITIONAL || type === BlockType.LOOP || blockInfo.info.dualBlock) {
                         return this.descendCompatLayerStack(block);
                     }
                 }
             }
 
-            log.warn(`IR: Unknown stacked block: ${block.opcode}`, block);
             throw new Error(`IR: Unknown stacked block: ${block.opcode}`);
         }
         }
