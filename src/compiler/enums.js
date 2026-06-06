@@ -353,6 +353,7 @@ const InputOpcode = {
     PM_OP_STARTS_WITH: 'op.startsWith',
     PM_OP_UPPER_CASE: 'op.upperCase',
     PM_OP_XOR: 'op.xor',
+    PM_OP_CHARACTER_TO_CODE: 'op.characterToCode',
 
     SENSING_ANSWER: 'sensing.answer',
     SENSING_COLOR_TOUCHING_COLOR: 'sensing.colorTouchingColor',

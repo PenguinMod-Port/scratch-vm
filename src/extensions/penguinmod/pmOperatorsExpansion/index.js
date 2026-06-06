@@ -193,6 +193,19 @@ class Extension {
                     },
                     ...template
                 },
+                "---",
+                {
+                blockType: BlockType.XML,
+                xml: `
+                <block type="operator_character_to_code">
+                    <value name="ONE">
+                        <shadow type="text">
+                        <field name="TEXT">a</field>
+                        </shadow>
+                    </value>
+                </block>
+                `
+                },
             ]
         };
     }

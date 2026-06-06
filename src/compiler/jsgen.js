@@ -599,6 +599,8 @@ class JSGenerator {
             return `String.prototype.toUpperCase.call(${this.descendInput(node.text)})`;
         case InputOpcode.PM_OP_XOR:
             return `(${this.descendInput(node.left)} !== ${this.descendInput(node.right)})`;
+        case InputOpcode.PM_OP_CHARACTER_TO_CODE:
+            return `(${this.descendInput(node.one)}).charCodeAt(0)`;
         
         case InputOpcode.SENSING_ANSWER:
             return `runtime.ext_scratch3_sensing._answer`;
