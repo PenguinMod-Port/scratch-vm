@@ -355,6 +355,8 @@ const InputOpcode = {
     PM_OP_XOR: 'op.xor',
     PM_OP_CHARACTER_TO_CODE: 'op.characterToCode',
     PM_OP_CODE_TO_CHARACTER: 'op.codeToCharacter',
+    PM_OP_INDEX_OF_TEXT_IN_TEXT: 'op.indexOfTextInText',
+    PM_OP_LAST_INDEX_OF_TEXT_IN_TEXT: 'op.lastIndexOfTextInText',
 
     SENSING_ANSWER: 'sensing.answer',
     SENSING_COLOR_TOUCHING_COLOR: 'sensing.colorTouchingColor',

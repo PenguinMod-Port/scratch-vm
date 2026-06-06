@@ -801,6 +801,16 @@ class ScriptTreeGenerator {
             return new IntermediateInput(InputOpcode.PM_OP_CODE_TO_CHARACTER, InputType.STRING, {
                 one: this.descendInputOfBlock(block, 'ONE').toType(InputType.NUMBER)
             });
+        case 'operator_indexOfTextInText':
+            return new IntermediateInput(InputOpcode.PM_OP_INDEX_OF_TEXT_IN_TEXT, InputType.NUMBER, {
+                text1: this.descendInputOfBlock(block, 'TEXT1').toType(InputType.STRING),
+                text2: this.descendInputOfBlock(block, 'TEXT2').toType(InputType.STRING)
+            });
+        case 'operator_lastIndexOfTextInText':
+            return new IntermediateInput(InputOpcode.PM_OP_LAST_INDEX_OF_TEXT_IN_TEXT, InputType.NUMBER, {
+                text1: this.descendInputOfBlock(block, 'TEXT1').toType(InputType.STRING),
+                text2: this.descendInputOfBlock(block, 'TEXT2').toType(InputType.STRING)
+            });
 
         case 'procedures_call': {
             const procedureInfo = this.getProcedureInfo(block);

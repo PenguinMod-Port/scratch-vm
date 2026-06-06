@@ -603,6 +603,10 @@ class JSGenerator {
             return `(${this.descendInput(node.one)}).charCodeAt(0)`;
         case InputOpcode.PM_OP_CODE_TO_CHARACTER:
             return `String.fromCharCode(${this.descendInput(node.one)})`;
+        case InputOpcode.PM_OP_INDEX_OF_TEXT_IN_TEXT:
+            return `((${this.descendInput(node.text2)}).indexOf(${this.descendInput(node.text1)}) + 1)`
+        case InputOpcode.PM_OP_LAST_INDEX_OF_TEXT_IN_TEXT:
+            return `((${this.descendInput(node.text2)}).lastIndexOf(${this.descendInput(node.text1)}) + 1)`
         
         case InputOpcode.SENSING_ANSWER:
             return `runtime.ext_scratch3_sensing._answer`;
