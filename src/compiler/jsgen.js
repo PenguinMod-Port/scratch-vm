@@ -601,6 +601,8 @@ class JSGenerator {
             return `(${this.descendInput(node.left)} !== ${this.descendInput(node.right)})`;
         case InputOpcode.PM_OP_CHARACTER_TO_CODE:
             return `(${this.descendInput(node.one)}).charCodeAt(0)`;
+        case InputOpcode.PM_OP_CODE_TO_CHARACTER:
+            return `String.fromCharCode(${this.descendInput(node.one)})`;
         
         case InputOpcode.SENSING_ANSWER:
             return `runtime.ext_scratch3_sensing._answer`;

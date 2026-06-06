@@ -204,6 +204,13 @@ class Extension {
                         </shadow>
                     </value>
                 </block>
+                <block type="operator_code_to_character">
+                    <value name="ONE">
+                        <shadow type="text">
+                        <field name="TEXT">97</field>
+                        </shadow>
+                    </value>
+                </block>
                 `
                 },
             ]

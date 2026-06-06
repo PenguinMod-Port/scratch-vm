@@ -797,6 +797,11 @@ class ScriptTreeGenerator {
             return new IntermediateInput(InputOpcode.PM_OP_CHARACTER_TO_CODE, InputType.NUMBER_INT, {
                 one: this.descendInputOfBlock(block, 'ONE').toType(InputType.STRING)
             });
+        case 'operator_code_to_character':
+            return new IntermediateInput(InputOpcode.PM_OP_CODE_TO_CHARACTER, InputType.STRING, {
+                one: this.descendInputOfBlock(block, 'ONE').toType(InputType.NUMBER)
+            });
+
         case 'procedures_call': {
             const procedureInfo = this.getProcedureInfo(block);
             return new IntermediateInput(procedureInfo.opcode, InputType.ANY, procedureInfo.inputs, procedureInfo.yields);
