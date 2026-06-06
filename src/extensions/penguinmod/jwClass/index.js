@@ -114,10 +114,10 @@ let jwPointer = {
 
 class Extension {
     constructor() {
-        vm.extensionManager.addExtensionDependency("jwClass", "https://extensions.penguinmod.com/extensions/DogeisCut/dogeiscutObject.js", () => dogeiscutObject = vm.dogeiscutObject);
+        vm.extensionManager.addExtensionDependency("jwClass", "dogeiscutObject", () => dogeiscutObject = vm.dogeiscutObject);
         vm.extensionManager.addExtensionDependency("jwClass", "jwPointer", () => jwPointer = vm.jwPointer);
 
-        vm.extensionManager.extendCompiler("jwFragment", this.extendCompiler.bind(this));
+        vm.extensionManager.extendCompiler("jwClass", this.extendCompiler.bind(this));
 
         vm.jwClass = jwClass;
         vm.runtime.registerSerializer(

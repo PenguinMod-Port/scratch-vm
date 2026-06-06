@@ -54,6 +54,9 @@ const defaultBuiltinExtensions = {
     jwPsychic: () => require('../extensions/penguinmod/jwPsychic'),
     jwProto: () => require('../extensions/penguinmod/jwProto'),
 
+    // dogeiscut
+    dogeiscutObject: () => require('../extensions/penguinmod/dogeiscutObject'),
+
     // jeremy
     jgStorage: () => require('../extensions/penguinmod/jgStorage'),
     jgTween: () => require('../extensions/penguinmod/jgTween'),
