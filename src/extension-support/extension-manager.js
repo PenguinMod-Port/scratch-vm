@@ -53,6 +53,7 @@ const defaultBuiltinExtensions = {
     jwClass: () => require('../extensions/penguinmod/jwClass'),
     jwPsychic: () => require('../extensions/penguinmod/jwPsychic'),
     jwProto: () => require('../extensions/penguinmod/jwProto'),
+    jwFetch: () => require('../extensions/penguinmod/jwFetch'),
 
     // dogeiscut
     dogeiscutObject: () => require('../extensions/penguinmod/dogeiscutObject'),
