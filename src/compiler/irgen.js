@@ -586,6 +586,19 @@ class ScriptTreeGenerator {
         }
         case 'operator_boolify':
             return this.descendInputOfBlock(block, 'ONE').toType(InputType.BOOLEAN);
+        case 'operator_character_to_code':
+            return new IntermediateInput(InputOpcode.PM_OP_CHARACTER_TO_CODE, InputType.NUMBER_INT, {
+                one: this.descendInputOfBlock(block, 'ONE').toType(InputType.STRING)
+            });
+        case 'operator_code_to_character':
+            return new IntermediateInput(InputOpcode.PM_OP_CODE_TO_CHARACTER, InputType.STRING, {
+                one: this.descendInputOfBlock(block, 'ONE').toType(InputType.NUMBER)
+            });
+        case 'operator_countAppearTimes':
+            return new IntermediateInput(InputOpcode.PM_OP_COUNT_APPEAR_TIMES, InputType.NUMBER, {
+                text1: this.descendInputOfBlock(block, 'TEXT1').toType(InputType.STRING),
+                text2: this.descendInputOfBlock(block, 'TEXT2').toType(InputType.STRING)
+            });
         case 'operator_constrainnumber':
             return new IntermediateInput(InputOpcode.PM_OP_CONSTRAIN, InputType.NUMBER, {
                 input: this.descendInputOfBlock(block, 'inp').toType(InputType.NUMBER),
@@ -659,6 +672,11 @@ class ScriptTreeGenerator {
                     right: this.descendInputOfBlock(block, 'OPERAND2')
                 })
             });
+        case 'operator_indexOfTextInText':
+            return new IntermediateInput(InputOpcode.PM_OP_INDEX_OF_TEXT_IN_TEXT, InputType.NUMBER, {
+                text1: this.descendInputOfBlock(block, 'TEXT1').toType(InputType.STRING),
+                text2: this.descendInputOfBlock(block, 'TEXT2').toType(InputType.STRING)
+            });
         case 'operator_join3':
             return new IntermediateInput(InputOpcode.OP_JOIN, InputType.STRING, {
                 left: new IntermediateInput(InputOpcode.OP_JOIN, InputType.STRING, {
@@ -666,6 +684,11 @@ class ScriptTreeGenerator {
                     right: this.descendInputOfBlock(block, 'STRING2').toType(InputType.STRING)
                 }),
                 right: this.descendInputOfBlock(block, 'STRING3').toType(InputType.STRING)
+            });
+        case 'operator_lastIndexOfTextInText':
+            return new IntermediateInput(InputOpcode.PM_OP_LAST_INDEX_OF_TEXT_IN_TEXT, InputType.NUMBER, {
+                text1: this.descendInputOfBlock(block, 'TEXT1').toType(InputType.STRING),
+                text2: this.descendInputOfBlock(block, 'TEXT2').toType(InputType.STRING)
             });
         case 'operator_lerpFunc':
             return new IntermediateInput(InputOpcode.PM_OP_INTERPOLATE, InputType.NUMBER, {
@@ -754,6 +777,11 @@ class ScriptTreeGenerator {
             return this.descendInputOfBlock(block, 'ONE').toType(InputType.STRING);
         case 'operator_tabCharacter':
             return this.createConstantInput('\t');
+        case 'operator_textIncludesLetterFrom':
+            return new IntermediateInput(InputOpcode.PM_OP_TEXT_INCLUDES_LETTER_FROM, InputType.BOOLEAN, {
+                text1: this.descendInputOfBlock(block, 'TEXT1').toType(InputType.STRING),
+                text2: this.descendInputOfBlock(block, 'TEXT2').toType(InputType.STRING)
+            });
         case 'operator_textStartsOrEndsWith':
             return new IntermediateInput(block.fields.OPTION.value === 'ends' ? InputOpcode.PM_OP_ENDS_WITH : InputOpcode.PM_OP_STARTS_WITH, InputType.BOOLEAN, {
                 text: this.descendInputOfBlock(block, 'TEXT1').toType(InputType.STRING),
