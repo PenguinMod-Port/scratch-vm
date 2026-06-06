@@ -525,10 +525,20 @@ class JSGenerator {
 
             return recursive(1);
         }
+        case InputOpcode.PM_OP_CHARACTER_TO_CODE:
+            return `(${this.descendInput(node.one)}).charCodeAt(0)`;
+        case InputOpcode.PM_OP_CODE_TO_CHARACTER:
+            return `String.fromCharCode(${this.descendInput(node.one)})`;
+        case InputOpcode.PM_OP_COUNT_APPEAR_TIMES:
+            return `((${this.descendInput(node.text2)}).split(${this.descendInput(node.text1)}).length - 1)`
         case InputOpcode.PM_OP_CONSTRAIN:
             return `Math.min(Math.max(${this.descendInput(node.min)}, ${this.descendInput(node.input)}), ${this.descendInput(node.max)})`;
         case InputOpcode.PM_OP_ENDS_WITH:
             return `String.prototype.endsWith.call(${this.descendInput(node.text)}, ${this.descendInput(node.term)})`;
+        case InputOpcode.PM_OP_INDEX_OF_TEXT_IN_TEXT:
+            return `((${this.descendInput(node.text2)}).indexOf(${this.descendInput(node.text1)}) + 1)`
+         case InputOpcode.PM_OP_LAST_INDEX_OF_TEXT_IN_TEXT:
+            return `((${this.descendInput(node.text2)}).lastIndexOf(${this.descendInput(node.text1)}) + 1)`
         case InputOpcode.PM_OP_INTERPOLATE:
             return `((a, b, c) => (b - a) * c + a)(${this.descendInput(node.from)}, ${this.descendInput(node.to)}, ${this.descendInput(node.amount)})`;
         case InputOpcode.PM_OP_IS_BOOLEAN:
@@ -593,24 +603,14 @@ class JSGenerator {
             return `(${this.descendInput(node.right)} ** (1 / ${this.descendInput(node.left)}))`;
         case InputOpcode.PM_OP_SIGN:
             return `Math.sign(${this.descendInput(node.value)})`;
+        case InputOpcode.PM_OP_TEXT_INCLUDES_LETTER_FROM:
+            return `((${this.descendInput(node.text2)}).split('').some(char => (${this.descendInput(node.text1)}).includes(char)))`
         case InputOpcode.PM_OP_STARTS_WITH:
             return `String.prototype.startsWith.call(${this.descendInput(node.text)}, ${this.descendInput(node.term)})`;
         case InputOpcode.PM_OP_UPPER_CASE:
             return `String.prototype.toUpperCase.call(${this.descendInput(node.text)})`;
         case InputOpcode.PM_OP_XOR:
             return `(${this.descendInput(node.left)} !== ${this.descendInput(node.right)})`;
-        case InputOpcode.PM_OP_CHARACTER_TO_CODE:
-            return `(${this.descendInput(node.one)}).charCodeAt(0)`;
-        case InputOpcode.PM_OP_CODE_TO_CHARACTER:
-            return `String.fromCharCode(${this.descendInput(node.one)})`;
-        case InputOpcode.PM_OP_INDEX_OF_TEXT_IN_TEXT:
-            return `((${this.descendInput(node.text2)}).indexOf(${this.descendInput(node.text1)}) + 1)`
-        case InputOpcode.PM_OP_LAST_INDEX_OF_TEXT_IN_TEXT:
-            return `((${this.descendInput(node.text2)}).lastIndexOf(${this.descendInput(node.text1)}) + 1)`
-        case InputOpcode.PM_OP_COUNT_APPEAR_TIMES:
-            return `((${this.descendInput(node.text2)}).split(${this.descendInput(node.text1)}).length - 1)`
-        case InputOpcode.PM_OP_TEXT_INCLUDES_LETTER_FROM:
-            return `((${this.descendInput(node.text2)}).split('').some(char => (${this.descendInput(node.text1)}).includes(char)))`
         
         case InputOpcode.SENSING_ANSWER:
             return `runtime.ext_scratch3_sensing._answer`;
