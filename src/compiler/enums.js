@@ -357,6 +357,9 @@ const InputOpcode = {
     PM_OP_CODE_TO_CHARACTER: 'op.codeToCharacter',
     PM_OP_INDEX_OF_TEXT_IN_TEXT: 'op.indexOfTextInText',
     PM_OP_LAST_INDEX_OF_TEXT_IN_TEXT: 'op.lastIndexOfTextInText',
+    PM_OP_COUNT_APPEAR_TIMES: 'operator_countAppearTimes',
+    PM_OP_TEXT_INCLUDES_LETTER_FROM: 'operator_textIncludesLetterFrom',
+    PM_OP_TEXT_STARTS_OR_ENDS_WITH: 'operator_textStartsOrEndsWith',
 
     SENSING_ANSWER: 'sensing.answer',
     SENSING_COLOR_TOUCHING_COLOR: 'sensing.colorTouchingColor',

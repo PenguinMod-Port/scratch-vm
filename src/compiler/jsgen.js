@@ -607,6 +607,10 @@ class JSGenerator {
             return `((${this.descendInput(node.text2)}).indexOf(${this.descendInput(node.text1)}) + 1)`
         case InputOpcode.PM_OP_LAST_INDEX_OF_TEXT_IN_TEXT:
             return `((${this.descendInput(node.text2)}).lastIndexOf(${this.descendInput(node.text1)}) + 1)`
+        case InputOpcode.PM_OP_COUNT_APPEAR_TIMES:
+            return `((${this.descendInput(node.text2)}).split(${this.descendInput(node.text1)}).length - 1)`
+        case InputOpcode.PM_OP_TEXT_INCLUDES_LETTER_FROM:
+            return `((${this.descendInput(node.text2)}).split('').some(char => (${this.descendInput(node.text1)}).includes(char)))`
         
         case InputOpcode.SENSING_ANSWER:
             return `runtime.ext_scratch3_sensing._answer`;

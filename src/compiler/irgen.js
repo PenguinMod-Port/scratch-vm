@@ -811,6 +811,16 @@ class ScriptTreeGenerator {
                 text1: this.descendInputOfBlock(block, 'TEXT1').toType(InputType.STRING),
                 text2: this.descendInputOfBlock(block, 'TEXT2').toType(InputType.STRING)
             });
+        case 'operator_countAppearTimes':
+            return new IntermediateInput(InputOpcode.PM_OP_COUNT_APPEAR_TIMES, InputType.NUMBER, {
+                text1: this.descendInputOfBlock(block, 'TEXT1').toType(InputType.STRING),
+                text2: this.descendInputOfBlock(block, 'TEXT2').toType(InputType.STRING)
+            });
+        case 'operator_textIncludesLetterFrom':
+            return new IntermediateInput(InputOpcode.PM_OP_TEXT_INCLUDES_LETTER_FROM, InputType.BOOLEAN, {
+                text1: this.descendInputOfBlock(block, 'TEXT1').toType(InputType.STRING),
+                text2: this.descendInputOfBlock(block, 'TEXT2').toType(InputType.STRING)
+            });
 
         case 'procedures_call': {
             const procedureInfo = this.getProcedureInfo(block);

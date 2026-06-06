@@ -213,6 +213,36 @@ class Extension {
                 </block>
                 `
                 },
+                "---",
+                {
+                blockType: BlockType.XML,
+                xml: `
+                <block type="operator_countAppearTimes">
+                    <value name="TEXT1">
+                        <shadow type="text">
+                        <field name="TEXT">a</field>
+                        </shadow>
+                    </value>
+                    <value name="TEXT2">
+                        <shadow type="text">
+                        <field name="TEXT">abc abc abc</field>
+                        </shadow>
+                    </value>
+                </block>
+                <block type="operator_textIncludesLetterFrom">
+                    <value name="TEXT1">
+                        <shadow type="text">
+                        <field name="TEXT">abcdef</field>
+                        </shadow>
+                    </value>
+                    <value name="TEXT2">
+                        <shadow type="text">
+                        <field name="TEXT">fgh</field>
+                        </shadow>
+                    </value>
+                </block>
+                `
+                }
             ]
         };
     }
