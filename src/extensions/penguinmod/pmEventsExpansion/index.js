@@ -14,6 +14,8 @@ class Extension {
             this._otherFrame = !this._otherFrame;
             if (this._otherFrame) vm.runtime.startHats('pmEventsExpansion_everyOtherFrame'); 
         });
+
+        vm.extensionManager.extendCompiler("pmEventsExpansion", this.extendCompiler.bind(this));
     }
 
     getInfo() {
@@ -81,6 +83,57 @@ class Extension {
         };
     }
 
+    extendCompiler({ IntermediateStackBlock, IntermediateInput, InputType, InputOpcode }) {
+        const opcodes = {
+            SEND_WITH_DATA: 'pmEventsExpansion.sendWithData',
+            RECIEVED_DATA_REPORTER: 'pmEventsExpansion.recievedDataReporter',
+        };
+
+        return {
+            ir: {
+                reporter(block) {
+                    switch (block.opcode) {
+                        case "pmEventsExpansion_recievedDataReporter":
+                            return new IntermediateInput(opcodes.RECIEVED_DATA_REPORTER, InputType.ANY);
+                    };
+                },
+                command(block) {
+                    switch (block.opcode) {
+                        case "pmEventsExpansion_sendWithData":
+                            return new IntermediateStackBlock(opcodes.SEND_WITH_DATA, {
+                                broadcast: this.descendInputOfBlock(block, 'BROADCAST').toType(InputType.STRING),
+                                data: this.descendInputOfBlock(block, 'DATA'),
+                            });
+                    };
+                }
+            },
+            js: {
+                reporter(block) {
+                    const node = block.inputs;
+
+                    switch (block.opcode) {
+                        case opcodes.RECIEVED_DATA_REPORTER:
+                            return `thread._pmEventsExpansionBroadcastData ?? null`;
+                    };
+                },
+                command(block) {
+                    const node = block.inputs;
+
+                    switch (block.opcode) {
+                        case opcodes.SEND_WITH_DATA:
+                            const broadcast = this.descendInput(node.broadcast);
+                            const data = this.descendInput(node.data);
+                            const b = this.localVariables.next();
+                            this.source += `const ${b} = runtime.getTargetForStage().lookupBroadcastMsg("", ${broadcast});\n`
+                            this.source += `if (${b}) ${b}.isSent = true;\n`
+                            this.source += `for (const thread of startHats("event_whenbroadcastreceived", { BROADCAST_OPTION: ${broadcast} })) { thread._pmEventsExpansionBroadcastData = ${data}; };\n`
+                            return true;
+                    };
+                }
+            },
+        };
+    }
+
     // menus
     
     _spriteName() {
@@ -123,25 +176,6 @@ class Extension {
         }
         if (menu.length <= 0) return emptyMenu;
         return menu;
-    }
-
-    // blocks
-
-    sendWithData(args, util) {
-        const broadcast = Cast.toString(args.BROADCAST);
-        const data = Cast.toString(args.DATA);
-        const broadcastVar = util.runtime.getTargetForStage().lookupBroadcastMsg("", broadcast);
-        if (broadcastVar) broadcastVar.isSent = true;
-
-        const threads = util.startHats("event_whenbroadcastreceived", {
-            BROADCAST_OPTION: broadcast
-        });
-        for (const thread of threads) {
-            thread._pmEventsExpansionBroadcastData = data;
-        }
-    }
-    recievedDataReporter(_, util) {
-        return util.thread._pmEventsExpansionBroadcastData ?? null;
     }
 }
 
