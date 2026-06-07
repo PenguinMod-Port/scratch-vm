@@ -57,6 +57,19 @@ class Extension {
                         HEADERS: dogeiscutObject.Argument
                     },
                     ...dogeiscutObject.Block
+                },
+                "---",
+                {
+                    opcode: "canFetch",
+                    text: "request to fetch [URL]",
+                    blockType: BlockType.BOOLEAN,
+                    dualBlock: true,
+                    arguments: {
+                        URL: {
+                            type: ArgumentType.STRING,
+                            defaultValue: "https://projects.penguinmod.com/api/v1"
+                        }
+                    }
                 }
             ],
             menus: {
@@ -89,7 +102,8 @@ class Extension {
 
     extendCompiler({IntermediateStackBlock, IntermediateInput, InputType, InputOpcode}) {
         const opcodes = {
-            FETCH: 'jwFetch.fetch'
+            FETCH: 'jwFetch.fetch',
+            CAN_FETCH: 'jwFetch.canFetch'
         };
 
         return {
@@ -104,6 +118,10 @@ class Extension {
                                 headers: this.descendInputOfBlock(block, 'HEADERS'),
                                 body: block.opcode === 'jwFetch_fetchBody' ? this.descendInputOfBlock(block, 'BODY') : this.createConstantInput(null)
                             }, true);
+                        case 'jwFetch_canFetch':
+                            return new IntermediateInput(opcodes.CAN_FETCH, InputType.BOOLEAN, {
+                                url: this.descendInputOfBlock(block, 'URL').toType(InputType.STRING)
+                            }, true);
                     }
                 },
                 command(block) {
@@ -116,6 +134,10 @@ class Extension {
                                 headers: this.descendInputOfBlock(block, 'HEADERS'),
                                 body: block.opcode === 'jwFetch_fetchBody' ? this.descendInputOfBlock(block, 'BODY').toType(InputType.STRING) : this.createConstantInput(null)
                             }, true);
+                        case 'jwFetch_canFetch':
+                            return new IntermediateStackBlock(opcodes.CAN_FETCH, {
+                                url: this.descendInputOfBlock(block, 'URL').toType(InputType.STRING)
+                            }, true);
                     }
                 }
             },
@@ -126,6 +148,8 @@ class Extension {
                     switch (block.opcode) {
                         case opcodes.FETCH:
                             return `(yield* vm.runtime.ext_jwFetch._fetch(thread, ${this.descendInput(node.method)}, ${this.descendInput(node.url)}, vm.dogeiscutObject.Type.toObject(${this.descendInput(node.headers)}), ${this.descendInput(node.body)}))`;
+                        case opcodes.CAN_FETCH:
+                            return `(yield* vm.runtime.ext_jwFetch._canFetch(thread, ${this.descendInput(node.url)}))`;
                     }
                 },
                 command(block) {
@@ -134,6 +158,9 @@ class Extension {
                     switch (block.opcode) {
                         case opcodes.FETCH:
                             this.source += `yield* vm.runtime.ext_jwFetch._fetch(thread, ${this.descendInput(node.method)}, ${this.descendInput(node.url)}, vm.dogeiscutObject.Type.toObject(${this.descendInput(node.headers)}), ${this.descendInput(node.body)}, true);\n`;
+                            return true;
+                        case opcodes.CAN_FETCH:
+                            this.source += `yield* vm.runtime.ext_jwFetch._canFetch(thread, ${this.descendInput(node.url)}, true);\n`;
                             return true;
                     }
                 }
@@ -160,6 +187,7 @@ class Extension {
     }
 
     _fetch = function*(thread, method, url, headers, body, strict = false) {
+        yield* this._canFetch(thread, url, true);
         return yield* this._waitPromise(thread, (async function() {
             const response = await fetch(url, {
                 method: method.toUpperCase(),
@@ -181,6 +209,16 @@ class Extension {
                 status: response.status,
                 url: response.url
             });
+        })());
+    }
+
+    _canFetch = function*(thread, url, strict = false) {
+        return yield* this._waitPromise(thread, (async function() {
+            let output = await vm.securityManager.canFetch(url);
+            if (strict && !output) {
+                throw `Permission to fetch ${url} denied.`;
+            }
+            return output;
         })());
     }
 }
