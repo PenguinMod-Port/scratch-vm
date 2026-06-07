@@ -499,7 +499,8 @@ class ExtensionManager {
 
             // If the menu description is in short form (items only) then normalize it to general form: an object with
             // its items listed in an `items` property.
-            if (!menuInfo.items) {
+            // we don't to do that if the menu defines a type
+            if (!menuInfo.items && (typeof menuInfo.variableType !== 'string') && (typeof menuInfo.menuType !== 'number')) {
                 menuInfo = {
                     items: menuInfo
                 };
