@@ -385,7 +385,7 @@ class ObjectType {
 
     get(key) {
         key = ObjectType.forKey(key)
-        return this.map.has(key) ? ObjectType.forObject(this.map.get(key)) : ""
+        return this.map.has(key) ? ObjectType.forObject(this.map.get(key)) : null
     }
 
     getPath(path) {
@@ -396,7 +396,7 @@ class ObjectType {
             if (val instanceof ObjectType && val.has(key)) {
                 val = val.get(key)
             } else {
-                return ""
+                return null
             }
         }
         return ObjectType.forObject(val)
