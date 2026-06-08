@@ -1409,12 +1409,14 @@ class Runtime extends EventEmitter {
                 break;
 
             case MenuType.VARIABLE:
-                delete baseJson.args0[0].options;
-                baseJson.args0[0].variableTypes = [
-                    menuInfo.variableType === 'scalar' ? Variable.SCALAR_TYPE : menuInfo.variableType
-                ];
-                baseJson.args0[0].variable = menuInfo.defaultName;
-                break;
+                throw new Error("Variable dropdown is currently unimplemented, do not use.");
+                // delete baseJson.args0[0].options;
+                // baseJson.args0[0].variableTypes = [
+                //     menuInfo.variableType === 'scalar' ? Variable.SCALAR_TYPE : menuInfo.variableType
+                // ];
+                // baseJson.args0[0].variable = menuInfo.defaultName;
+                // baseJson.args0[0].type = 'field_variable';
+                // break;
         }
 
         return { json: baseJson };
@@ -1433,6 +1435,9 @@ class Runtime extends EventEmitter {
     _buildLegacyMenuForScratchBlocks (menuName, menuInfo, categoryInfo) {
         const menuId = this._makeExtensionMenuId(menuName, categoryInfo.id);
         const menuItems = this._convertMenuItems(menuInfo.items);
+        if (menuInfo.variableType || menuInfo.defaultName) {
+            throw new Error("Variable dropdown is currently unimplemented, do not use.");
+        }
         return {
             json: {
                 message0: '%1',
