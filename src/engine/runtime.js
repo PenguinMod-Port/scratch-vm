@@ -1370,113 +1370,54 @@ class Runtime extends EventEmitter {
      */
     _buildMenuForScratchBlocks (menuName, menuInfo, categoryInfo) {
         const menuId = this._makeExtensionMenuId(menuName, categoryInfo.id);
+        const baseJson = {
+            message0: '%1',
+            type: menuId,
+            inputsInline: true,
+            output: 'String',
+            colour: categoryInfo.color1,
+            colourSecondary: categoryInfo.color2,
+            colourTertiary: categoryInfo.color3,
+            outputShape: ScratchBlocksConstants.OUTPUT_SHAPE_ROUND,
+            args0: [{
+                type: 'field_dropdown',
+                name: menuName,
+                options: this._convertMenuItems(menuInfo.items),
+            }]
+        };
 
-        // Listen, I know I could probably make this less redundant but I think it's way more readable this way.
         switch (menuInfo.menuType) {
-            default:
-                return {
-                    json: {
-                        message0: '%1',
-                        type: menuId,
-                        inputsInline: true,
-                        output: 'String',
-                        colour: categoryInfo.color1,
-                        colourSecondary: categoryInfo.color2,
-                        colourTertiary: categoryInfo.color3,
-                        outputShape: ScratchBlocksConstants.OUTPUT_SHAPE_SQUARE,
-                        args0: [
-                            {
-                                type: 'field_dropdown',
-                                name: menuName,
-                                options: this._convertMenuItems(menuInfo.items),
-                            }
-                        ]
-                    }
-                };
+            case MenuType.STRICT:
+                baseJson.outputShape = ScratchBlocksConstants.OUTPUT_SHAPE_SQUARE;
+                break;
+
             case MenuType.ACCEPTING:
-                return {
-                    json: {
-                        message0: '%1',
-                        type: menuId,
-                        inputsInline: true,
-                        output: 'String',
-                        colour: categoryInfo.color1,
-                        colourSecondary: categoryInfo.color2,
-                        colourTertiary: categoryInfo.color3,
-                        outputShape: ScratchBlocksConstants.OUTPUT_SHAPE_ROUND,
-                        args0: [
-                            {
-                                type: 'field_dropdown',
-                                name: menuName,
-                                options: this._convertMenuItems(menuInfo.items),
-                            }
-                        ]
-                    }
-                };
+                break;
+
             case MenuType.TYPEABLE:
-                return {
-                    json: {
-                        message0: '%1',
-                        type: menuId,
-                        inputsInline: true,
-                        output: 'String',
-                        colour: '#FFFFFF',
-                        colourSecondary: '#FFFFFF',
-                        colourTertiary: '#FFFFFF',
-                        outputShape: ScratchBlocksConstants.OUTPUT_SHAPE_ROUND,
-                        args0: [
-                            {
-                                type: 'field_textdropdown',
-                                name: menuName,
-                                options: this._convertMenuItems(menuInfo.items),
-                            }
-                        ]
-                    }
-                };
+                baseJson.colour = '#FFFFFF';
+                baseJson.colourSecondary = '#FFFFFF';
+                baseJson.colourTertiary = '#FFFFFF';
+                baseJson.args0[0].type = 'field_textdropdown';
+                break;
+
             case MenuType.TYPEABLE_NUMERIC:
-                return {
-                    json: {
-                        message0: '%1',
-                        type: menuId,
-                        inputsInline: true,
-                        output: 'String',
-                        colour: '#FFFFFF',
-                        colourSecondary: '#FFFFFF',
-                        colourTertiary: '#FFFFFF',
-                        outputShape: ScratchBlocksConstants.OUTPUT_SHAPE_ROUND,
-                        args0: [
-                            {
-                                type: 'field_numberdropdown',
-                                name: menuName,
-                                options: this._convertMenuItems(menuInfo.items),
-                            }
-                        ]
-                    }
-                };
+                baseJson.colour = '#FFFFFF';
+                baseJson.colourSecondary = '#FFFFFF';
+                baseJson.colourTertiary = '#FFFFFF';
+                baseJson.args0[0].type = 'field_numberdropdown';
+                break;
+
             case MenuType.VARIABLE:
-                return {
-                    json: {
-                        message0: '%1',
-                        type: menuId,
-                        inputsInline: true,
-                        output: 'String',
-                        colour: categoryInfo.color1,
-                        colourSecondary: categoryInfo.color2,
-                        colourTertiary: categoryInfo.color3,
-                        outputShape: ScratchBlocksConstants.OUTPUT_SHAPE_ROUND,
-                        args0: [
-                            {
-                                type: 'field_numberdropdown',
-                                name: menuName,
-                                variableTypes: [menuInfo.variableType === 'scalar'
-                                ? Variable.SCALAR_TYPE
-                                : menuInfo.variableType],
-                                variable: menuInfo.defaultName
-                            }
-                        ]
-                    }
-                };
+                delete baseJson.args0[0].options;
+                baseJson.args0[0].variableTypes = [
+                    menuInfo.variableType === 'scalar' ? Variable.SCALAR_TYPE : menuInfo.variableType
+                ];
+                baseJson.args0[0].variable = menuInfo.defaultName;
+                break;
         }
+
+        return { json: baseJson };
     }
 
     /**
