@@ -1082,7 +1082,9 @@ class Extension {
                             return true;
                         case opcodes.FOR_EACH:
                             const loopName = this.localVariables.next();
-                            this.source += `${loopName}: for (const [_dogeiscutObjectForEachKey, _dogeiscutObjectForEachValue] of vm.dogeiscutObject.Type.toObject(${this.descendInput(node.object)}).entries) {\n`;
+                            const object = this.localVariables.next();
+                            this.source += `const ${object} = vm.dogeiscutObject.Type.toObject(${this.descendInput(node.object)});\n`;
+                            this.source += `${loopName}: for (const [_dogeiscutObjectForEachKey, _dogeiscutObjectForEachValue] of ${object}.entries) {\n`;
                             this.descendStack(node.substack, {inLoop: true, loopName});
                             this.yieldLoop();
                             this.source += `}\n`;
