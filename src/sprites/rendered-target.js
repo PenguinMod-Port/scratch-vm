@@ -905,6 +905,21 @@ class RenderedTarget extends Target {
     }
 
     /**
+     * Return whether touching a target.
+     * @param {string} targetId ID of the target
+     * @return {boolean} True if touching the target
+     */
+    isTouchingTarget (targetId) {
+        targetId = Cast.toString(targetId);
+        const target = this.runtime.getTargetById(targetId);
+        if (!target || !this.renderer || target.dragging) {
+            return false;
+        }
+        return this.renderer.isTouchingDrawables(
+            this.drawableID, [target.drawableID]);
+    }
+
+    /**
      * Return whether touching a color.
      * @param {Array.<number>} rgb [r,g,b], values between 0-255.
      * @return {Promise.<boolean>} True iff the rendered target is touching the color.
