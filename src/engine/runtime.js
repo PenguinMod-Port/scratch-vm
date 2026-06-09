@@ -3,6 +3,7 @@ const ExtendedJSON = require('@turbowarp/json');
 const uuid = require('uuid');
 
 const ArgumentType = require('../extension-support/argument-type');
+const MenuType = require('../extension-support/menu-type');
 const Blocks = require('./blocks');
 const BlocksRuntimeCache = require('./blocks-runtime-cache');
 const BlockType = require('../extension-support/block-type');
@@ -1264,7 +1265,7 @@ class Runtime extends EventEmitter {
         for (const menuName in extensionInfo.menus) {
             if (Object.prototype.hasOwnProperty.call(extensionInfo.menus, menuName)) {
                 const menuInfo = extensionInfo.menus[menuName];
-                const convertedMenu = this._buildMenuForScratchBlocks(menuName, menuInfo, categoryInfo);
+                const convertedMenu = menuInfo.menuType ? this._buildMenuForScratchBlocks(menuName, menuInfo, categoryInfo) : this._buildLegacyMenuForScratchBlocks(menuName, menuInfo, categoryInfo);
                 categoryInfo.menus.push(convertedMenu);
                 categoryInfo.menuInfo[menuName] = menuInfo;
             }
@@ -1339,7 +1340,7 @@ class Runtime extends EventEmitter {
      * @private
      */
     _convertMenuItems (menuItems) {
-        if (typeof menuItems !== 'function') {
+        if (Array.isArray(menuItems)) {
             const extensionMessageContext = this.makeMessageContextForTarget();
             return menuItems.map(item => {
                 const formattedItem = maybeFormatMessage(item, extensionMessageContext);
@@ -1347,6 +1348,7 @@ class Runtime extends EventEmitter {
                 case 'string':
                     return [formattedItem, formattedItem];
                 case 'object':
+                    if (Array.isArray(item)) return item.slice(0, 2);
                     return [maybeFormatMessage(item.text, extensionMessageContext), item.value];
                 default:
                     throw new Error(`Can't interpret menu item: ${JSON.stringify(item)}`);
@@ -1368,24 +1370,112 @@ class Runtime extends EventEmitter {
      */
     _buildMenuForScratchBlocks (menuName, menuInfo, categoryInfo) {
         const menuId = this._makeExtensionMenuId(menuName, categoryInfo.id);
+        const baseJson = {
+            message0: '%1',
+            type: menuId,
+            inputsInline: true,
+            output: 'String',
+            colour: categoryInfo.color1,
+            colourSecondary: categoryInfo.color2,
+            colourTertiary: categoryInfo.color3,
+            outputShape: ScratchBlocksConstants.OUTPUT_SHAPE_ROUND,
+            args0: [{
+                type: 'field_dropdown',
+                name: menuName,
+                options: this._convertMenuItems(menuInfo.items),
+            }]
+        };
+
+        switch (menuInfo.menuType) {
+            case MenuType.STRICT:
+                baseJson.outputShape = ScratchBlocksConstants.OUTPUT_SHAPE_SQUARE;
+                break;
+
+            case MenuType.ACCEPTING:
+                break;
+
+            case MenuType.TYPEABLE:
+                baseJson.colour = '#FFFFFF';
+                baseJson.colourSecondary = '#FFFFFF';
+                baseJson.colourTertiary = '#FFFFFF';
+                baseJson.args0[0].type = 'field_textdropdown';
+                break;
+
+            case MenuType.TYPEABLE_NUMERIC:
+                baseJson.colour = '#FFFFFF';
+                baseJson.colourSecondary = '#FFFFFF';
+                baseJson.colourTertiary = '#FFFFFF';
+                baseJson.args0[0].type = 'field_numberdropdown';
+                break;
+
+            case MenuType.VARIABLE:
+                throw new Error("Variable dropdown is currently unimplemented, do not use.");
+                // delete baseJson.args0[0].options;
+                // baseJson.args0[0].variableTypes = [
+                //     menuInfo.variableType === 'scalar' ? Variable.SCALAR_TYPE : menuInfo.variableType
+                // ];
+                // baseJson.args0[0].variable = menuInfo.defaultName;
+                // baseJson.args0[0].type = 'field_variable';
+                // break;
+        }
+
+        return { json: baseJson };
+    }
+
+    /**
+     * Build the scratch-blocks JSON for a menu. Note that scratch-blocks treats menus as a special kind of block.
+     * @param {string} menuName - the name of the menu
+     * @param {object} menuInfo - a description of this menu and its items
+     * @property {*} items - an array of menu items or a function to retrieve such an array
+     * @property {boolean} [acceptReporters] - if true, allow dropping reporters onto this menu
+     * @param {CategoryInfo} categoryInfo - the category for this block
+     * @returns {object} - a JSON-esque object ready for scratch-blocks' consumption
+     * @private
+     */
+    _buildLegacyMenuForScratchBlocks (menuName, menuInfo, categoryInfo) {
+        const menuId = this._makeExtensionMenuId(menuName, categoryInfo.id);
         const menuItems = this._convertMenuItems(menuInfo.items);
+        if (menuInfo.variableType || menuInfo.defaultName) {
+            throw new Error("Variable dropdown is currently unimplemented, do not use.");
+        }
         return {
             json: {
                 message0: '%1',
                 type: menuId,
                 inputsInline: true,
                 output: 'String',
-                colour: categoryInfo.color1,
-                colourSecondary: categoryInfo.color2,
-                colourTertiary: categoryInfo.color3,
-                outputShape: menuInfo.acceptReporters ?
+                colour: menuInfo.isTypeable
+                    ? '#FFFFFF'
+                    : categoryInfo.color1,
+                colourSecondary: menuInfo.isTypeable
+                    ? '#FFFFFF'
+                    : categoryInfo.color2,
+                colourTertiary: menuInfo.isTypeable
+                    ? '#FFFFFF'
+                    : categoryInfo.color3,
+                outputShape: menuInfo.acceptReporters || menuInfo.isTypeable ?
                     ScratchBlocksConstants.OUTPUT_SHAPE_ROUND : ScratchBlocksConstants.OUTPUT_SHAPE_SQUARE,
                 args0: [
-                    {
-                        type: 'field_dropdown',
-                        name: menuName,
-                        options: menuItems
-                    }
+                    (typeof menuInfo.variableType !== 'undefined' ?
+                        {
+                            type: 'field_variable',
+                            name: menuName,
+                            variableTypes: [menuInfo.variableType === 'scalar'
+                                ? Variable.SCALAR_TYPE
+                                : menuInfo.variableType],
+                            variable: menuInfo.defaultName
+                        } : (menuInfo.isTypeable ?
+                            {
+                                type: menuInfo.isNumeric
+                                    ? 'field_numberdropdown'
+                                    : 'field_textdropdown',
+                                name: menuName,
+                                options: menuItems
+                            } : {
+                                type: 'field_dropdown',
+                                name: menuName,
+                                options: menuItems
+                            }))
                 ]
             }
         };
@@ -1824,19 +1914,93 @@ class Runtime extends EventEmitter {
             let valueName;
             let shadowType;
             let fieldName;
+            let variableID;
+            let variableName;
+            let variableType;
             if (argInfo.menu) {
                 const menuInfo = context.categoryInfo.menuInfo[argInfo.menu];
-                if (menuInfo.acceptReporters) {
-                    valueName = placeholder;
-                    shadowType = this._makeExtensionMenuId(argInfo.menu, context.categoryInfo.id);
-                    fieldName = argInfo.menu;
+                if (menuInfo.menuType) {
+                    switch (menuInfo.menuType) {
+                        default:
+                            argJSON.type = 'field_dropdown';
+                            argJSON.options = this._convertMenuItems(menuInfo.items);
+                            valueName = null;
+                            shadowType = null;
+                            fieldName = placeholder;
+                            break;
+                        case MenuType.ACCEPTING:
+                        case MenuType.TYPEABLE:
+                        case MenuType.TYPEABLE_NUMERIC:
+                            valueName = placeholder;
+                            shadowType = this._makeExtensionMenuId(argInfo.menu, context.categoryInfo.id);
+                            fieldName = argInfo.menu;
+                            break;
+                        case MenuType.VARIABLE:
+                            const args = Object.keys(context.blockInfo.arguments);
+                            const blockText = context.blockInfo.text.toString();
+                            const isVariableGetter = args.length === 1 && blockText.length === args[0].length + 2;
+                            if (isVariableGetter) {
+                                context.blockJSON.extensions ??= [];
+                                context.blockJSON.extensions.push('contextMenu_getVariableBlockAnyType');
+                            }
+                            argJSON.type = isVariableGetter
+                                ? 'field_variable_getter'
+                                : 'field_variable';
+                            argJSON.variableTypes = [menuInfo.variableType === 'scalar'
+                                ? Variable.SCALAR_TYPE
+                                : menuInfo.variableType];
+                            argJSON.variableType = argJSON.variableTypes[0];
+                            argJSON.variable = menuInfo.defaultName;
+                            valueName = null;
+                            shadowType = null;
+                            fieldName = placeholder;
+                            variableType = menuInfo.variableType === 'scalar'
+                                ? Variable.SCALAR_TYPE
+                                : menuInfo.variableType
+                            const defaultVar = argInfo.defaultValue ?? [];
+                            variableID = defaultVar[0];
+                            variableName = defaultVar[1];
+                            break;
+                    }
                 } else {
-                    argJSON.type = 'field_dropdown';
-                    argJSON.options = this._convertMenuItems(menuInfo.items);
-                    valueName = null;
-                    shadowType = null;
-                    fieldName = placeholder;
+                    if (menuInfo.acceptReporters || menuInfo.isTypeable) {
+                        valueName = placeholder;
+                        shadowType = this._makeExtensionMenuId(argInfo.menu, context.categoryInfo.id);
+                        fieldName = argInfo.menu;
+                    } else if (typeof menuInfo.variableType !== 'undefined') {
+                        const args = Object.keys(context.blockInfo.arguments);
+                        const blockText = context.blockInfo.text.toString();
+                        const isVariableGetter = args.length === 1 && blockText.length === args[0].length + 2;
+                        if (isVariableGetter) {
+                            context.blockJSON.extensions ??= [];
+                            context.blockJSON.extensions.push('contextMenu_getVariableBlockAnyType');
+                        }
+                        argJSON.type = isVariableGetter
+                            ? 'field_variable_getter'
+                            : 'field_variable';
+                        argJSON.variableTypes = [menuInfo.variableType === 'scalar'
+                            ? Variable.SCALAR_TYPE
+                            : menuInfo.variableType];
+                        argJSON.variableType = argJSON.variableTypes[0];
+                        argJSON.variable = menuInfo.defaultName;
+                        valueName = null;
+                        shadowType = null;
+                        fieldName = placeholder;
+                        variableType = menuInfo.variableType === 'scalar'
+                            ? Variable.SCALAR_TYPE
+                            : menuInfo.variableType
+                        const defaultVar = argInfo.defaultValue ?? [];
+                        variableID = defaultVar[0];
+                        variableName = defaultVar[1];
+                    } else {
+                        argJSON.type = 'field_dropdown';
+                        argJSON.options = this._convertMenuItems(menuInfo.items);
+                        valueName = null;
+                        shadowType = null;
+                        fieldName = placeholder;
+                    }
                 }
+                
             } else {
                 valueName = placeholder;
                 shadowType = (argTypeInfo.shadow && argTypeInfo.shadow.type) || null;
@@ -1860,8 +2024,13 @@ class Runtime extends EventEmitter {
 
             // A <field> displays a dynamic value: a user-editable text field, a drop-down menu, etc.
             // Leave out the field if defaultValue or fieldName are not specified
-            if (defaultValue !== null && fieldName) {
+            if (defaultValue !== null && fieldName && !variableID) {
                 context.inputList.push(`<field name="${xmlEscape(fieldName)}">${xmlEscape(defaultValue)}</field>`);
+            }
+
+            if (variableID) {
+                // eslint-disable-next-line max-len
+                context.inputList.push(`<field name="${fieldName}" id="${variableID}" variableType="${variableType}">${variableName}</field>`);
             }
 
             if (shadowType) {
