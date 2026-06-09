@@ -3993,8 +3993,8 @@ class Runtime extends EventEmitter {
 
             return a == b;
         } else {
-            if (a === null && (b === "" || b === 0 || b === false)) return true;
-            if (b === null && (a === "" || a === 0 || a === false)) return true;
+            if (a === null && b === "") return true;
+            if (b === null && a === "") return true;
             if (a === null || b === null) return false;
 
             if (isCustomType(a) && isCustomType(b) && a.customId === b.customId) {
