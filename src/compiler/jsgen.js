@@ -890,7 +890,7 @@ class JSGenerator {
             if (node.times.isAlwaysType(InputType.NUMBER_INT | InputType.NUMBER_INF)) {
                 this.source += `${loopName}: for (var ${i} = ${this.descendInput(node.times)}; ${i} > 0; ${i}--) {\n`;
             } else {
-                this.source += `for (var ${i} = ${this.descendInput(node.times)}; ${i} >= 0.5; ${i}--) {\n`;
+                this.source += `${loopName}: for (var ${i} = ${this.descendInput(node.times)}; ${i} >= 0.5; ${i}--) {\n`;
             }
             this.descendStack(node.do, {inLoop: true, loopName});
             this.yieldLoop();
@@ -1178,12 +1178,13 @@ class JSGenerator {
         }
         case StackOpcode.PM_LIST_FOREACH: {
             const list = this.localVariables.next();
+            const loopName = this.localVariables.next();
             this.source += `const ${list} = [...${this.referenceVariable(node.list)}.value];\n`;
             this.source += `for (let _scratch3DataIndex = 1; _scratch3DataIndex <= ${list}.length; _scratch3DataIndex++) {\n`;
             this.source += `const _scratch3DataItem = ${list}[_scratch3DataIndex - 1];\n`;
             if (node.indexVariable) this.source += `${this.referenceVariable(node.indexVariable)}.value = _scratch3DataIndex;\n`;
             if (node.itemVariable) this.source += `${this.referenceVariable(node.itemVariable)}.value = _scratch3DataItem;\n`;
-            this.descendStack(node.do);
+            this.descendStack(node.do, {inLoop: true, loopName});
             this.yieldLoop();
             this.source += `}\n`;
             break;
