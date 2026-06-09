@@ -1150,8 +1150,9 @@ class Extension {
                             return true;
                         
                         case opcodes.FOR_EACH:
-                            this.source += `for (const _jwArrayLoop of Object.entries(vm.jwArray.Type.toArray(${this.descendInput(node.array)}, true).array)) {\n`;
-                            this.descendStack(node.substack);
+                            const loopName = this.localVariables.next();
+                            this.source += `${loopName}: for (const _jwArrayLoop of Object.entries(vm.jwArray.Type.toArray(${this.descendInput(node.array)}, true).array)) {\n`;
+                            this.descendStack(node.substack, {inLoop: true, loopName});
                             this.yieldLoop();
                             this.source += `}\n`;
                             return true;

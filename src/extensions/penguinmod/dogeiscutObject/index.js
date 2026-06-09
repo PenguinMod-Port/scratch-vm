@@ -1081,8 +1081,9 @@ class Extension {
                             this.source += `typeof _dogeiscutObjectBuilder !== "undefined" && (_dogeiscutObjectBuilder = vm.dogeiscutObject.Type.toObject(${this.descendInput(node.object)}).map);\n`;
                             return true;
                         case opcodes.FOR_EACH:
-                            this.source += `for (const [_dogeiscutObjectForEachKey, _dogeiscutObjectForEachValue] of vm.dogeiscutObject.Type.toObject(${this.descendInput(node.object)}).entries) {\n`;
-                            this.descendStack(node.substack);
+                            const loopName = this.localVariables.next();
+                            this.source += `${loopName}: for (const [_dogeiscutObjectForEachKey, _dogeiscutObjectForEachValue] of vm.dogeiscutObject.Type.toObject(${this.descendInput(node.object)}).entries) {\n`;
+                            this.descendStack(node.substack, {inLoop: true, loopName});
                             this.yieldLoop();
                             this.source += `}\n`;
                             return true;
