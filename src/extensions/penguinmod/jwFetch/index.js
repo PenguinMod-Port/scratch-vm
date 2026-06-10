@@ -206,12 +206,12 @@ class Extension {
             }
 
             return vm.dogeiscutObject.Type.toObject({
-                body: await response.text(),
-                headers: vm.dogeiscutObject.Type.toObject(Object.fromEntries(response.headers.entries())),
+                status: response.status,
                 ok: response.ok,
                 redirected: response.redirected,
-                status: response.status,
                 time: (Date.now() - startTime) / 1000,
+                body: await response.text(),
+                headers: vm.dogeiscutObject.Type.toObject(Object.fromEntries(response.headers.entries())),
                 url: response.url
             });
         })());
