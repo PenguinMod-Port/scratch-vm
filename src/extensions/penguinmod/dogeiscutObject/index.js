@@ -121,6 +121,18 @@ class ObjectType {
         return "?"
     }
 
+    static validObject(x) {
+        if (x instanceof ObjectType) return true;
+        if (x instanceof Map) return true;
+        if (isPlainObject(x)) return true;
+        if (typeof x == "object" && typeof x.toJSON == "function") return true;
+        try {
+            let parsed = JSON.parse(Cast.toString(x));
+            if (isPlainObject(parsed)) return true;
+        } catch {}
+        return false;
+    }
+
     jwArrayHandler() {
         return `Object<${formatNumber(this.size)}>`
     }
@@ -1059,7 +1071,7 @@ class Extension {
                         case opcodes.ENTRIES:
                             return `vm.jwArray.Type.toArray(vm.dogeiscutObject.Type.toObject(${this.descendInput(node.object)}, true).entries.map(([_dogeiscutObjectEntriesKey, _dogeiscutObjectEntriesValue]) => vm.jwArray.Type.toArray([_dogeiscutObjectEntriesKey, _dogeiscutObjectEntriesValue])))`
                         case opcodes.IS:
-                            return `((() => { try { const p = JSON.parse(${this.descendInput(node.value)}); return typeof p === 'object' && p !== null && !Array.isArray(p); } catch { return false; } })())`
+                            return `vm.dogeiscutObject.Type.validObject(${this.descendInput(node.value)})`
                         case opcodes.FOR_EACH_K:
                             return `(typeof _dogeiscutObjectForEachKey !== "undefined" ? _dogeiscutObjectForEachKey : null)`
                         case opcodes.FOR_EACH_V:
