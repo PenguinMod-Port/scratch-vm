@@ -81,6 +81,17 @@ class ArrayType {
         return new ArrayType([x], true)
     }
 
+    static validArray(x) {
+        if (x instanceof ArrayType) return true;
+        if (x instanceof Array) return true;
+        if (typeof x == "object" && typeof x.toJSON == "function") return true;
+        try {
+            let parsed = JSON.parse(Cast.toString(x));
+            if (parsed instanceof Array) return true;
+        } catch {}
+        return false;
+    }
+
     static forArray(x) {
         if (x instanceof ArrayType) return new ArrayType([...x.array], true)
         if (x instanceof Array) return new ArrayType([...x])
@@ -455,6 +466,18 @@ class Extension {
                         }
                     },
                     ...jwArray.Block
+                },
+                {
+                    opcode: 'validate',
+                    text: 'is [INPUT] a valid array?',
+                    blockType: BlockType.BOOLEAN,
+                    arguments: {
+                        INPUT: {
+                            type: ArgumentType.STRING,
+                            defaultValue: '["a", "b", "c"]',
+                            exemptFromNormalization: true
+                        }
+                    }
                 },
                 "---",
                 {
@@ -842,6 +865,7 @@ class Extension {
     extendCompiler({IntermediateStackBlock, IntermediateInput, InputType, InputOpcode}) {
         const opcodes = {
             PARSE: 'jwArray.parse',
+            VALIDATE: 'jwArray.validate',
 
             BLANK: 'jwArray.blank',
             BLANK_LENGTH: 'jwArray.blankLength',
@@ -889,6 +913,10 @@ class Extension {
                     switch (block.opcode) {
                         case 'jwArray_parse':
                             return new IntermediateInput(opcodes.PARSE, InputType.CUSTOM_TYPE, {
+                                input: this.descendInputOfBlock(block, 'INPUT')
+                            });
+                        case 'jwArray_validate':
+                            return new IntermediateInput(opcodes.VALIDATE, InputType.BOOLEAN, {
                                 input: this.descendInputOfBlock(block, 'INPUT')
                             });
 
@@ -1053,6 +1081,8 @@ class Extension {
                     switch (block.opcode) {
                         case opcodes.PARSE:
                             return `vm.jwArray.Type.toArray(${this.descendInput(node.input)}, true)`;
+                        case opcodes.VALIDATE:
+                            return `vm.jwArray.Type.validArray(${this.descendInput(node.input)})`;
 
                         case opcodes.BLANK:
                             return `(new vm.jwArray.Type([], true))`;
