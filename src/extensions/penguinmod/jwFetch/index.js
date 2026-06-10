@@ -19,8 +19,27 @@ class Extension {
     getInfo() {
         return {
             id: "jwFetch",
-            name: "Fetch",
+            name: "Requests",
+            color1: "#42b0f5",
+            menuIconURI: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCI+CiAgPGVsbGlwc2Ugc3R5bGU9ImZpbGw6IHJnYig2NiwgMTc2LCAyNDUpOyBzdHJva2U6IHJnYig1MywgMTQxLCAxOTYpOyIgY3g9IjEwIiBjeT0iMTAiIHJ4PSI5LjUiIHJ5PSI5LjUiPjwvZWxsaXBzZT4KICA8cGF0aCBkPSJNIDMuOTMgMTAgQyAzLjkzIDE0LjY3MyA4Ljk4OSAxNy41OTMgMTMuMDM1IDE1LjI1NyBDIDE0LjkxMyAxNC4xNzMgMTYuMDcgMTIuMTY4IDE2LjA3IDEwIEMgMTYuMDcgNS4zMjcgMTEuMDExIDIuNDA2IDYuOTY1IDQuNzQzIEMgNS4wODcgNS44MjcgMy45MyA3LjgzIDMuOTMgMTAgTSAxMCAzLjkzIEwgMTAgMTYuMDcgQyAxNC4wNDcgMTIuMDIzIDE0LjA0NyA3Ljk3NiAxMCAzLjkzIEMgNS45NTMgNy45NzYgNS45NTMgMTIuMDIzIDEwIDE2LjA3IE0gMTYuMDcgMTAgTCAzLjkzIDEwIE0gMTQuODU2IDEzLjY0MiBDIDExLjYxOCAxMi4wMjMgOC4zODIgMTIuMDIzIDUuMTQ0IDEzLjY0MiBNIDE0Ljg1NiA2LjM1OCBDIDExLjYxOCA3Ljk3NiA4LjM4MiA3Ljk3NiA1LjE0NCA2LjM1OCIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIHN0eWxlPSJzdHJva2Utd2lkdGg6IDE7IHN0cm9rZS1saW5lY2FwOiByb3VuZDsgc3Ryb2tlLWxpbmVqb2luOiByb3VuZDsiPjwvcGF0aD4KPC9zdmc+",
             blocks: [
+                {
+                    opcode: "fetch",
+                    text: "[METHOD] [URL] with headers [HEADERS]",
+                    dualBlock: true,
+                    arguments: {
+                        METHOD: {
+                            menu: "methods",
+                            defaultValue: "GET"
+                        },
+                        URL: {
+                            type: ArgumentType.STRING,
+                            defaultValue: "https://projects.penguinmod.com/api/v1"
+                        },
+                        HEADERS: dogeiscutObject.Argument
+                    },
+                    ...dogeiscutObject.Block
+                },
                 {
                     opcode: "fetchBody",
                     text: "[METHOD] [URL] with headers [HEADERS] and body [BODY]",
@@ -28,7 +47,7 @@ class Extension {
                     arguments: {
                         METHOD: {
                             menu: "methodsBody",
-                            defaultValue: "GET"
+                            defaultValue: "POST"
                         },
                         URL: {
                             type: ArgumentType.STRING,
@@ -38,23 +57,6 @@ class Extension {
                         BODY: {
                             type: ArgumentType.STRING
                         }
-                    },
-                    ...dogeiscutObject.Block
-                },
-                {
-                    opcode: "fetch",
-                    text: "[METHOD] [URL] with headers [HEADERS]",
-                    dualBlock: true,
-                    arguments: {
-                        METHOD: {
-                            menu: "methods",
-                            defaultValue: "POST"
-                        },
-                        URL: {
-                            type: ArgumentType.STRING,
-                            defaultValue: "https://projects.penguinmod.com/api/v1"
-                        },
-                        HEADERS: dogeiscutObject.Argument
                     },
                     ...dogeiscutObject.Block
                 },
@@ -78,22 +80,23 @@ class Extension {
                     items: [
                         "GET",
                         "POST",
+                        "PUT",
+                        "PATCH",
+                        "DELETE",
+                        "HEAD",
                         "OPTIONS",
                         "TRACE",
-                        "HEAD",
-                        "PUT",
-                        "DELETE",
                         // "CONNECT", i dont know if this actually works
-                        "PATCH"
                     ]
                 },
                 methodsBody: {
                     acceptReporters: true,
                     items: [
-                        "GET",
-                        "OPTIONS",
+                        "POST",
                         "PUT",
-                        "PATCH"
+                        "PATCH",
+                        "DELETE",
+                        "OPTIONS"
                     ]
                 }
             }
@@ -189,6 +192,7 @@ class Extension {
     _fetch = function*(thread, method, url, headers, body, strict = false) {
         yield* this._canFetch(thread, url, true);
         return yield* this._waitPromise(thread, (async function() {
+            const startTime = Date.now();
             const response = await fetch(url, {
                 method: method.toUpperCase(),
                 headers: headers.toJSON(),
@@ -207,6 +211,7 @@ class Extension {
                 ok: response.ok,
                 redirected: response.redirected,
                 status: response.status,
+                time: (Date.now() - startTime) / 1000,
                 url: response.url
             });
         })());
