@@ -1032,10 +1032,12 @@ class ScriptTreeGenerator {
             }
 
             // It might be a menu.
-            const inputs = Object.keys(block.inputs);
-            const fields = Object.keys(block.fields);
-            if (inputs.length === 0 && fields.length === 1) {
-                return this.createConstantInput(block.fields[fields[0]].value, preserveStrings);
+            if (block.id !== this.script.topBlockId) {
+                const inputs = Object.keys(block.inputs);
+                const fields = Object.keys(block.fields);
+                if (inputs.length === 0 && fields.length === 1) {
+                    return this.createConstantInput(block.fields[fields[0]].value, preserveStrings);
+                }
             }
 
             throw new Error(`IR: Unknown input: ${block.opcode}`);
