@@ -1461,6 +1461,10 @@ class ScriptTreeGenerator {
                 x: this.descendInputOfBlock(block, 'X').toType(InputType.NUMBER),
                 y: this.descendInputOfBlock(block, 'Y').toType(InputType.NUMBER)
             });
+        case 'looks_set_blend_mode':
+            return new IntermediateStackBlock(StackOpcode.PM_LOOKS_SET_BLENDMODE, {
+                mode: block.fields.BLENDMODE.value.toLowerCase()
+            });
         case 'looks_setStretch':
             return new IntermediateStackBlock(StackOpcode.PM_LOOKS_SET_STRETCH, {
                 x: this.descendInputOfBlock(block, 'X').toType(InputType.NUMBER),

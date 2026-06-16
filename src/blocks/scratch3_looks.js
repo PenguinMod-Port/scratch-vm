@@ -652,6 +652,11 @@ class Scratch3LooksBlocks {
         const decimal = Color.rgbToDecimal(rgb);
         target.setEffect("tintColor", decimal + 1);
     }
+
+    _setBlendMode (mode, target) { // used by compiler
+        const index = ["normal", "additive", "multiplicative", "subtractive", "screen", "difference"].indexOf(mode);
+        target.setBlendMode(index < 0 ? 0 : index);
+    }
 }
 
 module.exports = Scratch3LooksBlocks;

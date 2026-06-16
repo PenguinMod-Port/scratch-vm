@@ -1271,6 +1271,9 @@ class JSGenerator {
         case StackOpcode.PM_LOOKS_CHANGE_STRETCH:
             this.source += `target.setStretch(${this.descendInput(node.x)} + target.stretch[0], ${this.descendInput(node.y)} + target.stretch[1]);\n`;
             break;
+        case StackOpcode.PM_LOOKS_SET_BLENDMODE:
+            this.source += `runtime.ext_scratch3_looks._setBlendMode("${sanitize(node.mode)}", target);\n`;
+            break;
         case StackOpcode.PM_LOOKS_SET_STRETCH:
             this.source += `target.setStretch(${this.descendInput(node.x)}, ${this.descendInput(node.y)});\n`;
             break;

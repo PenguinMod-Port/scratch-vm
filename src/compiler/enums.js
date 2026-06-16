@@ -190,6 +190,7 @@ const StackOpcode = {
     LOOKS_THINK: 'looks.think',
 
     PM_LOOKS_CHANGE_STRETCH: 'looks.changeStretch',
+    PM_LOOKS_SET_BLENDMODE: 'looks.setBlendMode',
     PM_LOOKS_SET_STRETCH: 'looks.setStretch',
     PM_LOOKS_SET_TINT: 'looks.setTint',
     PM_LOOKS_STOP_SPEAKING: 'looks.stopSpeaking',

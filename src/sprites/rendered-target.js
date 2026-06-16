@@ -69,6 +69,12 @@ class RenderedTarget extends Target {
         };
 
         /**
+         * blend mode
+         * see scratch-render Drawable.BlendMode
+         */
+        this.blendMode = 0;
+
+        /**
          * Whether this represents an "original" non-clone rendered-target for a sprite,
          * i.e., created by the editor and not clone blocks.
          * @type {boolean}
@@ -504,6 +510,17 @@ class RenderedTarget extends Target {
         }
     }
 
+    setBlendMode (mode) {
+        this.blendMode = mode;
+        if (this.renderer) {
+            this.renderer.updateDrawableBlendMode(this.drawableID, mode);
+            if (this.visible) {
+                this.emitVisualChange();
+                this.runtime.requestRedraw();
+            }
+        }
+    }
+
     /**
      * Set the current costume.
      * @param {number} index New index of costume.
@@ -777,6 +794,7 @@ class RenderedTarget extends Target {
                 if (!Object.prototype.hasOwnProperty.call(this.effects, effectName)) continue;
                 this.renderer.updateDrawableEffect(this.drawableID, effectName, this.effects[effectName]);
             }
+            this.renderer.updateDrawableBlendMode(this.drawableID, this.blendMode);
 
             let screen;
             switch (this.cameraBound) {
@@ -1084,6 +1102,7 @@ class RenderedTarget extends Target {
         newClone.currentCostume = this.currentCostume;
         newClone.rotationStyle = this.rotationStyle;
         newClone.effects = Clone.simple(this.effects);
+        newClone.blendMode = this.blendMode;
         newClone.variables = this.duplicateVariables();
         newClone._edgeActivatedHatValues = Clone.simple(this._edgeActivatedHatValues);
         newClone.initDrawable(StageLayering.SPRITE_LAYER);
@@ -1110,6 +1129,7 @@ class RenderedTarget extends Target {
             newTarget.currentCostume = this.currentCostume;
             newTarget.rotationStyle = this.rotationStyle;
             newTarget.effects = Clone.simple(this.effects);
+            newTarget.blendMode = this.blendMode;
             newTarget.variables = this.duplicateVariables(newTarget.blocks);
             newTarget.updateAllDrawableProperties();
             return newTarget;
@@ -1122,6 +1142,7 @@ class RenderedTarget extends Target {
      */
     onGreenFlag () {
         this.clearEffects();
+        this.setBlendMode(0);
     }
 
     /**
@@ -1130,6 +1151,7 @@ class RenderedTarget extends Target {
      */
     onStopAll () {
         this.clearEffects();
+        this.setBlendMode(0);
     }
 
     /**
