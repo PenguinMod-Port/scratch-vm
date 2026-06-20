@@ -92,6 +92,7 @@ class Cast {
      * @return {string} The Scratch-casted string value.
      */
     static toString (value) {
+        if (value === null) return "";
         return String(value);
     }
 
@@ -112,6 +113,7 @@ class Cast {
      */
     static toRgbColorObject (value) {
         let color;
+        if (typeof value === 'object') value += ''; // custom type convert pls pls
         if (typeof value === 'string' && value.substring(0, 1) === '#') {
             color = Color.hexToRgb(value);
 

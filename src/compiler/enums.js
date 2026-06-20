@@ -84,11 +84,17 @@ const InputType = {
     /** Any input that can be interperated as a boolean. Equal to BOOLEAN | STRING_BOOLEAN */
     BOOLEAN_INTERPRETABLE: 0x1800,
 
-    /** Any value type (a type a scratch variable can hold). Equal to NUMBER_OR_NAN | STRING | BOOLEAN */
-    ANY: 0x1FFF,
+    /** An instance of a class (for custom types in extensions) */
+    CUSTOM_TYPE: 0x2000,
+
+    /** The value 'null' */
+    NULL: 0x4000,
+
+    /** Any value type (a type a scratch variable can hold). Equal to NUMBER_OR_NAN | STRING | BOOLEAN | CUSTOM_TYPE | NULL */
+    ANY: 0x7FFF,
 
     /** An array of values in the form [R, G, B] */
-    COLOR: 0x2000
+    COLOR: 0x8000
 };
 
 /**
@@ -122,6 +128,26 @@ const StackOpcode = {
     CONTROL_CLEAR_COUNTER: 'control.counterClear',
     CONTORL_INCR_COUNTER: 'control.counterIncr',
 
+    PM_CONTROL_ALL_AT_ONCE: 'control.allAtOnce',
+    PM_CONTROL_CONTINUE_LOOP: 'control.continueLoop',
+    PM_CONTROL_DECR_COUNTER: 'control.counterDecr',
+    PM_CONTROL_DELETE_CLONES: 'control.deleteClones',
+    PM_CONTROL_DO_WHILE: 'control.doWhile',
+    PM_CONTROL_ESCAPE_LOOP: 'control.escapeLoop',
+    PM_CONTROL_EXPANDABLE_IF: 'control.expandableIf',
+    PM_CONTROL_EXIT_CASE: 'control.exitCase',
+    PM_CONTROL_FROM_TO: 'control.fromTo',
+    PM_CONTROL_REPEAT_SECONDS: 'control.repeatSeconds',
+    PM_CONTROL_RESTART_PROJECT: 'control.restartProject',
+    PM_CONTROL_RUN_AS: 'control.runAs',
+    PM_CONTROL_SET_COUNTER: 'control.counterSet',
+    PM_CONTROL_STOP_SPRITE: 'control.stopSprite',
+    PM_CONTROL_SWITCH: 'control.switch',
+    PM_CONTROL_THROW_ERROR: 'control.throwError',
+    PM_CONTROL_TRY_CATCH: 'control.tryCatch',
+    PM_CONTROL_WAIT_OR_UNTIL: 'control.waitOrUntil',
+    PM_CONTROL_WAIT_TICK: 'control.waitTick',
+
     LIST_ADD: 'list.add',
     LIST_INSERT: 'list.instert',
     LIST_REPLACE: 'list.replace',
@@ -130,9 +156,17 @@ const StackOpcode = {
     LIST_SHOW: 'list.show',
     LIST_HIDE: 'list.hide',
 
+    PM_LIST_ARRAY_SET: 'list.arraySet',
+    PM_LIST_FILTER: 'list.filter',
+    PM_LIST_FOREACH: 'list.forEach',
+    PM_LIST_REVERSE: 'list.reverse',
+    PM_LIST_SHIFT: 'list.shift',
+
     VAR_SET: 'var.set',
     VAR_SHOW: 'var.show',
     VAR_HIDE: 'var.hide',
+
+    PM_VAR_SET_VISIBLE: 'var.setVisible',
 
     EVENT_BROADCAST: 'event.broadcast',
     EVENT_BROADCAST_AND_WAIT: 'event.broadcastAndWait',
@@ -155,6 +189,12 @@ const StackOpcode = {
     LOOKS_SAY: 'looks.say',
     LOOKS_THINK: 'looks.think',
 
+    PM_LOOKS_CHANGE_STRETCH: 'looks.changeStretch',
+    PM_LOOKS_SET_BLENDMODE: 'looks.setBlendMode',
+    PM_LOOKS_SET_STRETCH: 'looks.setStretch',
+    PM_LOOKS_SET_TINT: 'looks.setTint',
+    PM_LOOKS_STOP_SPEAKING: 'looks.stopSpeaking',
+
     MOTION_X_SET: 'motion.setX',
     MOTION_X_CHANGE: 'motion.changeX',
     MOTION_Y_SET: 'motion.setY',
@@ -164,6 +204,9 @@ const StackOpcode = {
     MOTION_STEP: 'motion.step',
     MOTION_ROTATION_STYLE_SET: 'motion.setRotationStyle',
     MOTION_DIRECTION_SET: 'motion.setDirection',
+
+    PM_MOTION_XY_CHANGE: 'motion.changeXY',
+    PM_MOTION_POINTTOWARDS_XY: 'motion.pointTowardsXY',
 
     PEN_UP: 'pen.up',
     PEN_DOWN: 'pen.down',
@@ -181,8 +224,12 @@ const StackOpcode = {
 
     SENSING_TIMER_RESET: 'timer.reset',
 
+    PROCEDURE_CALL: 'procedures.call',
     PROCEDURE_RETURN: 'procedures.return',
-    PROCEDURE_CALL: 'procedures.call'
+
+    PM_PROCEDURE_COMMANDARG: 'procedures.commandarg',
+    PM_PROCEDURE_REEVALUATE: 'procedures.reevaluate',
+    PM_PROCEDURE_SET: 'procedures.set',
 };
 
 /**
@@ -206,19 +253,41 @@ const InputOpcode = {
     COMPATIBILITY_LAYER: 'compat',
     OLD_COMPILER_COMPATIBILITY_LAYER: 'oldCompiler',
 
+    CONTROL_COUNTER: 'control.counter',
+
+    PM_CONTROL_FROM_TO_INDEX: 'control.fromToIndex',
+    PM_CONTROL_IF_ELSE_REPORT: 'control.ifElseReport',
+    PM_CONTROL_INLINE_BLOCK: 'control.inlineBlock',
+    PM_CONTROL_IS_CLONE: 'control.isClone',
+    PM_CONTROL_TRY_CATCH_ERROR: 'control.tryCatchError',
+
     LOOKS_BACKDROP_NUMBER: 'looks.backdropNumber',
     LOOKS_BACKDROP_NAME: 'looks.backdropName',
     LOOKS_COSTUME_NUMBER: 'looks.costumeNumber',
     LOOKS_COSTUME_NAME: 'looks.costumeName',
     LOOKS_SIZE_GET: 'looks.size',
 
+    PM_LOOKS_GET_EFFECT: 'looks.getEffect',
+    PM_LOOKS_GET_TINT: 'looks.getTint',
+    PM_LOOKS_STRETCH_X: 'looks.stretchX',
+    PM_LOOKS_STRETCH_Y: 'looks.stretchY',
+
     VAR_GET: 'var.get',
+
+    PM_VAR_VISIBLE: 'var.visible',
 
     LIST_GET: 'list.get',
     LIST_LENGTH: 'list.length',
     LIST_CONTAINS: 'list.contains',
     LIST_INDEX_OF: 'list.indexOf',
     LIST_CONTENTS: 'list.contents',
+
+    PM_LIST_AMOUNT: 'list.amount',
+    PM_LIST_ARRAY_GET: 'list.arrayGet',
+    PM_LIST_EMPTY: 'list.empty',
+    PM_LIST_INDEX_EXISTS: 'list.indexExists',
+    PM_LIST_UPVAR_INDEX: 'list.upvarIndex',
+    PM_LIST_UPVAR_ITEM: 'list.upvarItem',
 
     MOTION_X_GET: 'motion.x',
     MOTION_Y_GET: 'motion.y',
@@ -256,6 +325,42 @@ const InputOpcode = {
     OP_ROUND: 'op.round',
     OP_SUBTRACT: 'op.subtract',
 
+    PM_OP_AVERAGE: 'op.average',
+    PM_OP_BOOL_EXPANDABLE: 'op.boolExpandable',
+    PM_OP_COMPARE_EXPANDABLE: 'op.compareExpandable',
+    PM_OP_CHARACTER_TO_CODE: 'op.characterToCode',
+    PM_OP_CODE_TO_CHARACTER: 'op.codeToCharacter',
+    PM_OP_COUNT_APPEAR_TIMES: 'operator_countAppearTimes',
+    PM_OP_CONSTRAIN: 'op.constrain',
+    PM_OP_ENDS_WITH: 'op.endsWith',
+    PM_OP_INDEX_OF_TEXT_IN_TEXT: 'op.indexOfTextInText',
+    PM_OP_INTERPOLATE: 'op.interpolate',
+    PM_OP_IS_BOOLEAN: 'op.isBoolean',
+    PM_OP_IS_NUMBER: 'op.isNumber',
+    PM_OP_IS_STRING: 'op.isString',
+    PM_OP_JOIN_EXPANDABLE: 'op.joinExpandable',
+    PM_OP_LAST_INDEX_OF_TEXT_IN_TEXT: 'op.lastIndexOfTextInText',
+    PM_OP_LETTERS_OF: 'op.lettersOf',
+    PM_OP_LOG: 'op.logB',
+    PM_OP_LOG_2: 'op.log2',
+    PM_OP_LOWER_CASE: 'op.lowerCase',
+    PM_OP_MATH_EXPANDABLE: 'op.mathExpandable',
+    PM_OP_MAXIMUM: 'op.maximum',
+    PM_OP_MINIMUM: 'op.minimum',
+    PM_OP_POWER: 'op.power',
+    PM_OP_RANDOMBOOL: 'op.randomBool',
+    PM_OP_RANGE: 'op.range',
+    PM_OP_READ_LINE: 'op.readLine',
+    PM_OP_REGEX_MATCH: 'op.regexMatch',
+    PM_OP_REPLACEALL: 'op.replaceAll',
+    PM_OP_REPLACEFIRST: 'op.replaceFirst',
+    PM_OP_ROOT: 'op.root',
+    PM_OP_SIGN: 'op.sign',
+    PM_OP_STARTS_WITH: 'op.startsWith',
+    PM_OP_TEXT_INCLUDES_LETTER_FROM: 'operator_textIncludesLetterFrom',
+    PM_OP_UPPER_CASE: 'op.upperCase',
+    PM_OP_XOR: 'op.xor',
+
     SENSING_ANSWER: 'sensing.answer',
     SENSING_COLOR_TOUCHING_COLOR: 'sensing.colorTouchingColor',
     SENSING_TIME_YEAR: 'sensing.year',
@@ -287,10 +392,19 @@ const InputOpcode = {
     SENSING_TOUCHING_OBJECT: 'sensing.touching',
     SENSING_USERNAME: 'sensing.username',
 
+    PM_SENSING_DISTANCE_COORDINATES: 'sensing.distance.coordinates',
+    PM_SENSING_HAS_NUMBER: 'sensing.hasNumber',
+    PM_SENSING_IS_TEXT: 'sensing.isText',
+    PM_SENSING_KEY_HIT: 'sensing.keyHit',
+    PM_SENSING_MOBILE: 'sensing.mobile',
+    PM_SENSING_MOUSEBTN_CLICKED: 'sensing.mousebtnClicked',
+    PM_SENSING_MOUSEBTN_DOWN: 'sensing.mousebtnDown',
+    PM_SENSING_MOUSEBTN_RELEASED: 'sensing.mousebtnReleased',
+    PM_SENSING_MOUSE_SCROLLING: 'sensing.mouseScrolling',
+    PM_SENSING_TIME_TIMESTAMP: 'sensing.timestamp',
+
     PROCEDURE_CALL: 'procedures.call',
     PROCEDURE_ARGUMENT: 'procedures.argument',
-
-    CONTROL_COUNTER: 'control.counter',
 
     TW_KEY_LAST_PRESSED: 'tw.lastKeyPressed'
 };

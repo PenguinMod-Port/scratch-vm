@@ -8,6 +8,7 @@
 // Please keep these lists alphabetical.
 
 const stacked = [
+    'control_backToGreenFlag',
     'looks_changestretchby',
     'looks_hideallsprites',
     'looks_sayforsecs',
@@ -22,6 +23,7 @@ const stacked = [
     'motion_scroll_right',
     'motion_scroll_up',
     'sensing_askandwait',
+    'sensing_setclipboard',
     'sensing_setdragmode',
     'sound_changeeffectby',
     'sound_changevolumeby',
@@ -36,6 +38,9 @@ const stacked = [
 const inputs = [
     'motion_xscroll',
     'motion_yscroll',
+    'operator_javascript_output',
+    'operator_javascript_boolean',
+    'sensing_getclipboard',
     'sensing_loud',
     'sensing_loudness',
     'sensing_online',

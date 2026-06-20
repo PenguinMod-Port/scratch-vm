@@ -4,6 +4,7 @@ const uid = require('../util/uid');
 const StageLayering = require('../engine/stage-layering');
 const getMonitorIdForBlockWithArgs = require('../util/get-monitor-id');
 const MathUtil = require('../util/math-util');
+const Color = require('../util/color');
 
 /**
  * @typedef {object} BubbleState - the bubble state associated with a particular target.
@@ -287,6 +288,7 @@ class Scratch3LooksBlocks {
             looks_sayforsecs: this.sayforsecs,
             looks_think: this.think,
             looks_thinkforsecs: this.thinkforsecs,
+            looks_stoptalking: this.stoptalking,
             looks_show: this.show,
             looks_hide: this.hide,
             looks_hideallsprites: () => {}, // legacy no-op block
@@ -306,7 +308,13 @@ class Scratch3LooksBlocks {
             looks_goforwardbackwardlayers: this.goForwardBackwardLayers,
             looks_size: this.getSize,
             looks_costumenumbername: this.getCostumeNumberName,
-            looks_backdropnumbername: this.getBackdropNumberName
+            looks_backdropnumbername: this.getBackdropNumberName,
+
+            //pm monitors
+            looks_stretchGetX: ({}, {target}) => target.stretch[0],
+            looks_stretchGetY: ({}, {target}) => target.stretch[1], 
+            looks_tintColor: ({}, {target}) => this._getTintColor(target),
+            looks_getEffectValue: ({EFFECT}, {target}) => target.getEffect(Cast.toString(EFFECT).toLowerCase()),
         };
     }
 
@@ -322,7 +330,23 @@ class Scratch3LooksBlocks {
             },
             looks_backdropnumbername: {
                 getId: (_, fields) => getMonitorIdForBlockWithArgs('backdropnumbername', fields)
-            }
+            },
+            looks_stretchGetX: {
+                isSpriteSpecific: true,
+                getId: targetId => `${targetId}_stretchGetX`
+            },
+            looks_stretchGetY: {
+                isSpriteSpecific: true,
+                getId: targetId => `${targetId}_stretchGetY`
+            },
+            looks_tintColor: {
+                isSpriteSpecific: true,
+                getId: targetId => `${targetId}_tintColor`
+            },
+            looks_getEffectValue: {
+                isSpriteSpecific: true,
+                getId: (targetId, fields) => getMonitorIdForBlockWithArgs(`${targetId}_getEffectValue`, fields)
+            },
         };
     }
 
@@ -612,6 +636,26 @@ class Scratch3LooksBlocks {
         }
         // Else return name
         return util.target.getCostumes()[util.target.currentCostume].name;
+    }
+
+    stoptalking (args, util) {
+        this._say('', util.target);
+    }
+
+    _getTintColor (target) {
+        const effects = target.effects;
+        if (typeof effects.tintColor !== 'number') return '#ffffff';
+        return Color.decimalToHex(effects.tintColor - 1);
+    }
+    _setTintColor (color, target) { // used by compiler
+        const rgb = Cast.toRgbColorObject(color);
+        const decimal = Color.rgbToDecimal(rgb);
+        target.setEffect("tintColor", decimal + 1);
+    }
+
+    _setBlendMode (mode, target) { // used by compiler
+        const index = ["normal", "additive", "multiplicative", "subtractive", "screen", "difference"].indexOf(mode);
+        target.setBlendMode(index < 0 ? 0 : index);
     }
 }
 

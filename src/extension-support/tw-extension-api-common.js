@@ -1,14 +1,18 @@
+const ArgumentAlignment = require('./argument-alignment');
 const ArgumentType = require('./argument-type');
 const BlockType = require('./block-type');
-const BlockShape = require('./tw-block-shape');
+const BlockShape = require('./block-shape');
+const MenuType = require('./menu-type');
 const TargetType = require('./target-type');
 const Cast = require('../util/cast');
 const external = require('./tw-external');
 
 const Scratch = {
+    ArgumentAlignment,
     ArgumentType,
     BlockType,
     BlockShape,
+    MenuType,
     TargetType,
     Cast,
     external
