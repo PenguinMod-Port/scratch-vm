@@ -513,7 +513,7 @@ class RenderedTarget extends Target {
     setBlendMode (mode) {
         this.blendMode = mode;
         if (this.renderer) {
-            this.renderer.updateDrawableBlendMode(this.drawableID, mode);
+            this.renderer.setDrawableBlendMode(this.drawableID, mode);
             if (this.visible) {
                 this.emitVisualChange();
                 this.runtime.requestRedraw();
@@ -794,7 +794,7 @@ class RenderedTarget extends Target {
                 if (!Object.prototype.hasOwnProperty.call(this.effects, effectName)) continue;
                 this.renderer.updateDrawableEffect(this.drawableID, effectName, this.effects[effectName]);
             }
-            this.renderer.updateDrawableBlendMode(this.drawableID, this.blendMode);
+            this.renderer.setDrawableBlendMode(this.drawableID, this.blendMode);
 
             let screen;
             switch (this.cameraBound) {
