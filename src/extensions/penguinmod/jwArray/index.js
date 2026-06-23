@@ -65,6 +65,9 @@ class ArrayType {
     }
 
     static toArray(x, readOnly = false) {
+        // jwPointer support
+        if (vm.jwPointer && x instanceof vm.jwPointer.Type && !(x.value instanceof vm.jwPointer.Type)) return ArrayType.toArray(x.value, true);
+
         if (x instanceof ArrayType) return readOnly ? x : new ArrayType([...x.array], true)
         if (x instanceof Array) return readOnly ? new ArrayType(x) : new ArrayType([...x])
         if (x === "" || x === null || x === undefined) return new ArrayType([], true)
@@ -418,7 +421,7 @@ const jwArray = {
     Argument: {
         shape: BlockShape.SQUARE,
         exemptFromNormalization: true,
-        check: ["Array"]
+        check: ["Array", "Pointer"]
     }
 }
 
@@ -646,6 +649,7 @@ class Extension {
                 {
                     opcode: 'set',
                     text: 'set [INDEX] in [ARRAY] to [VALUE]',
+                    dualBlock: true,
                     arguments: {
                         ARRAY: jwArray.Argument,
                         INDEX: {
@@ -663,6 +667,7 @@ class Extension {
                 {
                     opcode: 'append',
                     text: 'append [VALUE] to [ARRAY]',
+                    dualBlock: true,
                     arguments: {
                         ARRAY: jwArray.Argument,
                         VALUE: {
@@ -685,6 +690,7 @@ class Extension {
                 {
                     opcode: 'fill',
                     text: 'fill [ARRAY] with [VALUE]',
+                    dualBlock: true,
                     arguments: {
                         ARRAY: jwArray.Argument,
                         VALUE: {
@@ -699,6 +705,7 @@ class Extension {
                 {
                     opcode: 'reverse',
                     text: 'reverse [ARRAY]',
+                    dualBlock: true,
                     arguments: {
                         ARRAY: jwArray.Argument
                     },
@@ -707,6 +714,7 @@ class Extension {
                 {
                     opcode: 'splice',
                     text: 'splice [ARRAY] at [INDEX] with [ITEMS] items',
+                    dualBlock: true,
                     arguments: {
                         ARRAY: jwArray.Argument,
                         INDEX: {
@@ -1060,6 +1068,34 @@ class Extension {
                                 array: this.descendInputOfBlock(block, 'ARRAY')
                             });
                         
+                        case 'jwArray_set':
+                            return new IntermediateStackBlock(opcodes.SET, {
+                                array: this.descendInputOfBlock(block, 'ARRAY'),
+                                index: this.descendInputOfBlock(block, 'INDEX').toType(InputType.NUMBER),
+                                value: this.descendInputOfBlock(block, 'VALUE')
+                            });
+                        case 'jwArray_append':
+                            return new IntermediateStackBlock(opcodes.APPEND, {
+                                array: this.descendInputOfBlock(block, 'ARRAY'),
+                                value: this.descendInputOfBlock(block, 'VALUE')
+                            });
+                        case 'jwArray_fill':
+                            return new IntermediateStackBlock(opcodes.FILL, {
+                                array: this.descendInputOfBlock(block, 'ARRAY'),
+                                value: this.descendInputOfBlock(block, 'VALUE')
+                            });
+                        
+                        case 'jwArray_reverse':
+                            return new IntermediateStackBlock(opcodes.REVERSE, {
+                                array: this.descendInputOfBlock(block, 'ARRAY')
+                            });
+                        case 'jwArray_splice':
+                            return new IntermediateStackBlock(opcodes.SPLICE, {
+                                array: this.descendInputOfBlock(block, 'ARRAY'),
+                                index: this.descendInputOfBlock(block, 'INDEX').toType(InputType.NUMBER),
+                                items: this.descendInputOfBlock(block, 'ITEMS').toType(InputType.NUMBER)
+                            });
+
                         case 'jwArray_forEach':
                             return new IntermediateStackBlock(opcodes.FOR_EACH, {
                                 array: this.descendInputOfBlock(block, 'ARRAY'),
@@ -1177,6 +1213,23 @@ class Extension {
                             return true;
                         case opcodes.BUILDER_SET:
                             this.source += `typeof _jwArrayBuilder !== "undefined" && _jwArrayBuilder = vm.jwArray.Type.toArray(${this.descendInput(node.array)}).array;\n`;
+                            return true;
+                        
+                        case opcodes.SET:
+                            this.source += `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).set(${this.descendInput(node.index)}, ${this.descendInput(node.value)});\n`;
+                            return true;
+                        case opcodes.APPEND:
+                            this.source += `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).append(${this.descendInput(node.value)});\n`;
+                            return true;
+                        case opcodes.FILL:
+                            this.source += `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).fill(${this.descendInput(node.value)});\n`;
+                            return true;
+
+                        case opcodes.REVERSE:
+                            this.source += `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).reverse();\n`;
+                            return true;
+                        case opcodes.SPLICE:
+                            this.source += `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).splice(${this.descendInput(node.index)}, ${this.descendInput(node.count)});\n`;
                             return true;
                         
                         case opcodes.FOR_EACH:
