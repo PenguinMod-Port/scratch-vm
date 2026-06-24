@@ -531,7 +531,7 @@ const serializeVariables = function (variables, runtime) {
         }
 
         // otherwise should be a scalar type
-        obj.variables[varId] = [v.name, serializeVariableValue(v.value)];
+        obj.variables[varId] = [v.name, serializeVariableValue(v.value, runtime)];
         // only scalar vars have the potential to be cloud vars
         if (v.isCloud) obj.variables[varId].push(true);
     }
