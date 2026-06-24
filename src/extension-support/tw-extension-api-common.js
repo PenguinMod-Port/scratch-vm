@@ -5,6 +5,8 @@ const BlockShape = require('./block-shape');
 const MenuType = require('./menu-type');
 const TargetType = require('./target-type');
 const Cast = require('../util/cast');
+const Clone = require('../util/clone');
+const Color = require('../util/color');
 const external = require('./tw-external');
 
 const Scratch = {
@@ -15,6 +17,8 @@ const Scratch = {
     MenuType,
     TargetType,
     Cast,
+    Clone,
+    Color,
     external
 };
 
