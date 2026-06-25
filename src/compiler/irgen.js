@@ -1539,7 +1539,16 @@ class ScriptTreeGenerator {
                     left: this.createConstantInput(0),
                     right: this.descendInputOfBlock(block, 'STEPS').toType(InputType.NUMBER)
                 })
+            });
+        case 'motion_moveupdownsteps':
+            return new IntermediateStackBlock(StackOpcode.PM_MOTION_STEPUPDOWN, {
+                steps: this.descendInputOfBlock(block, 'STEPS').toType(InputType.NUMBER),
+                direction: block.fields.DIRECTION.value
             })
+        case 'motion_move_sprite_to_scene_side':
+            return new IntermediateStackBlock(StackOpcode.PM_MOTION_MOVESTAGESIDE, {
+                side: block.fields.ALIGNMENT.value
+            });
         case 'motion_pointinrandomdirection':
             return new IntermediateStackBlock(StackOpcode.MOTION_DIRECTION_SET, {
                 direction: new IntermediateInput(InputOpcode.OP_RANDOM, InputType.NUMBER, {

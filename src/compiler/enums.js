@@ -205,8 +205,10 @@ const StackOpcode = {
     MOTION_ROTATION_STYLE_SET: 'motion.setRotationStyle',
     MOTION_DIRECTION_SET: 'motion.setDirection',
 
-    PM_MOTION_XY_CHANGE: 'motion.changeXY',
+    PM_MOTION_MOVESTAGESIDE: 'motion.moveStageSide',
     PM_MOTION_POINTTOWARDS_XY: 'motion.pointTowardsXY',
+    PM_MOTION_STEPUPDOWN: 'motion.stepUpDown',
+    PM_MOTION_XY_CHANGE: 'motion.changeXY',
 
     PEN_UP: 'pen.up',
     PEN_DOWN: 'pen.down',

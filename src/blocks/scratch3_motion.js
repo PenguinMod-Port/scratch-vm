@@ -65,8 +65,8 @@ class Scratch3MotionBlocks {
         const steps = Cast.toNumber(args.STEPS);
         this._moveSteps(steps, util.target);
     }
-    _moveSteps (steps, target) { // used by compiler
-        const radians = MathUtil.degToRad(90 - target.direction);
+    _moveSteps (steps, target, angleOffset = 0) { // used by compiler
+        const radians = MathUtil.degToRad(90 - target.direction - angleOffset);
         const dx = steps * Math.cos(radians);
         const dy = steps * Math.sin(radians);
         target.setXY(target.x + dx, target.y + dy);
@@ -295,6 +295,27 @@ class Scratch3MotionBlocks {
         const limitedCoord = (Math.abs(delta) < 1e-9) ? rounded : coordinate;
 
         return limitedCoord;
+    }
+
+    _moveToStageSide (side, target) {
+        let x = 0;
+        let y = 0;
+        if (side.includes("top")) {
+            y = 1;
+        }
+        if (side.includes("bottom")) {
+            y = -1;
+        }
+        if (side.includes("left")) {
+            x = -1;
+        }
+        if (side.includes("right")) {
+            x = 1;
+        }
+        const bounds = this.runtime.renderer._allDrawables[target.drawableID].getAABB();
+        const width = this.runtime.stageWidth - bounds.width;
+        const height = this.runtime.stageHeight - bounds.height;
+        target.setXY(x * width / 2, y * height / 2);
     }
 }
 

@@ -1,8 +1,9 @@
-const BlockType = require('../../../extension-support/block-type')
-const BlockShape = require('../../../extension-support/block-shape')
-const ArgumentType = require('../../../extension-support/argument-type')
-const TargetType = require('../../../extension-support/target-type')
-const Cast = require('../../../util/cast')
+const BlockType = require('../../../extension-support/block-type');
+const BlockShape = require('../../../extension-support/block-shape');
+const ArgumentType = require('../../../extension-support/argument-type');
+const TargetType = require('../../../extension-support/target-type');
+const Cast = require('../../../util/cast');
+const MathUtil = require('../../../util/math-util');
 
 /**
  * @param {number} x
@@ -297,6 +298,19 @@ class Extension {
                 },
                 "---",
                 {
+                    opcode: 'stepsForward',
+                    text: '[STEPS] steps forward',
+                    arguments: {
+                        STEPS: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 10
+                        }
+                    },
+                    extensions: ["colours_motion"],
+                    filter: [TargetType.SPRITE],
+                    ...Vector.Block
+                },
+                {
                     opcode: 'getPos',
                     text: 'position',
                     extensions: ["colours_motion"],
@@ -464,6 +478,16 @@ class Extension {
         }
 
         return new VectorType(Math.round(v.x), Math.round(v.y))
+    }
+
+    stepsForward({STEPS}, util) {
+        STEPS = Cast.toNumber(STEPS);
+
+        const radians = MathUtil.degToRad(90 - util.target.direction);
+        return new Vector.Type(
+            STEPS * Math.cos(radians),
+            STEPS * Math.sin(radians)
+        )
     }
     
     getPos({}, util) {

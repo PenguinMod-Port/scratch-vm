@@ -1316,8 +1316,14 @@ class JSGenerator {
             break;
 
         //pm motion
+        case StackOpcode.PM_MOTION_MOVESTAGESIDE:
+            this.source += `runtime.ext_scratch3_motion._moveToStageSide("${sanitize(node.side)}", target);\n`;
+            break;
         case StackOpcode.PM_MOTION_POINTTOWARDS_XY:
             this.source += `runtime.ext_scratch3_motion._pointTowards(target, ${this.descendInput(node.x)}, ${this.descendInput(node.y)});\n`;
+            break;
+        case StackOpcode.PM_MOTION_STEPUPDOWN:
+            this.source += `runtime.ext_scratch3_motion._moveSteps(${this.descendInput(node.steps)}, target, ${node.direction === "up" ? -90 : 90});\n`;
             break;
         case StackOpcode.PM_MOTION_XY_CHANGE:
             this.source += `target.setXY(target.x + ${this.descendInput(node.dx)}, target.y + ${this.descendInput(node.dy)});\n`;
