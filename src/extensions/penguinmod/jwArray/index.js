@@ -808,6 +808,41 @@ class Extension {
                     }
                 },
                 {
+                    opcode: 'filter',
+                    text: 'filter [ARRAY] [I] [V] > [PREDICATE]',
+                    arguments: {
+                        ARRAY: jwArray.Argument,
+                        I: {
+                            fillIn: 'forEachI'
+                        },
+                        V: {
+                            fillIn: 'forEachV'
+                        },
+                        PREDICATE: {
+                            type: ArgumentType.BOOLEAN,
+                            defaultValue: true
+                        }
+                    },
+                    ...jwArray.Block
+                },
+                {
+                    opcode: 'map',
+                    text: 'map [ARRAY] [I] [V] > [VALUE]',
+                    arguments: {
+                        ARRAY: jwArray.Argument,
+                        I: {
+                            fillIn: 'forEachI'
+                        },
+                        V: {
+                            fillIn: 'forEachV'
+                        },
+                        VALUE: {
+                            type: ArgumentType.STRING
+                        }
+                    },
+                    ...jwArray.Block
+                },
+                {
                     opcode: 'basicSort',
                     text: 'sort [ARRAY] [I] [V] > [VALUE]',
                     arguments: {
@@ -901,6 +936,8 @@ class Extension {
             LOOP_INDEX: 'jwArray.loopIndex',
             LOOP_VALUE: 'jwArray.loopValue',
             FOR_EACH: 'jwArray.forEach',
+            FILTER: 'jwArray.filter',
+            MAP: 'jwArray.map',
             BASIC_SORT: 'jwArray.basicSort',
 
             FROM_LIST: 'jwArray.fromList',
@@ -1037,6 +1074,16 @@ class Extension {
                             return new IntermediateInput(opcodes.LOOP_INDEX, InputType.NUMBER_WHOLE);
                         case 'jwArray_forEachV':
                             return new IntermediateInput(opcodes.LOOP_VALUE, InputType.ANY);
+                        case 'jwArray_filter':
+                            return new IntermediateInput(opcodes.FILTER, InputType.CUSTOM_TYPE, {
+                                array: this.descendInputOfBlock(block, 'ARRAY'),
+                                predicate: this.descendInputOfBlock(block, 'PREDICATE').toType(InputType.BOOLEAN)
+                            }, true);
+                        case 'jwArray_map':
+                            return new IntermediateInput(opcodes.MAP, InputType.CUSTOM_TYPE, {
+                                array: this.descendInputOfBlock(block, 'ARRAY'),
+                                value: this.descendInputOfBlock(block, 'VALUE')
+                            });
                         case 'jwArray_basicSort':
                             return new IntermediateInput(opcodes.BASIC_SORT, InputType.CUSTOM_TYPE, {
                                 array: this.descendInputOfBlock(block, 'ARRAY'),
@@ -1147,6 +1194,36 @@ class Extension {
                             return `(typeof _jwArrayLoop !== "undefined" ? Number(_jwArrayLoop[0]) + 1 : 0)`;
                         case opcodes.LOOP_VALUE:
                             return `(typeof _jwArrayLoop !== "undefined" ? _jwArrayLoop[1] : null)`;
+                        case opcodes.FILTER: {
+                            let source = "";
+                            source += `vm.jwArray.Type.toArray(yield* (function*() {\n`;
+                            const array = this.localVariables.next();
+                            source += `const ${array} = vm.jwArray.Type.toArray(${this.descendInput(node.array)}, true).array;\n`;
+                            const output = this.localVariables.next();
+                            source += `const ${output} = [];\n`;
+                            source += `for (const _jwArrayLoop of Object.entries(${array})) {\n`;
+                            source += `if (${this.descendInput(node.predicate)}) ${output}.push(_jwArrayLoop[1]);\n`;
+                            source += this.yieldLoopInline();
+                            source += `}\n`;
+                            source += `return ${output};\n`;
+                            source += `}()), true)\n`;
+                            return source;
+                        }
+                        case opcodes.MAP: {
+                            let source = "";
+                            source += `vm.jwArray.Type.toArray(yield* (function*() {\n`;
+                            const array = this.localVariables.next();
+                            source += `const ${array} = vm.jwArray.Type.toArray(${this.descendInput(node.array)}, true).array;\n`;
+                            const output = this.localVariables.next();
+                            source += `const ${output} = [];\n`;
+                            source += `for (const _jwArrayLoop of Object.entries(${array})) {\n`;
+                            source += `${output}.push(${this.descendInput(node.value)});\n`;
+                            source += this.yieldLoopInline();
+                            source += `}\n`;
+                            source += `return ${output};\n`;
+                            source += `}()), true)\n`;
+                            return source;
+                        }
                         case opcodes.BASIC_SORT: {
                             let source = "";
                             source += `vm.jwArray.Type.toArray(yield* (function*() {\n`;
