@@ -240,6 +240,15 @@ class Extension {
                     },
                     ...Vector.Block
                 },
+                {
+                    opcode: 'dot',
+                    text: '[X] ⋅ [Y]',
+                    blockType: BlockType.REPORTER,
+                    arguments: {
+                        X: Vector.Argument,
+                        Y: Vector.Argument
+                    }
+                },
                 "---",
                 {
                     opcode: 'magnitude',
@@ -432,6 +441,17 @@ class Extension {
         const Y = VectorType.toVector(args.Y)
 
         return new VectorType(X.x / Y.x, X.y / Y.y)
+    }
+
+    dot(args) {
+        console.log(args);
+
+        const X = VectorType.toVector(args.X);
+        const Y = VectorType.toVector(args.Y);
+
+        console.log(X, Y);
+
+        return X.x * Y.x + X.y * Y.y;
     }
 
     magnitude(args) {
