@@ -915,16 +915,15 @@ class JgRuntimeBlocks {
                 return;
             }
         }
-        console.log("Loading project from custom source...");
         fetch(url)
             .then((r) => r.arrayBuffer())
             .then((buffer) => vm.loadProject(buffer))
             .then(() => {
-                console.log("Loaded project!");
                 vm.greenFlag();
             })
             .catch((error) => {
                 console.log("Error loading custom project;", error);
+                throw "Error loading custom project";
             });
     }
     getProjectDataUrl() {

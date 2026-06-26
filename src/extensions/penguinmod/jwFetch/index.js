@@ -199,10 +199,7 @@ class Extension {
                 body: body === '' ? null : body
             });
             if (strict) {
-                if (!response.ok) {
-                    console.log(response)
-                    throw `Request ${url} returned status ${response.status}`;
-                }
+                if (!response.ok) throw `Request ${url} returned status ${response.status}`;
             }
 
             return vm.dogeiscutObject.Type.toObject({

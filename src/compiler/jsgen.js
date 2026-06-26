@@ -984,7 +984,6 @@ class JSGenerator {
             }
             break;
         case StackOpcode.PM_CONTROL_EXPANDABLE_IF:
-            console.log(node);
             this.source += node.ifs.map(v => `if (${this.descendInput(v.condition)}) {\n${this.descendStackInline(v.do)}\n}`).join(' else ');
             if (node.elseDo) this.source += `else {\n${this.descendStackInline(node.elseDo)}\n}`;
             this.source += '\n';

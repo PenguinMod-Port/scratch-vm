@@ -1306,7 +1306,6 @@ const parseScratchObject = function (object, runtime, pmVersion, extensions, zip
                 Variable.SCALAR_TYPE, // type of the variable
                 isCloud
             );
-            console.log(variable);
             if (isCloud) runtime.addCloudVariable();
             newVariable.value = variable[1];
             target.variables[newVariable.id] = newVariable;

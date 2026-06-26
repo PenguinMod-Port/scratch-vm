@@ -444,12 +444,8 @@ class Extension {
     }
 
     dot(args) {
-        console.log(args);
-
         const X = VectorType.toVector(args.X);
         const Y = VectorType.toVector(args.Y);
-
-        console.log(X, Y);
 
         return X.x * Y.x + X.y * Y.y;
     }
