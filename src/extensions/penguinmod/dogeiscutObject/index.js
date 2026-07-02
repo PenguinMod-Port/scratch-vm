@@ -2,6 +2,7 @@ const BlockType = require('../../../extension-support/block-type');
 const BlockShape = require('../../../extension-support/block-shape');
 const ArgumentType = require('../../../extension-support/argument-type');
 const Cast = require('../../../util/cast');
+const pmSymbol = require('../../../util/symbol.js');
 
 /**
 * @param {number} x
@@ -56,14 +57,8 @@ class ObjectType {
     map = new Map()
 
     constructor(map = new Map(), safe = false) {
-
         if (safe) {
             this.map = map
-        } /* TEMPORARY: JW NEEDS TO REMOVE OR CHANGE A LINE FROM ARRAYS */ else {
-            // i lowkey dont even remember what line it was.
-            // keeping this just in case though
-            if (isPlainObject(map)) map = new Map(Object.entries(map))
-            /* TEMPORARY END */
         }
 
         const newMap = new Map();
@@ -511,6 +506,17 @@ class ObjectType {
         return Iter.overArray("Object", this.entries.map(([key, val]) =>
             new jwArray.Type([key, ObjectType.forObject(val)])
         ));
+    }
+
+    [pmSymbol.equals](other) {
+        if (this === other) return true;
+        if (this.map.size !== other.map.size) return false;
+
+        const tKeys = Array.from(this.map.keys());
+        for (let key of tKeys) {
+            if (!vm.runtime.equals(this.map.get(key), other.map.get(key))) return false;
+        }
+        return true;
     }
 }
 

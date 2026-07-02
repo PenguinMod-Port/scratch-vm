@@ -95,7 +95,7 @@ class ArrayType {
     static forArray(x) {
         if (x instanceof ArrayType) return new ArrayType([...x.array], true)
         if (x instanceof Array) return new ArrayType([...x])
-        if (vm.dogeiscutObject && isObject(x)) return new vm.dogeiscutObject.Type({...x})
+        if (vm.dogeiscutObject && isObject(x)) return new vm.dogeiscutObject.Type(Object.entries(x))
         return x
     }
 
@@ -403,7 +403,7 @@ class ArrayType {
     }
 
     [pmSymbol.equals](other) {
-        return this.array.length == other.array.length && this.array.every((v, i) => vm.runtime.equals(v, other.array[i]));
+        return this === other || (this.array.length == other.array.length && this.array.every((v, i) => vm.runtime.equals(v, other.array[i])));
     }
 }
 

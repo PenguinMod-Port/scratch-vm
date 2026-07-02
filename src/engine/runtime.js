@@ -3980,6 +3980,7 @@ class Runtime extends EventEmitter {
             return true;
         };
 
+        if (a === b) return true;
         if (a === null && b === null) return true;
         if (typeof a === 'number' && !isNaN(a) && typeof b === 'number' && !isNaN(b)) return a === b;
 
@@ -3989,7 +3990,7 @@ class Runtime extends EventEmitter {
             let aC = isCustomType(a);
             let bC = isCustomType(b);
             if (aC !== bC) return false;
-            if (aC && bC) {
+            if (aC) { // if aC is true then bC is also true
                 if (a.customId !== b.customId) return false;
                 if (a[pmSymbol.equals]) return a[pmSymbol.equals](b);
                 return false;
