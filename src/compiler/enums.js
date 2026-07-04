@@ -207,6 +207,7 @@ const StackOpcode = {
 
     PM_MOTION_MOVESTAGESIDE: 'motion.moveStageSide',
     PM_MOTION_POINTTOWARDS_XY: 'motion.pointTowardsXY',
+    PM_MOTION_ROTATE_AROUND_PIVOT: 'motion.rotateAroundPivot',
     PM_MOTION_STEPUPDOWN: 'motion.stepUpDown',
     PM_MOTION_XY_CHANGE: 'motion.changeXY',
 

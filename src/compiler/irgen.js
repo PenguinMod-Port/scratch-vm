@@ -1570,6 +1570,21 @@ class ScriptTreeGenerator {
                     right: this.createConstantInput(180)
                 })
             });
+        case 'motion_turnleftaroundxy':
+            return new IntermediateStackBlock(StackOpcode.PM_MOTION_ROTATE_AROUND_PIVOT, {
+                degrees: new IntermediateInput(InputOpcode.OP_SUBTRACT, InputType.NUMBER, {
+                    left: this.createConstantInput(0),
+                    right: this.descendInputOfBlock(block, 'DEGREES').toType(InputType.NUMBER)
+                }),
+                x: this.descendInputOfBlock(block, 'X').toType(InputType.NUMBER),
+                y: this.descendInputOfBlock(block, 'Y').toType(InputType.NUMBER)
+            });
+        case 'motion_turnrightaroundxy':
+            return new IntermediateStackBlock(StackOpcode.PM_MOTION_ROTATE_AROUND_PIVOT, {
+                degrees: this.descendInputOfBlock(block, 'DEGREES').toType(InputType.NUMBER),
+                x: this.descendInputOfBlock(block, 'X').toType(InputType.NUMBER),
+                y: this.descendInputOfBlock(block, 'Y').toType(InputType.NUMBER)
+            });
 
         case 'pen_clear':
             return new IntermediateStackBlock(StackOpcode.PEN_CLEAR);

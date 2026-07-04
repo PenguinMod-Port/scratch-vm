@@ -317,6 +317,15 @@ class Scratch3MotionBlocks {
         const height = this.runtime.stageHeight - bounds.height;
         target.setXY(x * width / 2, y * height / 2);
     }
+
+    _turnAroundPivot (degrees, x, y, target) {
+        const radians = (Math.PI * degrees) / 180;
+        const cos = Math.cos(radians);
+        const sin = Math.sin(radians);
+        const dx = target.x - x;
+        const dy = target.y - y;
+        target.setXY((cos * dx) - (sin * dy) + x, (cos * dy) + (sin * dx) + y);
+    }
 }
 
 module.exports = Scratch3MotionBlocks;
