@@ -311,7 +311,7 @@ class Extension {
 
                     switch (block.opcode) {
                         case opcodes.EXECUTE:
-                            this.source += `yield* vm.jwLambda.Type.toLambda(${this.descendInput(node.lambda)}).execute(${this.descendInput(node.arg)}, thread, target, runtime, stage)`;
+                            this.source += `yield* vm.jwLambda.Type.toLambda(${this.descendInput(node.lambda)}).execute(${this.descendInput(node.arg)}, thread, target, runtime, stage);\n`;
                             return true;
                     }
                 }
