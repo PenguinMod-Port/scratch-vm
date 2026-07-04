@@ -29,7 +29,7 @@ function span(text) {
 class LambdaType {
     customId = "jwLambda"
 
-    constructor(func = function*() {}, thread) {
+    constructor(func = function*() {return null}, thread) {
         this.func = func
         this.proc = thread ? thread.procedures : {}
         this.timesExecuted = 0
@@ -64,7 +64,7 @@ class LambdaType {
     execute = function* (arg, thread, target, runtime, stage) {
         if (this.proc) thread.procedures = {...this.proc, ...thread.procedures};
         this.timesExecuted++;
-        let output = yield* this.func(arg, thread, target, runtime, stage, this) ?? null;
+        let output = yield* this.func(arg, thread, target, runtime, stage, this);
         return output;
     }
 }
