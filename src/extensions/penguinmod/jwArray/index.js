@@ -1250,10 +1250,10 @@ class Extension {
                     const node = block.inputs;
                     switch (block.opcode) {
                         case opcodes.BUILDER_APPEND:
-                            this.source += `typeof _jwArrayBuilder !== "undefined" && _jwArrayBuilder.push(vm.jwArray.Type.forArray(${this.descendInput(node.value)}));\n`;
+                            this.source += `if (typeof _jwArrayBuilder !== "undefined") _jwArrayBuilder.push(vm.jwArray.Type.forArray(${this.descendInput(node.value)}));\n`;
                             return true;
                         case opcodes.BUILDER_SET:
-                            this.source += `typeof _jwArrayBuilder !== "undefined" && _jwArrayBuilder = vm.jwArray.Type.toArray(${this.descendInput(node.array)}).array;\n`;
+                            this.source += `if (typeof _jwArrayBuilder !== "undefined") _jwArrayBuilder = vm.jwArray.Type.toArray(${this.descendInput(node.array)}).array;\n`;
                             return true;
                         
                         case opcodes.FOR_EACH:
