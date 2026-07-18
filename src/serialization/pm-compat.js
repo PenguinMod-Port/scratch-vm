@@ -58,8 +58,12 @@ export function compatBlock(block, pmVersion) {
         }
 
         //procedures_call
-        if (block.opcode === "procedures_call" && block.mutation.returns === "true") {
-            block.mutation.return = `[null, ${block.mutation.optype === "boolean" ? "1" : "2"}]`;
+        if (block.opcode === "procedures_call") {
+            if (block.mutation.returns === "true") block.mutation.return = `[null, ${block.mutation.optype === "\"boolean\"" ? "1" : "2"}]`;
+            if (block.mutation.optype === "\"end\"") block.mutation.terminal = "true";
+            
+            delete block.mutation.returns;
+            delete block.mutation.optype;
         }
 
         //procedures_definition_return
@@ -68,8 +72,13 @@ export function compatBlock(block, pmVersion) {
         }
 
         //procedures_prototype
-        if (block.opcode === "procedures_prototype" && block.mutation.returns === "true") {
-            block.mutation.forceoutput = block.mutation.optype === "boolean" ? "1" : "2";
+        if (block.opcode === "procedures_prototype") {
+            console.log(block.mutation.optype)
+            if (block.mutation.returns === "true") block.mutation.forceoutput = block.mutation.optype === "\"boolean\"" ? "1" : "2";
+            if (block.mutation.optype === "\"end\"") block.mutation.terminal = "true";
+            
+            delete block.mutation.returns;
+            delete block.mutation.optype;
         }
 
         //procedures_return
