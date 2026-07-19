@@ -2212,7 +2212,12 @@ class ScriptTreeGenerator {
             }
 
             if (entryBlock) {
-                let visualReport = this.script.stackClicked && !this.script.isProcedure && this.descendVisualReport(this.getBlockById(entryBlock))
+                let visualReport =
+                    this.script.stackClicked &&
+                    !this.script.isProcedure &&
+                    !(this.getBlockById(entryBlock).opcode === 'procedures_call' && !this.getBlockById(entryBlock).mutation.return) &&
+                    this.descendVisualReport(this.getBlockById(entryBlock));
+
                 this.script.stack = visualReport ? new IntermediateStack([visualReport]) : this.walkStack(entryBlock);
             }
         }

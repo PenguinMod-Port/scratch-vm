@@ -189,7 +189,7 @@ class JSGenerator {
         const node = block.inputs;
         switch (block.opcode) {
         case InputOpcode.NOP:
-            return `""`;
+            return `null`;
 
         case InputOpcode.PROCEDURE_ARGUMENT:
             return `p${node.index}`;
