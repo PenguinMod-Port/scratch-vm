@@ -29,9 +29,14 @@ const stacked = [
     'sound_changevolumeby',
     'sound_cleareffects',
     'sound_play',
+    'sound_playallsounds',
+    'sound_play_at_seconds',
+    'sound_play_at_seconds_until_done',
     'sound_playuntildone',
     'sound_seteffectto',
+    'sound_set_stop_fadeout_to',
     'sound_setvolumeto',
+    'sound_stop',
     'sound_stopallsounds'
 ];
 
@@ -45,6 +50,9 @@ const inputs = [
     'sensing_loudness',
     'sensing_online',
     'sensing_userid',
+    'sound_getEffectValue',
+    'sound_getLength',
+    'sound_isSoundPlaying',
     'sound_volume'
 ];
 
