@@ -45,7 +45,7 @@ class Extension {
         return {
             id: "jwPsychic",
             name: "Psychic",
-            color1: "#b16bed",
+            color: "#b16bed",
             menuIconURI: "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCIgeG1sbnM6Yng9Imh0dHBzOi8vYm94eS1zdmcuY29tIiB3aWR0aD0iMjBweCIgaGVpZ2h0PSIyMHB4Ij48ZGVmcz48Yng6ZXhwb3J0PjxieDpmaWxlIGZvcm1hdD0ic3ZnIi8+PC9ieDpleHBvcnQ+PC9kZWZzPjxlbGxpcHNlIHN0eWxlPSJzdHJva2Utd2lkdGg6IDJweDsgcGFpbnQtb3JkZXI6IHN0cm9rZTsgZmlsbDogcmdiKDE3NywgMTA3LCAyMzcpOyBzdHJva2U6IHJnYigxNTksIDk2LCAyMTMpOyIgY3g9IjEwIiBjeT0iMTAiIHJ4PSI5IiByeT0iOSIvPjxyZWN0IHg9IjQuNjM0IiB5PSIxMC4yMjgiIHdpZHRoPSI0Ljc3IiBoZWlnaHQ9IjQuNzciIHN0eWxlPSJmaWxsOiByZ2IoMjU1LCAyNTUsIDI1NSk7Ii8+PHJlY3QgeD0iMTAuNTk2IiB5PSIxMC4yMjgiIHdpZHRoPSI0Ljc3IiBoZWlnaHQ9IjQuNzciIHN0eWxlPSJmaWxsOiByZ2IoMjU1LCAyNTUsIDI1NSk7Ii8+PHJlY3QgeD0iNy42MTUiIHdpZHRoPSI0Ljc3IiBoZWlnaHQ9IjQuNzciIHN0eWxlPSJmaWxsOiByZ2IoMjU1LCAyNTUsIDI1NSk7IiB5PSI0LjI2NyIvPjwvc3ZnPg==",
             blocks: [
                 {

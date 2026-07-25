@@ -12,7 +12,7 @@ class jwProto {
         return {
             id: 'jwProto',
             name: 'Labels',
-            color1: '#969696',
+            color: '#969696',
             menuIconURI: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCI+CiAgPGVsbGlwc2Ugc3R5bGU9InN0cm9rZTogcmdiKDEyMCwgMTIwLCAxMjApOyBmaWxsOiByZ2IoMTUwLCAxNTAsIDE1MCk7IiBjeD0iMTAiIGN5PSIxMCIgcng9IjkuNSIgcnk9IjkuNSI+PC9lbGxpcHNlPgogIDxsaW5lIHN0eWxlPSJzdHJva2UtbGluZWNhcDogcm91bmQ7IHN0cm9rZS1saW5lam9pbjogcm91bmQ7IHN0cm9rZS13aWR0aDogMjsgZmlsbDogbm9uZTsgc3Ryb2tlOiByZ2IoMjU1LCAyNTUsIDI1NSk7IiB4MT0iOS44ODQiIHkxPSI2LjIzMiIgeDI9IjYuMTE2IiB5Mj0iMTMuNzY4Ij48L2xpbmU+CiAgPGxpbmUgc3R5bGU9InN0cm9rZS1saW5lY2FwOiByb3VuZDsgc3Ryb2tlLWxpbmVqb2luOiByb3VuZDsgc3Ryb2tlLXdpZHRoOiAyOyBmaWxsOiBub25lOyBzdHJva2U6IHJnYigyNTUsIDI1NSwgMjU1KTsiIHgxPSIxMy44ODQiIHkxPSI2LjIzMiIgeDI9IjEwLjExNiIgeTI9IjEzLjc2OCI+PC9saW5lPgo8L3N2Zz4=',
             blocks: [
                 {

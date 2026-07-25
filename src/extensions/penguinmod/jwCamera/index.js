@@ -155,7 +155,7 @@ class Extension {
         return {
             id: "jwCamera",
             name: "Camera",
-            color1: "#0586ff",
+            color: "#0586ff",
             menuIconURI: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCI+CiAgPGVsbGlwc2Ugc3R5bGU9InN0cm9rZTogcmdiKDQsIDEwNywgMjA0KTsgZmlsbDogcmdiKDUsIDEzNCwgMjU1KTsiIGN4PSIxMCIgY3k9IjEwIiByeD0iOS41IiByeT0iOS41Ij48L2VsbGlwc2U+CiAgPHBhdGggZD0iTSA1Ljc3OSA2LjQ4MyBDIDUuMDAzIDYuNDgzIDQuMzcyIDcuMTEzIDQuMzcyIDcuODkgTCA0LjM3MiAxMi4xMSBDIDQuMzcyIDEyLjg4NyA1LjAwMyAxMy41MTcgNS43NzkgMTMuNTE3IEwgMTEuNDA3IDEzLjUxNyBDIDEyLjE4NCAxMy41MTcgMTIuODE0IDEyLjg4NyAxMi44MTQgMTIuMTEgTCAxNS42MjggMTMuNTE3IEwgMTUuNjI4IDYuNDgzIEwgMTIuODE0IDcuODkgQyAxMi44MTQgNy4xMTMgMTIuMTg0IDYuNDgzIDExLjQwNyA2LjQ4MyBMIDUuNzc5IDYuNDgzIFoiIHN0cm9rZS13aWR0aD0iMC41IiBmaWxsPSIjZmZmIiBzdHlsZT0ic3Ryb2tlLXdpZHRoOiAwLjU7IHN0cm9rZTogcmdiKDI1NSwgMjU1LCAyNTUpOyBzdHJva2UtbGluZWpvaW46IHJvdW5kOyBzdHJva2UtbGluZWNhcDogcm91bmQ7Ij48L3BhdGg+Cjwvc3ZnPg==",
             blocks: [
                 {

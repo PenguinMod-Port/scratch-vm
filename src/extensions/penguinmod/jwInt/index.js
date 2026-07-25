@@ -112,7 +112,7 @@ class Extension {
         return {
             id: "jwInt",
             name: "Integers",
-            color1: "#fc874a",
+            color: "#fc874a",
             menuIconURI: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCI+CiAgPGVsbGlwc2Ugc3R5bGU9ImZpbGw6IHJnYigyNTIsIDEzNSwgNzQpOyBzdHJva2U6IHJnYigyMDIsIDEwOCwgNTkpOyIgY3g9IjEwIiBjeT0iMTAiIHJ4PSI5LjUiIHJ5PSI5LjUiPjwvZWxsaXBzZT4KICA8cGF0aCBkPSJNIDYuMjY4IDYuMjY4IEwgNi4yNjggNS4zMzYgTCAxMy43MzIgNS4zMzYgTCA5LjA2NyAxNC42NjQgTCA2LjI2OCAxNC42NjQgTCAxMC45MzMgNS4zMzYgTSAxMy43MzIgMTMuNzMyIEwgMTMuNzMyIDE0LjY2NCBMIDYuMjY4IDE0LjY2NCIgc3Ryb2tlPSIjZmZmIiBmaWxsPSJub25lIiBzdHlsZT0ic3Ryb2tlLWxpbmVqb2luOiByb3VuZDsgc3Ryb2tlLWxpbmVjYXA6IHJvdW5kOyBzdHJva2Utd2lkdGg6IDEuNXB4OyI+PC9wYXRoPgo8L3N2Zz4=",
             blocks: [
                 {

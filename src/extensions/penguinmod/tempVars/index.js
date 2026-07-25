@@ -31,7 +31,7 @@ class tempVars {
         return {
             id: 'tempVars',
             name: 'Temporary Variables',
-            color1: '#0069c2',
+            color: '#0069c2',
             menuIconURI: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCI+CiAgPGVsbGlwc2Ugc3R5bGU9ImZpbGw6IHJnYigwLCAxMDUsIDE5NCk7IHN0cm9rZTogcmdiKDAsIDg0LCAxNTUpOyIgY3g9IjEwIiBjeT0iMTAiIHJ4PSI5LjUiIHJ5PSI5LjUiPjwvZWxsaXBzZT4KICA8cGF0aCBkPSJNIDcuNDc4IDYuMTUgQyAxMC41NTggNi4xNSA5LjQ0MiAxMy44NSAxMi41MjIgMTMuODUgTSA2LjM2MiAxMy44NSBDIDcuOTAyIDEzLjg1IDEyLjA5OCA2LjE1IDEzLjYzOCA2LjE1IiBzdHlsZT0iZmlsbDogbm9uZTsgc3Ryb2tlOiByZ2IoMjU1LCAyNTUsIDI1NSk7IHN0cm9rZS1saW5lY2FwOiByb3VuZDsgc3Ryb2tlLXdpZHRoOiAycHg7Ij48L3BhdGg+Cjwvc3ZnPg==',
             blocks: [
                 {

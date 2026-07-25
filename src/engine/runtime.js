@@ -1202,14 +1202,12 @@ class Runtime extends EventEmitter {
             menuIconURI: extensionInfo.menuIconURI
         };
 
-        if (extensionInfo.color1) {
-            categoryInfo.color1 = extensionInfo.color1;
-            categoryInfo.color2 = extensionInfo.color2;
-            categoryInfo.color3 = extensionInfo.color3;
+        if (extensionInfo.color) {
+            categoryInfo.color = extensionInfo.color;
+        } else if (extensionInfo.color1) {
+            categoryInfo.color = extensionInfo.color1;
         } else {
-            categoryInfo.color1 = defaultExtensionColors[0];
-            categoryInfo.color2 = defaultExtensionColors[1];
-            categoryInfo.color3 = defaultExtensionColors[2];
+            categoryInfo.color = defaultExtensionColors[0];
         }
 
         // undefined will default to the regular text color
@@ -1375,9 +1373,7 @@ class Runtime extends EventEmitter {
             type: menuId,
             inputsInline: true,
             output: 'String',
-            colour: categoryInfo.color1,
-            colourSecondary: categoryInfo.color2,
-            colourTertiary: categoryInfo.color3,
+            colour: categoryInfo.color,
             outputShape: ScratchBlocksConstants.OUTPUT_SHAPE_ROUND,
             args0: [{
                 type: 'field_dropdown',
@@ -1446,13 +1442,7 @@ class Runtime extends EventEmitter {
                 output: 'String',
                 colour: menuInfo.isTypeable
                     ? '#FFFFFF'
-                    : categoryInfo.color1,
-                colourSecondary: menuInfo.isTypeable
-                    ? '#FFFFFF'
-                    : categoryInfo.color2,
-                colourTertiary: menuInfo.isTypeable
-                    ? '#FFFFFF'
-                    : categoryInfo.color3,
+                    : categoryInfo.color,
                 outputShape: menuInfo.acceptReporters || menuInfo.isTypeable ?
                     ScratchBlocksConstants.OUTPUT_SHAPE_ROUND : ScratchBlocksConstants.OUTPUT_SHAPE_SQUARE,
                 args0: [
@@ -1518,9 +1508,7 @@ class Runtime extends EventEmitter {
                 message0: '%1',
                 inputsInline: true,
                 output: output,
-                colour: categoryInfo.color1,
-                colourSecondary: categoryInfo.color2,
-                colourTertiary: categoryInfo.color3,
+                colour: categoryInfo.color,
                 outputShape: outputShape,
                 args0: [
                     {
@@ -1575,9 +1563,7 @@ class Runtime extends EventEmitter {
             category: categoryInfo.name,
             branches: blockInfo.branches ?? [],
             extensions: blockInfo.extensions ?? [],
-            colour: blockInfo.color1 ?? categoryInfo.color1,
-            colourSecondary: blockInfo.color2 ?? categoryInfo.color2,
-            colourTertiary: blockInfo.color3 ?? categoryInfo.color3,
+            colour: blockInfo.color ?? blockInfo.color1 ?? categoryInfo.color,
             blockText: blockInfo.blockText ?? categoryInfo.blockText
         };
         const context = {
@@ -2059,7 +2045,7 @@ class Runtime extends EventEmitter {
      */
     getBlocksXML (target) {
         return this._blockInfo.map(categoryInfo => {
-            const {name, color1, color2} = categoryInfo;
+            const {name, color} = categoryInfo;
             // Filter out blocks that aren't supposed to be shown on this target, as determined by the block info's
             // `hideFromPalette` and `filter` properties.
             const paletteBlocks = categoryInfo.blocks.filter(block => {
@@ -2075,7 +2061,7 @@ class Runtime extends EventEmitter {
                 return blockFilterIncludesTarget && !block.info.hideFromPalette;
             });
 
-            const colorXML = `colour="${xmlEscape(color1)}" secondaryColour="${xmlEscape(color2)}"`;
+            const colorXML = `colour="${xmlEscape(color)}" secondaryColour="#00000044"`;
 
             // Use a menu icon if there is one. Otherwise, use the block icon. If there's no icon,
             // the category menu will show its default colored circle.
@@ -3203,9 +3189,7 @@ class Runtime extends EventEmitter {
                         default: 'Addons',
                         description: 'Name of the addon block category in the extension list'
                     }),
-                    color1: '#29beb8',
-                    color2: '#3aa8a4',
-                    color3: '#3aa8a4',
+                    color: '#29beb8',
                     menuIconURI: `data:image/svg+xml;,${encodeURIComponent(ICON)}`,
                     blocks: [],
                     customFieldTypes: {},
@@ -3716,7 +3700,7 @@ class Runtime extends EventEmitter {
         const labelFn = block.info.labelFn ? this[`ext_${category}`][block.info.labelFn] : undefined;
         const label = block.info.label ?? `${categoryInfo.name}: ${block.info.text}`;
         const monitorColor = {
-            background: block.info.color1 ?? categoryInfo.color1 ?? null,
+            background: block.info.color ?? block.info.color1 ?? categoryInfo.color ?? null,
             text: block.info.blockText ?? categoryInfo.blockText ?? null
         };
 

@@ -25,9 +25,7 @@ class Extension {
         return {
             id: "pmOperatorsExpansion",
             name: "Operators Expansion",
-            color1: "#59c059",
-            color2: "#46b946",
-            color3: "#389438",
+            color: "#59c059",
             blocks: [
                 //legacy joins
                 generateJoin(4),

@@ -25,8 +25,8 @@ class jwUnite {
             id: 'jwUnite',
             name: 'Unite',
             blockIconURI: blockIconURI,
-            color1: '#7ddcff',
-            color2: '#4a98ff',
+            color: '#7ddcff',
+            blockText: "#575e75",
             blocks: [
                 {
                     opcode: 'always',

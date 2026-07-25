@@ -38,7 +38,7 @@ class PenguinModCamera {
         return {
             id: 'pmCamera',
             name: 'Camera (OLD)',
-            color1: '#0586FF',
+            color: '#0586FF',
             blocks: [
                 {
                     opcode: 'moveSteps',
