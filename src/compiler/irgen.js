@@ -1158,7 +1158,8 @@ class ScriptTreeGenerator {
         case 'control_all_at_once':
             // In PenguinMod, this runs the substack as run without screen refresh.
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_ALL_AT_ONCE, {
-                stack: this.descendSubstack(block, 'SUBSTACK')
+                stack: this.descendSubstack(block, 'SUBSTACK'),
+                value: true
             });
         case 'control_case':
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_THROW_ERROR, {
@@ -1226,6 +1227,12 @@ class ScriptTreeGenerator {
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_RUN_AS, {
                 sprite: this.descendInputOfBlock(block, 'RUN_AS_OPTION').toType(InputType.STRING),
                 substack: this.descendSubstack(block, 'SUBSTACK')
+            });
+        case 'control_runwithoutscreenrefresh':
+            // In PenguinMod, this runs the substack as run without screen refresh.
+            return new IntermediateStackBlock(StackOpcode.PM_CONTROL_ALL_AT_ONCE, {
+                stack: this.descendSubstack(block, 'SUBSTACK'),
+                value: block.fields.CHECKBOX.value === 'TRUE'
             });
         case 'control_set_counter':
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_SET_COUNTER, {

@@ -947,7 +947,7 @@ class JSGenerator {
 
         //pm control
         case StackOpcode.PM_CONTROL_ALL_AT_ONCE:
-            this.descendStack(node.stack, {isWarp: true});
+            this.descendStack(node.stack, {isWarp: node.value});
             break;
         case StackOpcode.PM_CONTROL_CONTINUE_LOOP:
             if (this.inLoop) {
