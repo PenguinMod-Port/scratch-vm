@@ -84,6 +84,7 @@ class ArrayType {
     static validArray(x) {
         if (x instanceof ArrayType) return true;
         if (x instanceof Array) return true;
+        if (x === null) return false;
         if (typeof x == "object" && typeof x.toJSON == "function") return true;
         try {
             let parsed = JSON.parse(Cast.toString(x));
@@ -1267,7 +1268,7 @@ class Extension {
                             return true;
                             
                         case opcodes.TO_LIST:
-                            this.source += `${this.referenceVariable(node.list)}.value = vm.jwArray.Type.toArray(${this.descendInput(node.array)}, true).array;\n`;
+                            this.source += `${this.referenceVariable(node.list)}.value = vm.jwArray.Type.toArray(${this.descendInput(node.array)}).array;\n`;
                             return true;
                     }
                 }

@@ -119,6 +119,7 @@ class ObjectType {
     static validObject(x) {
         if (x instanceof ObjectType) return true;
         if (x instanceof Map) return true;
+        if (x === null) return false;
         if (isPlainObject(x)) return true;
         if (typeof x == "object" && typeof x.toJSON == "function") return true;
         try {
