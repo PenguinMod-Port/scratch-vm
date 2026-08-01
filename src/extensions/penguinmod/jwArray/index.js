@@ -163,7 +163,11 @@ class ArrayType {
                 return text.outerHTML
             }
 
-            limitedArray.forEach((value, index) => {
+            const filledArray = limitedArray.map((value) => { // we love sparse arrays
+                return value === undefined ? null : value;
+            })
+
+            filledArray.forEach((value, index) => {
                 const centeringDiv = document.createElement('div')
                 centeringDiv.style.display = 'flex'
                 centeringDiv.style.justifyContent = 'center'
