@@ -1,6 +1,7 @@
-const BlockType = require('../../../extension-support/block-type');
-const BlockShape = require('../../../extension-support/block-shape');
 const ArgumentType = require('../../../extension-support/argument-type');
+const BlockShape = require('../../../extension-support/block-shape');
+const BlockType = require('../../../extension-support/block-type');
+const ImageURI = require('../../../extension-support/image-uri');
 const Cast = require('../../../util/cast');
 const pmSymbol = require('../../../util/symbol.js');
 
@@ -812,7 +813,7 @@ class Extension {
                 },
                 {
                     opcode: 'filter',
-                    text: 'filter [ARRAY] [I] [V] > [PREDICATE]',
+                    text: 'filter [ARRAY] [I] [V] [ARROW] [PREDICATE]',
                     arguments: {
                         ARRAY: jwArray.Argument,
                         I: {
@@ -820,6 +821,11 @@ class Extension {
                         },
                         V: {
                             fillIn: 'forEachV'
+                        },
+                        ARROW: {
+                            type: ArgumentType.IMAGE,
+                            dataURI: ImageURI.ARROW,
+                            flipRTL: true
                         },
                         PREDICATE: {
                             type: ArgumentType.BOOLEAN,
@@ -830,7 +836,7 @@ class Extension {
                 },
                 {
                     opcode: 'map',
-                    text: 'map [ARRAY] [I] [V] > [VALUE]',
+                    text: 'map [ARRAY] [I] [V] [ARROW] [VALUE]',
                     arguments: {
                         ARRAY: jwArray.Argument,
                         I: {
@@ -838,6 +844,11 @@ class Extension {
                         },
                         V: {
                             fillIn: 'forEachV'
+                        },
+                        ARROW: {
+                            type: ArgumentType.IMAGE,
+                            dataURI: ImageURI.ARROW,
+                            flipRTL: true
                         },
                         VALUE: {
                             type: ArgumentType.STRING
@@ -847,7 +858,7 @@ class Extension {
                 },
                 {
                     opcode: 'basicSort',
-                    text: 'sort [ARRAY] [I] [V] > [VALUE]',
+                    text: 'sort [ARRAY] [I] [V] [ARROW] [VALUE]',
                     arguments: {
                         ARRAY: jwArray.Argument,
                         I: {
@@ -855,6 +866,11 @@ class Extension {
                         },
                         V: {
                             fillIn: 'forEachV'
+                        },
+                        ARROW: {
+                            type: ArgumentType.IMAGE,
+                            dataURI: ImageURI.ARROW,
+                            flipRTL: true
                         },
                         VALUE: {
                             type: ArgumentType.NUMBER,

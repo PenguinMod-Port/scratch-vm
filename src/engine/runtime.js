@@ -1848,6 +1848,7 @@ class Runtime extends EventEmitter {
             // TODO these probably shouldn't be hardcoded...?
             width: 24,
             height: 24,
+            alt: argInfo.altText || '*',
             // Whether or not the inline image should be flipped horizontally
             // in RTL languages. Defaults to false, indicating that the
             // image will not be flipped.
