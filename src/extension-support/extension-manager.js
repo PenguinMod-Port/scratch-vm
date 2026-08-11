@@ -227,11 +227,10 @@ class ExtensionManager {
 
         const extension = this.builtinExtensions[extensionId]();
         const extensionInstance = new extension(this.runtime);
-        this._loadedExtensions.set(extensionId, 'fakeServiceName');
+        const serviceName = this._registerInternalExtension(extensionInstance);
+        this.runtime.compilerRegisterExtension(extensionId, extensionInstance);
         return this.loadNewDependencies(extensionId).then(() => {
-            const serviceName = this._registerInternalExtension(extensionInstance);
             this._loadedExtensions.set(extensionId, serviceName);
-            this.runtime.compilerRegisterExtension(extensionId, extensionInstance);
         })
     }
 
