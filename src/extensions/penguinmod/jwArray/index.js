@@ -506,7 +506,6 @@ class Extension {
                     arguments: {
                         EXPANDABLE: {
                             type: ArgumentType.EXPANDABLE,
-                            defaultValue: 2,
                             text: '[VALUE]',
                             arguments: {
                                 VALUE: {
