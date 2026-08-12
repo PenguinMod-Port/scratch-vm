@@ -1892,6 +1892,17 @@ class ScriptTreeGenerator {
         };
     }
 
+    descendExpandableJson (block, fieldName, valueName, cast) {
+        let amount = Number(block.fields[fieldName].value);
+        let inputs = [];
+        for (let i = 1; i <= amount; i++) {
+            let input = this.descendInputOfBlock(block, `${fieldName}.${i}.${valueName}`);
+            if (cast) input = input.toType(cast);
+            inputs.push(input);
+        }
+        return inputs;
+    }
+
     /**
      * @param {*} block
      * @returns {IntermediateStackBlock | null}

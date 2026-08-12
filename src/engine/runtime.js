@@ -1864,11 +1864,16 @@ class Runtime extends EventEmitter {
         const args = argInfo.arguments ?? {};
         const json = [];
 
+        context.inputList.push(`<field name="${xmlEscape(placeholder)}">${argInfo.defaultValue ?? 1}</field>`);
+
         let match;
         let previousIndex = 0;
         while ((match = regex.exec(argInfo.text)) !== null) {
             const labelText = argInfo.text.slice(previousIndex, match.index);
             if (labelText) json.push(labelText);
+
+            // no expandables in expandables cause im LAZY
+            if (args[match[1]].type === ArgumentType.EXPANDABLE) throw "Expandables inside expandables are not allowed.";
 
             const argJSON = this._convertArgJSON(context, match[1], args[match[1]]);
             if (argJSON._shadow) {
@@ -1895,7 +1900,13 @@ class Runtime extends EventEmitter {
                     shadow += '</shadow>';
                 }
 
-                argJSON.shadow = shadow;
+                if (shadow !== "") {
+                    argJSON.shadow = shadow;
+                    for (let i = 1; i <= (argInfo.defaultValue ?? 1); i++) {
+                        context.inputList.push(`<value name="${xmlEscape(`${placeholder}.${i}.${match[1]}`)}">${shadow}</value>`)
+                    }
+                }
+
             }
             json.push(argJSON);
 

@@ -381,9 +381,8 @@ class ArrayType {
         return this;
     }
 
-    concat(other) {
-        this.array = this.array.concat(other.array);
-        return this;
+    static concat(...arrays) {
+        return new jwArray.Type(Array.prototype.concat(...arrays.map(v => v.array)), true);
     }
 
     fill(value) {
@@ -697,10 +696,27 @@ class Extension {
                 },
                 {
                     opcode: 'concat',
-                    text: 'merge [ONE] with [TWO]',
+                    text: 'concat [ONE] [TWO]',
                     arguments: {
                         ONE: jwArray.Argument,
                         TWO: jwArray.Argument
+                    },
+                    hideFromPalette: true,
+                    ...jwArray.Block
+                },
+                {
+                    opcode: 'concatExpandable',
+                    text: 'concat [EXPANDABLE]',
+                    arguments: {
+                        EXPANDABLE: {
+                            type: ArgumentType.EXPANDABLE,
+                            minValue: 2,
+                            defaultValue: 2,
+                            text: '[ARRAY]',
+                            arguments: {
+                                ARRAY: jwArray.Argument
+                            }
+                        }
                     },
                     ...jwArray.Block
                 },
@@ -941,6 +957,8 @@ class Extension {
 
             BLANK: 'jwArray.blank',
             BLANK_LENGTH: 'jwArray.blankLength',
+
+            EXPANDABLE: 'jwArray.expandable',
             RANGE: 'jwArray.range',
             SPLIT: 'jwArray.split',
             SPLIT_CHARS: 'jwArray.splitChars',
@@ -999,6 +1017,11 @@ class Extension {
                         case 'jwArray_blankLength':
                             return new IntermediateInput(opcodes.BLANK_LENGTH, InputType.CUSTOM_TYPE, {
                                 len: this.descendInputOfBlock(block, 'LENGTH').toType(InputType.NUMBER)
+                            });
+
+                        case 'jwArray_expandable':
+                            return new IntermediateInput(opcodes.EXPANDABLE, InputType.STRING, {
+                                values: this.descendExpandableJson(block, 'EXPANDABLE', 'VALUE')
                             });
                         case 'jwArray_range':
                             return new IntermediateInput(opcodes.RANGE, InputType.CUSTOM_TYPE, {
@@ -1062,9 +1085,12 @@ class Extension {
                             });
                         case 'jwArray_concat':
                             return new IntermediateInput(opcodes.CONCAT, InputType.CUSTOM_TYPE, {
-                                array1: this.descendInputOfBlock(block, 'ONE'),
-                                array2: this.descendInputOfBlock(block, 'TWO')
+                                values: [this.descendInputOfBlock(block, 'ONE'), this.descendInputOfBlock(block, 'TWO')]
                             });
+                        case 'jwArray_concatExpandable':
+                            return new IntermediateInput(opcodes.CONCAT, InputType.CUSTOM_TYPE, {
+                                values: this.descendExpandableJson(block, 'EXPANDABLE', 'ARRAY')
+                            })
                         case 'jwArray_fill':
                             return new IntermediateInput(opcodes.FILL, InputType.CUSTOM_TYPE, {
                                 array: this.descendInputOfBlock(block, 'ARRAY'),
@@ -1172,6 +1198,9 @@ class Extension {
                             return `(new vm.jwArray.Type([], true))`;
                         case opcodes.BLANK_LENGTH:
                             return `(new vm.jwArray.Type(Array(vm.jwArray.Type.parseLength(${this.descendInput(node.len)})).fill(null), true))`;
+
+                        case opcodes.EXPANDABLE:
+                            return `(new vm.jwArray.Type([${node.values.map(v => this.descendInput(v)).join(', ')}]))`
                         case opcodes.RANGE:
                             return `vm.jwArray.Type.range(${this.descendInput(node.start)}, ${this.descendInput(node.end)})`;
                         case opcodes.SPLIT:
@@ -1207,7 +1236,7 @@ class Extension {
                         case opcodes.APPEND:
                             return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).append(${this.descendInput(node.value)})`;
                         case opcodes.CONCAT:
-                            return `vm.jwArray.Type.toArray(${this.descendInput(node.array1)}).concat(vm.jwArray.Type.toArray(${this.descendInput(node.array2)}, true))`;
+                            return `vm.jwArray.Type.concat(${node.values.map(v => `vm.jwArray.Type.toArray(${this.descendInput(v)}, true)`).join(', ')})`;
                         case opcodes.FILL:
                             return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).fill(${this.descendInput(node.value)})`;
                         
@@ -1310,11 +1339,6 @@ class Extension {
                 }
             }
         }
-    }
-
-    expandable(args) {
-        console.log(args);
-        return new jwArray.Type(Object.values(args));
     }
 }
 
