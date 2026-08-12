@@ -71,7 +71,12 @@ const ArgumentType = {
     /**
      * pm: custom fields
      */
-    CUSTOM: 'custom'
+    CUSTOM: 'custom',
+
+    /**
+     * pm: expandables
+     */
+    EXPANDABLE: 'expandable'
 };
 
 module.exports = ArgumentType;

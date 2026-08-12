@@ -152,6 +152,9 @@ const ArgumentTypeMap = (() => {
     map[ArgumentType.CUSTOM] = {
         fieldType: 'field_custom'
     };
+    map[ArgumentType.EXPANDABLE] = {
+        fieldType: 'field_expandable'
+    }
     return map;
 })();
 
@@ -1875,6 +1878,51 @@ class Runtime extends EventEmitter {
             argTypeInfo = context.categoryInfo.customFieldTypes[argInfo.type].argumentTypeInfo;
         }
 
+        const argJSON = this._convertArgJSON(context, placeholder, argInfo, argTypeInfo);
+
+        if (argJSON._shadow) {
+            const { valueName, shadowType, fieldName, variableID, variableName, variableType, defaultValue } = argJSON._shadow;
+            // <value> is the ScratchBlocks name for a block input.
+            if (valueName) {
+                context.inputList.push(`<value name="${xmlEscape(placeholder)}">`);
+            }
+
+            // The <shadow> is a placeholder for a reporter and is visible when there's no reporter in this input.
+            // Boolean inputs don't need to specify a shadow in the XML.
+            if (shadowType) {
+                context.inputList.push(`<shadow type="${xmlEscape(shadowType)}">`);
+            }
+
+            // A <field> displays a dynamic value: a user-editable text field, a drop-down menu, etc.
+            // Leave out the field if defaultValue or fieldName are not specified
+            if (defaultValue !== null && fieldName && !variableID) {
+                context.inputList.push(`<field name="${xmlEscape(fieldName)}">${xmlEscape(defaultValue)}</field>`);
+            }
+
+            if (variableID) {
+                // eslint-disable-next-line max-len
+                context.inputList.push(`<field name="${fieldName}" id="${variableID}" variableType="${variableType}">${variableName}</field>`);
+            }
+
+            if (shadowType) {
+                context.inputList.push('</shadow>');
+            }
+
+            if (valueName) {
+                context.inputList.push('</value>');
+            }
+        }
+
+        const argsName = `args${context.outLineNum}`;
+        const blockArgs = (context.blockJSON[argsName] = context.blockJSON[argsName] || []);
+        if (argJSON) blockArgs.push(argJSON);
+        const argNum = blockArgs.length;
+        context.argsMap[placeholder] = argNum;
+
+        return `%${argNum}`;
+    }
+
+    _convertArgJSON (context, placeholder, argInfo, argTypeInfo) {
         // Start to construct the scratch-blocks style JSON defining how the block should be
         // laid out
         let argJSON;
@@ -1895,6 +1943,13 @@ class Runtime extends EventEmitter {
                 name: placeholder,
                 id: argInfo.id,
                 value: argInfo.defaultValue
+            };
+        } else if (argTypeInfo.fieldType === 'field_expandable') {
+            argJSON = {
+                type: 'field_expandable',
+                value: argInfo.defaultValue,
+                min: argInfo.minValue,
+                max: argInfo.maxValue
             };
         } else {
             // Construct input value
@@ -2011,45 +2066,10 @@ class Runtime extends EventEmitter {
                     shadowType = argInfo.fillInGlobal || `${context.categoryInfo.id}_${argInfo.fillIn}`;
                 }
             }
-
-            // <value> is the ScratchBlocks name for a block input.
-            if (valueName) {
-                context.inputList.push(`<value name="${xmlEscape(placeholder)}">`);
-            }
-
-            // The <shadow> is a placeholder for a reporter and is visible when there's no reporter in this input.
-            // Boolean inputs don't need to specify a shadow in the XML.
-            if (shadowType) {
-                context.inputList.push(`<shadow type="${xmlEscape(shadowType)}">`);
-            }
-
-            // A <field> displays a dynamic value: a user-editable text field, a drop-down menu, etc.
-            // Leave out the field if defaultValue or fieldName are not specified
-            if (defaultValue !== null && fieldName && !variableID) {
-                context.inputList.push(`<field name="${xmlEscape(fieldName)}">${xmlEscape(defaultValue)}</field>`);
-            }
-
-            if (variableID) {
-                // eslint-disable-next-line max-len
-                context.inputList.push(`<field name="${fieldName}" id="${variableID}" variableType="${variableType}">${variableName}</field>`);
-            }
-
-            if (shadowType) {
-                context.inputList.push('</shadow>');
-            }
-
-            if (valueName) {
-                context.inputList.push('</value>');
-            }
+            argJSON._shadow = { valueName, shadowType, fieldName, variableID, variableName, variableType, defaultValue };
         }
 
-        const argsName = `args${context.outLineNum}`;
-        const blockArgs = (context.blockJSON[argsName] = context.blockJSON[argsName] || []);
-        if (argJSON) blockArgs.push(argJSON);
-        const argNum = blockArgs.length;
-        context.argsMap[placeholder] = argNum;
-
-        return `%${argNum}`;
+        return argJSON;
     }
 
     /**

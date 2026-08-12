@@ -500,6 +500,25 @@ class Extension {
                     },
                     ...jwArray.Block
                 },
+                "---",
+                {
+                    opcode: 'expandable',
+                    text: 'new array [EXPANDABLE]',
+                    arguments: {
+                        EXPANDABLE: {
+                            type: ArgumentType.EXPANDABLE,
+                            minValue: 1,
+                            defaultValue: 2,
+                            text: '[VALUE]',
+                            arguments: {
+                                VALUE: {
+                                    type: ArgumentType.STRING
+                                }
+                            }
+                        }
+                    },
+                    ...jwArray.Block
+                },
                 {
                     opcode: 'range',
                     text: 'range from [START] to [END]',
