@@ -507,7 +507,6 @@ class Extension {
                     arguments: {
                         EXPANDABLE: {
                             type: ArgumentType.EXPANDABLE,
-                            minValue: 1,
                             defaultValue: 2,
                             text: '[VALUE]',
                             arguments: {
@@ -1311,6 +1310,11 @@ class Extension {
                 }
             }
         }
+    }
+
+    expandable(args) {
+        console.log(args);
+        return new jwArray.Type(Object.values(args));
     }
 }
 

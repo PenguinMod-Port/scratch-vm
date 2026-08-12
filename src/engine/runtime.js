@@ -1859,6 +1859,59 @@ class Runtime extends EventEmitter {
         };
     }
 
+    _constructExpandableJson (context, placeholder, argInfo) {
+        const regex = /\[(.+?)]/g;
+        const args = argInfo.arguments ?? {};
+        const json = [];
+
+        let match;
+        let previousIndex = 0;
+        while ((match = regex.exec(argInfo.text)) !== null) {
+            const labelText = argInfo.text.slice(previousIndex, match.index);
+            if (labelText) json.push(labelText);
+
+            const argJSON = this._convertArgJSON(context, match[1], args[match[1]]);
+            if (argJSON._shadow) {
+                const { valueName, shadowType, fieldName, variableID, variableName, variableType, defaultValue } = argJSON._shadow;
+                let shadow = "";
+
+                // The <shadow> is a placeholder for a reporter and is visible when there's no reporter in this input.
+                if (shadowType) {
+                    shadow += `<shadow type="${xmlEscape(shadowType)}">`;
+                }
+
+                // A <field> displays a dynamic value: a user-editable text field, a drop-down menu, etc.
+                // Leave out the field if defaultValue or fieldName are not specified
+                if (defaultValue !== null && fieldName && !variableID) {
+                    shadow += `<field name="${xmlEscape(fieldName)}">${xmlEscape(defaultValue)}</field>`;
+                }
+
+                if (variableID) {
+                    // eslint-disable-next-line max-len
+                    shadow += `<field name="${fieldName}" id="${variableID}" variableType="${variableType}">${variableName}</field>`;
+                }
+
+                if (shadowType) {
+                    shadow += '</shadow>';
+                }
+
+                argJSON.shadow = shadow;
+            }
+            json.push(argJSON);
+
+            previousIndex = regex.lastIndex;
+        }
+
+        return {
+            type: 'field_expandable_json',
+            name: placeholder,
+            value: argInfo.defaultValue,
+            min: argInfo.minValue,
+            max: argInfo.maxValue,
+            args: json
+        }
+    }
+
     /**
      * Helper for _convertForScratchBlocks which handles linearization of argument placeholders. Called as a callback
      * from string#replace. In addition to the return value the JSON and XML items in the context will be filled.
@@ -1871,14 +1924,8 @@ class Runtime extends EventEmitter {
     _convertPlaceholders (context, match, placeholder) {
         // Determine whether the argument type is one of the known standard field types
         const argInfo = context.blockInfo.arguments[placeholder] || {};
-        let argTypeInfo = ArgumentTypeMap[argInfo.type] || {};
 
-        // Field type not a standard field type, see if extension has registered custom field type
-        if (!ArgumentTypeMap[argInfo.type] && context.categoryInfo.customFieldTypes[argInfo.type]) {
-            argTypeInfo = context.categoryInfo.customFieldTypes[argInfo.type].argumentTypeInfo;
-        }
-
-        const argJSON = this._convertArgJSON(context, placeholder, argInfo, argTypeInfo);
+        const argJSON = this._convertArgJSON(context, placeholder, argInfo);
 
         if (argJSON._shadow) {
             const { valueName, shadowType, fieldName, variableID, variableName, variableType, defaultValue } = argJSON._shadow;
@@ -1888,7 +1935,6 @@ class Runtime extends EventEmitter {
             }
 
             // The <shadow> is a placeholder for a reporter and is visible when there's no reporter in this input.
-            // Boolean inputs don't need to specify a shadow in the XML.
             if (shadowType) {
                 context.inputList.push(`<shadow type="${xmlEscape(shadowType)}">`);
             }
@@ -1922,7 +1968,13 @@ class Runtime extends EventEmitter {
         return `%${argNum}`;
     }
 
-    _convertArgJSON (context, placeholder, argInfo, argTypeInfo) {
+    _convertArgJSON (context, placeholder, argInfo) {
+        // argtypeinfo
+        let argTypeInfo = ArgumentTypeMap[argInfo.type] || {};
+        if (!ArgumentTypeMap[argInfo.type] && context.categoryInfo.customFieldTypes[argInfo.type]) {
+            argTypeInfo = context.categoryInfo.customFieldTypes[argInfo.type].argumentTypeInfo;
+        }
+
         // Start to construct the scratch-blocks style JSON defining how the block should be
         // laid out
         let argJSON;
@@ -1945,12 +1997,7 @@ class Runtime extends EventEmitter {
                 value: argInfo.defaultValue
             };
         } else if (argTypeInfo.fieldType === 'field_expandable') {
-            argJSON = {
-                type: 'field_expandable',
-                value: argInfo.defaultValue,
-                min: argInfo.minValue,
-                max: argInfo.maxValue
-            };
+            argJSON = this._constructExpandableJson(context, placeholder, argInfo);
         } else {
             // Construct input value
 
