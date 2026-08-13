@@ -580,7 +580,7 @@ class Extension {
                     text: 'current array',
                     hideFromPalette: true,
                     canDragDuplicate: true,
-                    ...jwArray.Blockf
+                    ...jwArray.Block
                 },
                 {
                     opcode: 'builderAppend',
