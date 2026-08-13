@@ -493,6 +493,8 @@ const serializeSound = function (sound) {
  * Serializes the value of a variable (handles custom types)
  */
 const serializeVariableValue = function(value, runtime) {
+    if (value === null) return null;
+
     if (value.customId) {
         const {serialize} = runtime.serializers[value.customId];
         return {
