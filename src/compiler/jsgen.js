@@ -310,12 +310,14 @@ class JSGenerator {
         //pm looks
         case InputOpcode.PM_LOOKS_GET_EFFECT:
             return `target.getEffect("${sanitize(node.effect)}")`;
+        case InputOpcode.PM_LOOKS_GET_TINT:
+            return 'runtime.ext_scratch3_looks._getTintColor(target)';
         case InputOpcode.PM_LOOKS_STRETCH_X:
             return 'target.stretch[0]';
         case InputOpcode.PM_LOOKS_STRETCH_Y:
             return 'target.stretch[1]';
-        case InputOpcode.PM_LOOKS_GET_TINT:
-            return 'runtime.ext_scratch3_looks._getTintColor(target)';
+        case InputOpcode.PM_LOOKS_VISIBLE_GET:
+            return `target.visible`;
 
         case InputOpcode.MOTION_DIRECTION_GET:
             return 'target.direction';
@@ -1287,6 +1289,10 @@ class JSGenerator {
             break;
         case StackOpcode.PM_LOOKS_STOP_SPEAKING:
             this.source += `runtime.ext_scratch3_looks._say('', target);\n`;
+            break;
+        case StackOpcode.PM_LOOKS_VISIBLE_SET:
+            this.source += `target.setVisible(${this.descendInput(node.visible)});\n`;
+            this.source += `runtime.ext_scratch3_looks._renderBubble(target);\n`;
             break;
 
         case StackOpcode.MOTION_X_CHANGE:

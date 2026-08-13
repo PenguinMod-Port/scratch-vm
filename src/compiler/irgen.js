@@ -384,6 +384,8 @@ class ScriptTreeGenerator {
             return new IntermediateInput(InputOpcode.PM_LOOKS_GET_EFFECT, InputType.NUMBER, {
                 effect: block.fields.EFFECT.value.toLowerCase()
             });
+        case 'looks_getSpriteVisible':
+            return new IntermediateInput(InputOpcode.PM_LOOKS_VISIBLE_GET, InputType.BOOLEAN);
         case 'looks_stretchGetX':
             return new IntermediateInput(InputOpcode.PM_LOOKS_STRETCH_X, InputType.NUMBER);
         case 'looks_stretchGetY':
@@ -1475,6 +1477,10 @@ class ScriptTreeGenerator {
         case 'looks_set_blend_mode':
             return new IntermediateStackBlock(StackOpcode.PM_LOOKS_SET_BLENDMODE, {
                 mode: block.fields.BLENDMODE.value.toLowerCase()
+            });
+        case 'looks_setSpriteVisible':
+            return new IntermediateStackBlock(StackOpcode.PM_LOOKS_VISIBLE_SET, {
+                visible: this.descendInputOfBlock(block, 'VISIBILITY').toType(InputType.BOOLEAN)
             });
         case 'looks_setStretch':
             return new IntermediateStackBlock(StackOpcode.PM_LOOKS_SET_STRETCH, {

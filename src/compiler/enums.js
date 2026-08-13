@@ -196,6 +196,7 @@ const StackOpcode = {
     PM_LOOKS_SET_STRETCH: 'looks.setStretch',
     PM_LOOKS_SET_TINT: 'looks.setTint',
     PM_LOOKS_STOP_SPEAKING: 'looks.stopSpeaking',
+    PM_LOOKS_VISIBLE_SET: 'looks.setVisibility',
 
     MOTION_X_SET: 'motion.setX',
     MOTION_X_CHANGE: 'motion.changeX',
@@ -276,6 +277,7 @@ const InputOpcode = {
     PM_LOOKS_GET_TINT: 'looks.getTint',
     PM_LOOKS_STRETCH_X: 'looks.stretchX',
     PM_LOOKS_STRETCH_Y: 'looks.stretchY',
+    PM_LOOKS_VISIBLE_GET: 'looks.getVisibility',
 
     VAR_GET: 'var.get',
 

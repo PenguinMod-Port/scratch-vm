@@ -311,10 +311,11 @@ class Scratch3LooksBlocks {
             looks_backdropnumbername: this.getBackdropNumberName,
 
             //pm monitors
+            looks_getEffectValue: ({EFFECT}, {target}) => target.getEffect(Cast.toString(EFFECT).toLowerCase()),
+            looks_getSpriteVisible: ({}, {target}) => target.visible,
             looks_stretchGetX: ({}, {target}) => target.stretch[0],
             looks_stretchGetY: ({}, {target}) => target.stretch[1], 
             looks_tintColor: ({}, {target}) => this._getTintColor(target),
-            looks_getEffectValue: ({EFFECT}, {target}) => target.getEffect(Cast.toString(EFFECT).toLowerCase()),
         };
     }
 
@@ -331,6 +332,16 @@ class Scratch3LooksBlocks {
             looks_backdropnumbername: {
                 getId: (_, fields) => getMonitorIdForBlockWithArgs('backdropnumbername', fields)
             },
+
+            // pm
+            looks_getEffectValue: {
+                isSpriteSpecific: true,
+                getId: (targetId, fields) => getMonitorIdForBlockWithArgs(`${targetId}_getEffectValue`, fields)
+            },
+            looks_getSpriteVisible: {
+                isSpriteSpecific: true,
+                getId: targetId => `${targetId}_getSpriteVisible`
+            },
             looks_stretchGetX: {
                 isSpriteSpecific: true,
                 getId: targetId => `${targetId}_stretchGetX`
@@ -342,10 +353,6 @@ class Scratch3LooksBlocks {
             looks_tintColor: {
                 isSpriteSpecific: true,
                 getId: targetId => `${targetId}_tintColor`
-            },
-            looks_getEffectValue: {
-                isSpriteSpecific: true,
-                getId: (targetId, fields) => getMonitorIdForBlockWithArgs(`${targetId}_getEffectValue`, fields)
             },
         };
     }
