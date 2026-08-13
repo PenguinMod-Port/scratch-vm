@@ -1311,7 +1311,7 @@ class Extension {
                         }
 
                         case opcodes.FROM_LIST:
-                            return `(new vm.jwArray.Type(${this.referenceVariable(node.list)}.value, true))`;
+                            return `(new vm.jwArray.Type(${this.referenceVariable(node.list)}.value))`;
                     }
                 },
                 command(block) {
