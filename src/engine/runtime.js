@@ -1906,7 +1906,6 @@ class Runtime extends EventEmitter {
                         context.inputList.push(`<value name="${xmlEscape(`${placeholder}.${i}.${match[1]}`)}">${shadow}</value>`)
                     }
                 }
-
             }
             json.push(argJSON);
 
@@ -1919,7 +1918,8 @@ class Runtime extends EventEmitter {
             value: argInfo.defaultValue,
             min: argInfo.minValue,
             max: argInfo.maxValue,
-            args: json
+            args: json,
+            sep: argInfo.separator
         }
     }
 
@@ -1976,6 +1976,15 @@ class Runtime extends EventEmitter {
         const argNum = blockArgs.length;
         context.argsMap[placeholder] = argNum;
 
+        // expandable fix
+        if (argJSON && argJSON.type === 'field_expandable_json') {
+            blockArgs.push({
+                type: 'input_dummy',
+                name: placeholder
+            });
+
+            return `%${argNum} %${argNum + 1}`;
+        }
         return `%${argNum}`;
     }
 
