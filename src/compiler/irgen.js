@@ -1892,7 +1892,7 @@ class ScriptTreeGenerator {
         };
     }
 
-    descendExpandableJson (block, fieldName, valueName, cast) {
+    descendExpandableValue (block, fieldName, valueName, cast) {
         let amount = Number(block.fields[fieldName].value);
         let inputs = [];
         for (let i = 1; i <= amount; i++) {
@@ -1901,6 +1901,15 @@ class ScriptTreeGenerator {
             inputs.push(input);
         }
         return inputs;
+    }
+
+    descendExpandableField (block, fieldName, valueName) {
+        let amount = Number(block.fields[fieldName].value);
+        let values = [];
+        for (let i = 1; i <= amount; i++) {
+            values.push(block.fields[`${fieldName}.${i}.${valueName}`].value);
+        }
+        return values;
     }
 
     /**

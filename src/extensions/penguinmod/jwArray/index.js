@@ -382,7 +382,10 @@ class ArrayType {
     }
 
     static concat(...arrays) {
-        return new jwArray.Type(Array.prototype.concat(...arrays.map(v => v.array)), true);
+        return new ArrayType(Array.prototype.concat(...arrays.map(v => v.array)), true);
+    }
+    concat(...arrays) {
+        return ArrayType.concat(this, ...arrays);
     }
 
     fill(value) {
@@ -577,7 +580,7 @@ class Extension {
                     text: 'current array',
                     hideFromPalette: true,
                     canDragDuplicate: true,
-                    ...jwArray.Block
+                    ...jwArray.Blockf
                 },
                 {
                     opcode: 'builderAppend',
@@ -695,7 +698,7 @@ class Extension {
                 },
                 {
                     opcode: 'concat',
-                    text: 'concat [ONE] [TWO]',
+                    text: 'merge [ONE] [TWO]',
                     arguments: {
                         ONE: jwArray.Argument,
                         TWO: jwArray.Argument
@@ -705,7 +708,7 @@ class Extension {
                 },
                 {
                     opcode: 'concatExpandable',
-                    text: 'concat [EXPANDABLE]',
+                    text: 'merge [EXPANDABLE]',
                     arguments: {
                         EXPANDABLE: {
                             type: ArgumentType.EXPANDABLE,
@@ -1019,8 +1022,8 @@ class Extension {
                             });
 
                         case 'jwArray_expandable':
-                            return new IntermediateInput(opcodes.EXPANDABLE, InputType.STRING, {
-                                values: this.descendExpandableJson(block, 'EXPANDABLE', 'VALUE')
+                            return new IntermediateInput(opcodes.EXPANDABLE, InputType.CUSTOM_TYPE, {
+                                values: this.descendExpandableValue(block, 'EXPANDABLE', 'VALUE')
                             });
                         case 'jwArray_range':
                             return new IntermediateInput(opcodes.RANGE, InputType.CUSTOM_TYPE, {
@@ -1088,7 +1091,7 @@ class Extension {
                             });
                         case 'jwArray_concatExpandable':
                             return new IntermediateInput(opcodes.CONCAT, InputType.CUSTOM_TYPE, {
-                                values: this.descendExpandableJson(block, 'EXPANDABLE', 'ARRAY')
+                                values: this.descendExpandableValue(block, 'EXPANDABLE', 'ARRAY')
                             })
                         case 'jwArray_fill':
                             return new IntermediateInput(opcodes.FILL, InputType.CUSTOM_TYPE, {

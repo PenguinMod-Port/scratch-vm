@@ -483,10 +483,11 @@ class ObjectType {
         return updateRecursive(this.map, 0);
     }
 
-    merge(other) {
-        other = ObjectType.toObject(other, true)
-        const OBJECT = ObjectType.toObject(new Map([...other.map, ...this.map]), true)
-        return OBJECT
+    static merge(...objects) {
+        return new ObjectType(new Map(objects.flatMap(v => [...v.map])));
+    }
+    merge(...objects) {
+        return ObjectType.merge(this, ...objects);
     }
 
     get keys() {
@@ -793,12 +794,29 @@ class Extension {
                 },
                 {
                     opcode: 'merge',
-                    text: 'merge [ONE] into [TWO]',
+                    text: 'merge [ONE] [TWO]',
                     arguments: {
                         ONE: dogeiscutObject.Argument,
                         TWO: dogeiscutObject.Argument,
                     },
+                    hideFromPalette: true,
                     ...dogeiscutObject.Block,
+                },
+                {
+                    opcode: 'mergeExpandable',
+                    text: 'merge [EXPANDABLE]',
+                    arguments: {
+                        EXPANDABLE: {
+                            type: ArgumentType.EXPANDABLE,
+                            minValue: 2,
+                            defaultValue: 2,
+                            text: '[OBJECT]',
+                            arguments: {
+                                OBJECT: dogeiscutObject.Argument
+                            }
+                        }
+                    },
+                    ...dogeiscutObject.Block
                 },
                 '---',
                 {
@@ -980,9 +998,12 @@ class Extension {
                             });
                         case 'dogeiscutObject_merge':
                             return new IntermediateInput(opcodes.MERGE, InputType.CUSTOM_TYPE, {
-                                one: this.descendInputOfBlock(block, 'ONE'),
-                                two: this.descendInputOfBlock(block, 'TWO'),
+                                values: [this.descendInputOfBlock(block, 'ONE'), this.descendInputOfBlock(block, 'TWO')],
                             });
+                        case 'dogeiscutObject_mergeExpandable':
+                            return new IntermediateInput(opcodes.MERGE, InputType.CUSTOM_TYPE, {
+                                values: this.descendExpandableValue(block, 'EXPANDABLE', 'OBJECT')
+                            })
                         case 'dogeiscutObject_toString':
                             return new IntermediateInput(opcodes.TO_STRING, InputType.STRING, {
                                 object: this.descendInputOfBlock(block, 'OBJECT'),
@@ -1070,7 +1091,7 @@ class Extension {
                         case opcodes.DELETE_AT_PATH:
                             return `vm.dogeiscutObject.Type.toObject(${this.descendInput(node.object)}).deleteAtPath(vm.jwArray.Type.toArray(${this.descendInput(node.array)}))`
                         case opcodes.MERGE:
-                            return `vm.dogeiscutObject.Type.toObject(${this.descendInput(node.one)}, true).merge(${this.descendInput(node.two)})`
+                            return `vm.dogeiscutObject.Type.merge(${node.values.map(v => `vm.dogeiscutObject.Type.toObject(${this.descendInput(v)}, true)`).join(', ')})`;
                         case opcodes.TO_STRING:
                             return `vm.dogeiscutObject.Type.toObject(${this.descendInput(node.object)}, true).toString(${node.format === "pretty"})`
                         case opcodes.KEYS:

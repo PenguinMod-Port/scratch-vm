@@ -238,7 +238,7 @@ class BlockUtility {
         }
     }
 
-    expandableJson(args, fieldName, valueName) {
+    expandableValue(args, fieldName, valueName) {
         let amount = Number(args[fieldName]);
         let values = [];
         for (let i = 1; i <= amount; i++) {
