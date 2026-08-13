@@ -1267,8 +1267,14 @@ class JSGenerator {
             break;
 
         //pm looks
+        case StackOpcode.PM_LOOKS_BACKDROP_PREVIOUS:
+            this.source += 'runtime.ext_scratch3_looks._setBackdrop(stage, stage.currentCostume - 1, true);\n';
+            break;
         case StackOpcode.PM_LOOKS_CHANGE_STRETCH:
             this.source += `target.setStretch(${this.descendInput(node.x)} + target.stretch[0], ${this.descendInput(node.y)} + target.stretch[1]);\n`;
+            break;
+        case StackOpcode.PM_LOOKS_COSTUME_PREVIOUS:
+            this.source += 'target.setCostume(target.currentCostume - 1);\n';
             break;
         case StackOpcode.PM_LOOKS_SET_BLENDMODE:
             this.source += `runtime.ext_scratch3_looks._setBlendMode("${sanitize(node.mode)}", target);\n`;
