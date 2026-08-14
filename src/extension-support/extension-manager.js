@@ -64,6 +64,7 @@ const defaultBuiltinExtensions = {
     jgTween: () => require('../extensions/penguinmod/jgTween'),
     jgExtendedAudio: () => require('../extensions/penguinmod/jgExtendedAudio'),
     jgRuntime: () => require('../extensions/penguinmod/jgRuntime'),
+    jgPrism: () => require('../extensions/penguinmod/jgPrism'),
 
     // gsa
     tempVars: () => require('../extensions/penguinmod/tempVars'),
