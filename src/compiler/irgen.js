@@ -386,6 +386,8 @@ class ScriptTreeGenerator {
             });
         case 'looks_getSpriteVisible':
             return new IntermediateInput(InputOpcode.PM_LOOKS_VISIBLE_GET, InputType.BOOLEAN);
+        case 'looks_layersGetLayer':
+            return new IntermediateInput(InputOpcode.PM_LOOKS_LAYER_GET, InputType.NUMBER_WHOLE);
         case 'looks_stretchGetX':
             return new IntermediateInput(InputOpcode.PM_LOOKS_STRETCH_X, InputType.NUMBER);
         case 'looks_stretchGetY':
@@ -1470,6 +1472,10 @@ class ScriptTreeGenerator {
                 x: this.descendInputOfBlock(block, 'X').toType(InputType.NUMBER),
                 y: this.descendInputOfBlock(block, 'Y').toType(InputType.NUMBER)
             });
+        case 'looks_layersSetLayer':
+            return new IntermediateStackBlock(StackOpcode.PM_LOOKS_LAYER_SET, {
+                layer: this.descendInputOfBlock(block, 'NUM').toType(InputType.NUMBER)
+            });
         case 'looks_previousbackdrop':
             return new IntermediateStackBlock(StackOpcode.PM_LOOKS_BACKDROP_PREVIOUS);
         case 'looks_previouscostume':
@@ -1487,12 +1493,12 @@ class ScriptTreeGenerator {
                 x: this.descendInputOfBlock(block, 'X').toType(InputType.NUMBER),
                 y: this.descendInputOfBlock(block, 'Y').toType(InputType.NUMBER)
             });
+        case 'looks_stoptalking':
+            return new IntermediateStackBlock(StackOpcode.PM_LOOKS_STOP_SPEAKING, {});
         case 'looks_setTintColor':
             return new IntermediateStackBlock(StackOpcode.PM_LOOKS_SET_TINT, {
                 tint: this.descendInputOfBlock(block, 'color').toType(InputType.STRING)
             });
-        case 'looks_stoptalking':
-            return new IntermediateStackBlock(StackOpcode.PM_LOOKS_STOP_SPEAKING, {});
 
         case 'motion_changexby':
             return new IntermediateStackBlock(StackOpcode.MOTION_X_CHANGE, {

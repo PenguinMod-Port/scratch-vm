@@ -192,6 +192,7 @@ const StackOpcode = {
     PM_LOOKS_BACKDROP_PREVIOUS: 'looks.previousBackdrop',
     PM_LOOKS_CHANGE_STRETCH: 'looks.changeStretch',
     PM_LOOKS_COSTUME_PREVIOUS: 'looks.previousCostume',
+    PM_LOOKS_LAYER_SET: 'looks.setLayer',
     PM_LOOKS_SET_BLENDMODE: 'looks.setBlendMode',
     PM_LOOKS_SET_STRETCH: 'looks.setStretch',
     PM_LOOKS_SET_TINT: 'looks.setTint',
@@ -275,6 +276,7 @@ const InputOpcode = {
 
     PM_LOOKS_GET_EFFECT: 'looks.getEffect',
     PM_LOOKS_GET_TINT: 'looks.getTint',
+    PM_LOOKS_LAYER_GET: 'looks.getLayer',
     PM_LOOKS_STRETCH_X: 'looks.stretchX',
     PM_LOOKS_STRETCH_Y: 'looks.stretchY',
     PM_LOOKS_VISIBLE_GET: 'looks.getVisibility',

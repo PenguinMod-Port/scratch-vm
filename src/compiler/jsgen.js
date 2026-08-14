@@ -310,6 +310,8 @@ class JSGenerator {
         //pm looks
         case InputOpcode.PM_LOOKS_GET_EFFECT:
             return `target.getEffect("${sanitize(node.effect)}")`;
+        case InputOpcode.PM_LOOKS_LAYER_GET:
+            return `target.getLayerOrder()`;
         case InputOpcode.PM_LOOKS_GET_TINT:
             return 'runtime.ext_scratch3_looks._getTintColor(target)';
         case InputOpcode.PM_LOOKS_STRETCH_X:
@@ -1277,6 +1279,11 @@ class JSGenerator {
             break;
         case StackOpcode.PM_LOOKS_COSTUME_PREVIOUS:
             this.source += 'target.setCostume(target.currentCostume - 1);\n';
+            break;
+        case StackOpcode.PM_LOOKS_LAYER_SET:
+            if (!this.target.isStage) {
+                this.source += `target.goForwardLayers(${this.descendInput(node.layer)} - target.getLayerOrder());\n`;
+            }
             break;
         case StackOpcode.PM_LOOKS_SET_BLENDMODE:
             this.source += `runtime.ext_scratch3_looks._setBlendMode("${sanitize(node.mode)}", target);\n`;
