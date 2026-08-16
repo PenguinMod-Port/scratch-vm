@@ -669,6 +669,17 @@ class Scratch3LooksBlocks {
         const index = ["normal", "additive", "multiplicative", "subtractive", "screen", "difference"].indexOf(mode);
         target.setBlendMode(index < 0 ? 0 : index);
     }
+
+    _goTargetLayer (target, option, infront) {
+        let ibTarget;
+        if (option === '_stage_') ibTarget = this.runtime.getTargetForStage();
+        else ibTarget = this.runtime.getSpriteTargetByName(option);
+
+        if (ibTarget) {
+            target.goBehindOther(ibTarget);
+            if (infront) target.goForwardLayers(1);
+        }
+    }
 }
 
 module.exports = Scratch3LooksBlocks;

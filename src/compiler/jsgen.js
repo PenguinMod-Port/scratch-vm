@@ -1285,6 +1285,11 @@ class JSGenerator {
                 this.source += `target.goForwardLayers(${this.descendInput(node.layer)} - target.getLayerOrder());\n`;
             }
             break;
+        case StackOpcode.PM_LOOKS_LAYER_TARGET:
+            if (!this.target.isStage) {
+                this.source += `runtime.ext_scratch3_looks._goTargetLayer(target, ${this.descendInput(node.option)}, ${node.infront});\n`;
+            }
+            break;
         case StackOpcode.PM_LOOKS_SET_BLENDMODE:
             this.source += `runtime.ext_scratch3_looks._setBlendMode("${sanitize(node.mode)}", target);\n`;
             break;

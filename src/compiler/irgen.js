@@ -1472,6 +1472,11 @@ class ScriptTreeGenerator {
                 x: this.descendInputOfBlock(block, 'X').toType(InputType.NUMBER),
                 y: this.descendInputOfBlock(block, 'Y').toType(InputType.NUMBER)
             });
+        case 'looks_goTargetLayer':
+            return new IntermediateStackBlock(StackOpcode.PM_LOOKS_LAYER_TARGET, {
+                option: this.descendInputOfBlock(block, 'VISIBLE_OPTION'),
+                infront: block.fields.FORWARD_BACKWARD.value === "infront"
+            });
         case 'looks_layersSetLayer':
             return new IntermediateStackBlock(StackOpcode.PM_LOOKS_LAYER_SET, {
                 layer: this.descendInputOfBlock(block, 'NUM').toType(InputType.NUMBER)
