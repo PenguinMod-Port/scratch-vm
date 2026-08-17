@@ -4101,7 +4101,7 @@ class Runtime extends EventEmitter {
             const n1 = +a;
             if (Number.isNaN(n1) || (n1 === 0 && isNotActuallyZero(a))) return ('' + a).toLowerCase() === ('' + b).toLowerCase();
             const n2 = +b;
-            if (Number.isNaN(n2) || (n2 === 0 && isNotActuallyZero(b))) return ('' + b).toLowerCase() === ('' + b).toLowerCase();
+            if (Number.isNaN(n2) || (n2 === 0 && isNotActuallyZero(b))) return ('' + a).toLowerCase() === ('' + b).toLowerCase();
             return n1 === n2;
         }
     }
