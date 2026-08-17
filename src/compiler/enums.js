@@ -192,11 +192,13 @@ const StackOpcode = {
     PM_LOOKS_BACKDROP_PREVIOUS: 'looks.previousBackdrop',
     PM_LOOKS_CHANGE_STRETCH: 'looks.changeStretch',
     PM_LOOKS_COSTUME_PREVIOUS: 'looks.previousCostume',
+    PM_LOOKS_HIDE_SPRITE: 'looks.hideSprite',
     PM_LOOKS_LAYER_SET: 'looks.setLayer',
     PM_LOOKS_LAYER_TARGET: 'looks.goTargetLayer',
     PM_LOOKS_SET_BLENDMODE: 'looks.setBlendMode',
     PM_LOOKS_SET_STRETCH: 'looks.setStretch',
     PM_LOOKS_SET_TINT: 'looks.setTint',
+    PM_LOOKS_SHOW_SPRITE: 'looks.showSprite',
     PM_LOOKS_STOP_SPEAKING: 'looks.stopSpeaking',
     PM_LOOKS_VISIBLE_SET: 'looks.setVisibility',
 

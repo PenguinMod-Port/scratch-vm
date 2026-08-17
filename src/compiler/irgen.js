@@ -1472,9 +1472,21 @@ class ScriptTreeGenerator {
                 x: this.descendInputOfBlock(block, 'X').toType(InputType.NUMBER),
                 y: this.descendInputOfBlock(block, 'Y').toType(InputType.NUMBER)
             });
+        case 'looks_changeVisibilityOfSprite':
+            return new IntermediateStackBlock(block.fields.VISIBLE_TYPE.value === "show" ? StackOpcode.PM_LOOKS_SHOW_SPRITE : StackOpcode.PM_LOOKS_HIDE_SPRITE, {
+                option: this.descendInputOfBlock(block, 'VISIBLE_OPTION').toType(InputType.STRING)
+            });
+        case 'looks_changeVisibilityOfSpriteHide':
+            return new IntermediateStackBlock(StackOpcode.PM_LOOKS_HIDE_SPRITE, {
+                option: this.descendInputOfBlock(block, 'VISIBLE_OPTION').toType(InputType.STRING)
+            });
+        case 'looks_changeVisibilityOfSpriteShow':
+            return new IntermediateStackBlock(StackOpcode.PM_LOOKS_SHOW_SPRITE, {
+                option: this.descendInputOfBlock(block, 'VISIBLE_OPTION').toType(InputType.STRING)
+            });
         case 'looks_goTargetLayer':
             return new IntermediateStackBlock(StackOpcode.PM_LOOKS_LAYER_TARGET, {
-                option: this.descendInputOfBlock(block, 'VISIBLE_OPTION'),
+                option: this.descendInputOfBlock(block, 'VISIBLE_OPTION').toType(InputType.STRING),
                 infront: block.fields.FORWARD_BACKWARD.value === "infront"
             });
         case 'looks_layersSetLayer':

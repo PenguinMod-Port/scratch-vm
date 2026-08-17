@@ -680,6 +680,18 @@ class Scratch3LooksBlocks {
             if (infront) target.goForwardLayers(1);
         }
     }
+
+    _setSpriteVisibility(selfTarget, option, visible) {
+        let target;
+        if (option === '_myself_') {
+            target = selfTarget;
+        } else {
+            target = this.runtime.getSpriteTargetByName(option);
+        }
+        if (!target) return;
+        target.setVisible(visible);
+        this._renderBubble(target);
+    }
 }
 
 module.exports = Scratch3LooksBlocks;

@@ -1280,6 +1280,9 @@ class JSGenerator {
         case StackOpcode.PM_LOOKS_COSTUME_PREVIOUS:
             this.source += 'target.setCostume(target.currentCostume - 1);\n';
             break;
+        case StackOpcode.PM_LOOKS_HIDE_SPRITE:
+            this.source += `runtime.ext_scratch3_looks._setSpriteVisibility(target, ${this.descendInput(node.option)}, false);`
+            break;
         case StackOpcode.PM_LOOKS_LAYER_SET:
             if (!this.target.isStage) {
                 this.source += `target.goForwardLayers(${this.descendInput(node.layer)} - target.getLayerOrder());\n`;
@@ -1298,6 +1301,9 @@ class JSGenerator {
             break;
         case StackOpcode.PM_LOOKS_SET_TINT:
             this.source += `runtime.ext_scratch3_looks._setTintColor(${this.descendInput(node.tint)}, target);\n`;
+            break;
+        case StackOpcode.PM_LOOKS_SHOW_SPRITE:
+            this.source += `runtime.ext_scratch3_looks._setSpriteVisibility(target, ${this.descendInput(node.option)}, true);`
             break;
         case StackOpcode.PM_LOOKS_STOP_SPEAKING:
             this.source += `runtime.ext_scratch3_looks._say('', target);\n`;
