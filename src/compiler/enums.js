@@ -283,6 +283,7 @@ const InputOpcode = {
     PM_LOOKS_STRETCH_X: 'looks.stretchX',
     PM_LOOKS_STRETCH_Y: 'looks.stretchY',
     PM_LOOKS_VISIBLE_GET: 'looks.getVisibility',
+    PM_LOOKS_VISIBLE_SPRITE: 'looks.getSpriteVisibility',
 
     VAR_GET: 'var.get',
 

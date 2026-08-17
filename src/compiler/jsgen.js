@@ -320,6 +320,8 @@ class JSGenerator {
             return 'target.stretch[1]';
         case InputOpcode.PM_LOOKS_VISIBLE_GET:
             return `target.visible`;
+        case InputOpcode.PM_LOOKS_VISIBLE_SPRITE:
+            return `runtime.ext_scratch3_looks._getOtherSpriteVisible(target, ${this.descendInput(node.option)})`;
 
         case InputOpcode.MOTION_DIRECTION_GET:
             return 'target.direction';
