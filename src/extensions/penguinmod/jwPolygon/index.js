@@ -27,6 +27,8 @@ function formatNumber(x) {
 }
 
 class PolygonType {
+    customId = "jwPolygon"
+
     /** @type {{x: number, y: number}[]} */
     points = []
 
