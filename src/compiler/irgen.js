@@ -384,6 +384,17 @@ class ScriptTreeGenerator {
             return new IntermediateInput(InputOpcode.PM_LOOKS_GET_EFFECT, InputType.NUMBER, {
                 effect: block.fields.EFFECT.value.toLowerCase()
             });
+        case 'looks_getinputofcostume':
+            return new IntermediateInput(InputOpcode.PM_LOOKS_GET_COSTUME_VALUE, InputType.STRING | InputType.NUMBER, {
+                costume: this.descendInputOfBlock(block, 'COSTUME', true),
+                value: this.descendInputOfBlock(block, 'INPUT').toType(InputType.STRING),
+                old: true
+            });
+        case 'looks_getinputofcostumenew':
+            return new IntermediateInput(InputOpcode.PM_LOOKS_GET_COSTUME_VALUE, InputType.STRING | InputType.NUMBER, {
+                costume: this.descendInputOfBlock(block, 'COSTUME', true),
+                value: this.descendInputOfBlock(block, 'INPUT').toType(InputType.STRING)
+            });
         case 'looks_getOtherSpriteVisible':
             return new IntermediateInput(InputOpcode.PM_LOOKS_VISIBLE_SPRITE, InputType.BOOLEAN, {
                 option: this.descendInputOfBlock(block, 'VISIBLE_OPTION').toType(InputType.STRING)

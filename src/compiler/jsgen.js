@@ -308,12 +308,14 @@ class JSGenerator {
             return '(target.currentCostume + 1)';
 
         //pm looks
+        case InputOpcode.PM_LOOKS_GET_COSTUME_VALUE:
+            return `runtime.ext_scratch3_looks._getCostumeValue(target, ${this.descendInput(node.costume)}, ${this.descendInput(node.value)}${node.old ? `, true` : ''})`;
         case InputOpcode.PM_LOOKS_GET_EFFECT:
             return `target.getEffect("${sanitize(node.effect)}")`;
-        case InputOpcode.PM_LOOKS_LAYER_GET:
-            return `target.getLayerOrder()`;
         case InputOpcode.PM_LOOKS_GET_TINT:
             return 'runtime.ext_scratch3_looks._getTintColor(target)';
+        case InputOpcode.PM_LOOKS_LAYER_GET:
+            return `target.getLayerOrder()`;
         case InputOpcode.PM_LOOKS_STRETCH_X:
             return 'target.stretch[0]';
         case InputOpcode.PM_LOOKS_STRETCH_Y:

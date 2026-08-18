@@ -703,6 +703,77 @@ class Scratch3LooksBlocks {
         if (!target) return false;
         return target.visible;
     }
+
+    _getCostumeValue (target, costumeName, value, old = false) {
+        let costumeIndex = 0;
+        if (typeof costumeName === 'number') {
+            // Numbers should be treated as costume indices, always
+            costumeIndex = (costumeName === 0) ? 0 : costumeName - 1;
+        } else {
+            let noun = target.isStage ? "backdrop" : "costume";
+            switch (Cast.toString(costumeName)) {
+                case "next " + noun:
+                    costumeIndex = target.currentCostume + 1;
+                    if (costumeIndex >= target.sprite.costumes_.length) {
+                        costumeIndex = 0
+                        // loop around to front
+                    }
+                    break;
+                case "previous " + noun:
+                    costumeIndex = target.currentCostume - 1;
+                    if (costumeIndex < 0) {
+                        costumeIndex = target.sprite.costumes_.length - 1;
+                        // Loop around to back
+                    }
+                    break;
+                case "random " + noun:
+                    costumeIndex = MathUtil.inclusiveRandIntWithout(
+                        0,
+                        target.sprite.costumes_.length - 1,
+                        target.currentCostume
+                    )
+                    if (costumeIndex >= target.sprite.costumes_.length) {
+                        costumeIndex = 0;
+                        // This really only accounts for if there's only 1
+                        // costume.
+                    }
+                    break;
+                default:
+                    costumeIndex = target.getCostumeIndexByName(Cast.toString(costumeName));
+            }
+        }
+        if (costumeIndex < 0) return this._costumeValueToDefaultNone(value);
+        if (!target.sprite) return this._costumeValueToDefaultNone(value);
+        if (!target.sprite.costumes_) return this._costumeValueToDefaultNone(value);
+        const costume = target.sprite.costumes_[costumeIndex];
+        console.log(costume);
+        if (!costume) return this._costumeValueToDefaultNone(value);
+        switch (value) {
+            case 'width':
+                return costume.size[0] / (old ? 1 : costume.bitmapResolution);
+            case 'height':
+                return costume.size[1] / (old ? 1 : costume.bitmapResolution);
+            case 'rotation center x':
+                return costume.rotationCenterX / (old ? 1 : costume.bitmapResolution);
+            case 'rotation center y':
+                return costume.rotationCenterY / (old ? 1 : costume.bitmapResolution);
+            case 'drawing mode':
+                return ((costume.dataFormat === "svg") ? "Vector" : "Bitmap");
+            default:
+                return '';
+        }
+    }
+    _costumeValueToDefaultNone (value) {
+        switch (value) {
+            case 'width':
+            case 'height':
+            case 'rotation center x':
+            case 'rotation center y':
+                return 0;
+            default:
+                return '';
+        }
+    }
 }
 
 module.exports = Scratch3LooksBlocks;
