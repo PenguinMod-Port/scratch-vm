@@ -61,11 +61,12 @@ class VectorType {
     get x() { return this.components[0] ?? 0; }
     get y() { return this.components[1] ?? 0; }
     get z() { return this.components[2] ?? 0; }
+    get w() { return this.components[3] ?? 0; }
     get magnitude() { return Math.hypot(...this.components); }
     get angle() { return Math.atan2(this.components[0] ?? 0, this.components[1] ?? 0) * (180 / Math.PI); }
 
     toJSON() {
-        return this.components;
+        return Object.fromEntries(Array.from(this.components).map((v, i) => [(["x", "y", "z", "w"])[i] ?? `d${i + 1}`, v]));
     }
 
     static fromMagnitude(magnitude, angle) {
@@ -129,22 +130,6 @@ class Extension {
                     ...jwVector.Block
                 },
                 {
-                    opcode: 'newVectorFromMagnitude',
-                    text: 'magnitude: [X] angle: [Y]',
-                    arguments: {
-                        X: {
-                            type: ArgumentType.NUMBER,
-                            defaultValue: 0
-                        },
-                        Y: {
-                            type: ArgumentType.ANGLE,
-                            defaultValue: 90
-                        }
-                    },
-                    ...jwVector.Block
-                },
-                "---",
-                {
                     opcode: 'newVector3',
                     text: 'x: [X] y: [Y] z: [Z]',
                     arguments: {
@@ -156,6 +141,22 @@ class Extension {
                         },
                         Z: {
                             type: ArgumentType.NUMBER
+                        }
+                    },
+                    ...jwVector.Block
+                },
+                "---",
+                {
+                    opcode: 'newVectorFromMagnitude',
+                    text: 'magnitude: [X] angle: [Y]',
+                    arguments: {
+                        X: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 0
+                        },
+                        Y: {
+                            type: ArgumentType.ANGLE,
+                            defaultValue: 90
                         }
                     },
                     ...jwVector.Block
