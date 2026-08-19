@@ -1,7 +1,9 @@
-const BlockType = require('../../../extension-support/block-type');
-const BlockShape = require('../../../extension-support/block-shape');
 const ArgumentType = require('../../../extension-support/argument-type');
+const BlockShape = require('../../../extension-support/block-shape');
+const BlockType = require('../../../extension-support/block-type');
+const MenuType = require('../../../extension-support/menu-type');
 const TargetType = require('../../../extension-support/target-type');
+
 const Cast = require('../../../util/cast');
 const MathUtil = require('../../../util/math-util');
 
@@ -11,118 +13,99 @@ const MathUtil = require('../../../util/math-util');
  */
 function formatNumber(x) {
     if (x >= 1e6) {
-        return x.toExponential(4)
+        return x.toExponential(4);
     } else {
-        x = Math.floor(x * 1000) / 1000
-        return x.toFixed(Math.min(3, (String(x).split('.')[1] || '').length))
+        x = Math.floor(x * 1000) / 1000;
+        return x.toFixed(Math.min(3, (String(x).split('.')[1] || '').length));
     }
 }
 
 function span(text) {
-    let el = document.createElement('span')
-    el.innerHTML = text
-    el.style.display = 'hidden'
-    el.style.whiteSpace = 'nowrap'
-    el.style.width = '100%'
-    el.style.textAlign = 'center'
-    return el
+    let el = document.createElement('span');
+    el.innerHTML = text;
+    el.style.display = 'hidden';
+    el.style.whiteSpace = 'nowrap';
+    el.style.width = '100%';
+    el.style.textAlign = 'center';
+    return el;
 }
 
 class VectorType {
     customId = "jwVector"
 
-    constructor(x = 0, y = 0) {
-        this.x = isNaN(x) ? 0 : x
-        this.y = isNaN(y) ? 0 : y
+    /**
+     * @param  {...number} components 
+     */
+    constructor(...components) {
+        this.components = new Float64Array(components);
     }
 
     static toVector(x) {
-        if (x instanceof VectorType) return x
-        if (x instanceof Array && x.length == 2) return new VectorType(x[0], x[1])
-        if (String(x).split(',')) return new VectorType(Cast.toNumber(String(x).split(',')[0]), Cast.toNumber(String(x).split(',')[1]))
-        return new VectorType(0, 0)
-    }
-
-    jwArrayHandler() {
-        return 'Vector'
+        if (x instanceof VectorType) return x;
+        if (x !== null && x.toJSON) {
+            let json = x.toJSON();
+            if (!(json instanceof Array)) json = Object.values();
+            return new VectorType(...json.map(v => Cast.toNumber(v)));
+        }
+        const strX = Cast.toString(x);
+        if (strX.includes(",")) {
+            return new VectorType(...strX.split(",").map(v => Cast.toNumber(v)));
+        }
+        return new VectorType();
     }
 
     toString() {
-        return `${this.x},${this.y}`
-    }
-    toMonitorContent = () => span(this.toString())
-
-    toReporterContent() {
-        let root = document.createElement('div')
-        root.style.display = 'flex'
-        root.style.width = "200px"
-        root.style.overflow = "hidden"
-        let details = document.createElement('div')
-        details.style.display = 'flex'
-        details.style.flexDirection = 'column'
-        details.style.justifyContent = 'center'
-        details.style.width = "100px"
-        details.appendChild(span(`<b>X:</b> ${formatNumber(this.x)}`))
-        details.appendChild(span(`<b>Y:</b> ${formatNumber(this.y)}`))
-        root.appendChild(details)
-        let angle = document.createElement('div')
-        angle.style.width = "100px"
-        let circle = document.createElement('div')
-        circle.style.width = "84px"
-        circle.style.height = "84px"
-        circle.style.margin = "8px"
-        circle.style.border = "4px solid var(--text-primary)"
-        circle.style.borderRadius = "100%"
-        circle.style.boxSizing = "border-box"
-        circle.style.transform = `rotate(${this.angle}deg)`
-        let line = document.createElement('div')
-        line.style.width = "8px"
-        line.style.height = "50%"
-        line.style.background = "var(--text-primary)"
-        line.style.position = "absolute"
-        line.style.left = "calc(50% - 4px)"
-        circle.appendChild(line)
-        angle.appendChild(circle)
-        root.appendChild(angle)
-        return root
+        return this.components.join(",");
     }
 
-    /** @returns {number} */
-    get magnitude() { return Math.hypot(this.x, this.y) }
-
-    /** @returns {number} */
-    get angle() {return Math.atan2(this.x, this.y) * (180 / Math.PI)}
+    get x() { return this.components[0] ?? 0; }
+    get y() { return this.components[1] ?? 0; }
+    get z() { return this.components[2] ?? 0; }
+    get magnitude() { return Math.hypot(...this.components); }
+    get angle() { return Math.atan2(this.components[0] ?? 0, this.components[1] ?? 0) * (180 / Math.PI); }
 
     toJSON() {
-        return {
-            x: this.x,
-            y: this.y
-        }
+        return this.components;
+    }
+
+    static fromMagnitude(magnitude, angle) {
+        angle = angle / 180 * -Math.PI;
+
+        return new VectorType(
+            magnitude * -Math.sin(angle),
+            magnitude * Math.cos(angle)
+        );
+    }
+
+    getComponent(component) {
+        component -= 1;
+        return this.components[component] ?? 0;
     }
 }
 
-const Vector = {
+const jwVector = {
     Type: VectorType,
     Block: {
         blockType: BlockType.REPORTER,
         blockShape: BlockShape.LEAF,
-        forceOutputType: "Vector",
+        forceOutputType: "jwVector",
         disableMonitor: true
     },
     Argument: {
         shape: BlockShape.LEAF,
-        check: ["Vector"]
+        check: ["jwVector"]
     }
-}
+};
 
 class Extension {
     constructor() {
-        vm.jwVector = Vector
+        vm.jwVector = jwVector;
         vm.runtime.registerSerializer(
             "jwVector", 
-            v => [v.x, v.y], 
-            v => new Vector.Type(v[0], v[1])
+            v => v.components, 
+            v => new jwVector.Type(v.components)
         );
+        vm.extensionManager.extendCompiler("jwVector", this.extendCompiler.bind(this));
     }
 
     getInfo() {
@@ -134,33 +117,48 @@ class Extension {
             blocks: [
                 {
                     opcode: 'newVector',
-                    text: 'new vector x: [X] y: [Y]',
+                    text: 'x: [X] y: [Y]',
                     arguments: {
                         X: {
-                            type: ArgumentType.NUMBER,
-                            defaultValue: 1
+                            type: ArgumentType.NUMBER
                         },
                         Y: {
-                            type: ArgumentType.NUMBER,
-                            defaultValue: 1
+                            type: ArgumentType.NUMBER
                         }
                     },
-                    ...Vector.Block
+                    ...jwVector.Block
                 },
                 {
                     opcode: 'newVectorFromMagnitude',
-                    text: 'new vector magnitude: [X] angle: [Y]',
+                    text: 'magnitude: [X] angle: [Y]',
                     arguments: {
                         X: {
                             type: ArgumentType.NUMBER,
-                            defaultValue: 1.415
+                            defaultValue: 0
                         },
                         Y: {
                             type: ArgumentType.ANGLE,
-                            defaultValue: 45
+                            defaultValue: 90
                         }
                     },
-                    ...Vector.Block
+                    ...jwVector.Block
+                },
+                "---",
+                {
+                    opcode: 'newVector3',
+                    text: 'x: [X] y: [Y] z: [Z]',
+                    arguments: {
+                        X: {
+                            type: ArgumentType.NUMBER
+                        },
+                        Y: {
+                            type: ArgumentType.NUMBER
+                        },
+                        Z: {
+                            type: ArgumentType.NUMBER
+                        }
+                    },
+                    ...jwVector.Block
                 },
                 "---",
                 {
@@ -168,369 +166,146 @@ class Extension {
                     text: '[VECTOR] x',
                     blockType: BlockType.REPORTER,
                     arguments: {
-                        VECTOR: Vector.Argument
-                    }
+                        VECTOR: jwVector.Argument
+                    },
+                    hideFromPalette: true
                 },
                 {
                     opcode: 'vectorY',
                     text: '[VECTOR] y',
                     blockType: BlockType.REPORTER,
                     arguments: {
-                        VECTOR: Vector.Argument
-                    }
-                },
-                "---",
-                {
-                    opcode: 'add',
-                    text: '[X] + [Y]',
-                    arguments: {
-                        X: Vector.Argument,
-                        Y: Vector.Argument
+                        VECTOR: jwVector.Argument
                     },
-                    ...Vector.Block
+                    hideFromPalette: true
                 },
                 {
-                    opcode: 'subtract',
-                    text: '[X] - [Y]',
-                    arguments: {
-                        X: Vector.Argument,
-                        Y: Vector.Argument
-                    },
-                    ...Vector.Block
-                },
-                {
-                    opcode: 'multiplyA',
-                    text: '[X] * [Y]',
-                    arguments: {
-                        X: Vector.Argument,
-                        Y: {
-                            type: ArgumentType.NUMBER,
-                            defaultValue: 1
-                        }
-                    },
-                    ...Vector.Block
-                },
-                {
-                    opcode: 'multiplyB',
-                    text: '[X] * [Y]',
-                    arguments: {
-                        X: Vector.Argument,
-                        Y: Vector.Argument
-                    },
-                    ...Vector.Block
-                },
-                {
-                    opcode: 'divideA',
-                    text: '[X] / [Y]',
-                    arguments: {
-                        X: Vector.Argument,
-                        Y: {
-                            type: ArgumentType.NUMBER,
-                            defaultValue: 1
-                        }
-                    },
-                    ...Vector.Block
-                },
-                {
-                    opcode: 'divideB',
-                    text: '[X] / [Y]',
-                    arguments: {
-                        X: Vector.Argument,
-                        Y: Vector.Argument
-                    },
-                    ...Vector.Block
-                },
-                {
-                    opcode: 'dot',
-                    text: '[X] ⋅ [Y]',
+                    opcode: 'getComponentMenu',
+                    text: '[VECTOR] [COMPONENT]',
                     blockType: BlockType.REPORTER,
                     arguments: {
-                        X: Vector.Argument,
-                        Y: Vector.Argument
-                    }
-                },
-                "---",
-                {
-                    opcode: 'magnitude',
-                    text: 'magnitude of [VECTOR]',
-                    blockType: BlockType.REPORTER,
-                    arguments: {
-                        VECTOR: Vector.Argument
-                    }
-                },
-                {
-                    opcode: 'angle',
-                    text: 'angle of [VECTOR]',
-                    blockType: BlockType.REPORTER,
-                    arguments: {
-                        VECTOR: Vector.Argument
-                    }
-                },
-                {
-                    opcode: 'normalize',
-                    text: 'normalize [VECTOR]',
-                    arguments: {
-                        VECTOR: Vector.Argument
-                    },
-                    ...Vector.Block
-                },
-                {
-                    opcode: 'absolute',
-                    text: 'absolute [VECTOR]',
-                    arguments: {
-                        VECTOR: Vector.Argument
-                    },
-                    ...Vector.Block
-                },
-                {
-                    opcode: 'rotate',
-                    text: 'rotate [VECTOR] by [ANGLE]',
-                    arguments: {
-                        VECTOR: Vector.Argument,
-                        ANGLE: {
-                            type: ArgumentType.ANGLE,
-                            defaultValue: 90
-                        }
-                    },
-                    ...Vector.Block
-                },
-                {
-                    opcode: 'round',
-                    text: '[ROUNDING] of [VECTOR]',
-                    arguments: {
-                        ROUNDING: {
-                            menu: 'roundingFunctions',
+                        COMPONENT: {
+                            menu: 'component'
                         },
-                        VECTOR: Vector.Argument
-                    },
-                    ...Vector.Block
+                        VECTOR: jwVector.Argument
+                    }
                 },
-                "---",
                 {
-                    opcode: 'stepsForward',
-                    text: '[STEPS] steps forward',
+                    opcode: 'getComponent',
+                    text: 'component [COMPONENT] of [VECTOR]',
+                    blockType: BlockType.REPORTER,
                     arguments: {
-                        STEPS: {
+                        COMPONENT: {
                             type: ArgumentType.NUMBER,
-                            defaultValue: 10
-                        }
-                    },
-                    extensions: ["colours_motion"],
-                    filter: [TargetType.SPRITE],
-                    ...Vector.Block
+                            defaultValue: 1
+                        },
+                        VECTOR: jwVector.Argument
+                    }
                 },
                 {
-                    opcode: 'getPos',
-                    text: 'position',
-                    extensions: ["colours_motion"],
-                    filter: [TargetType.SPRITE],
-                    ...Vector.Block
-                },
-                {
-                    opcode: 'setPos',
-                    text: 'set position to [VECTOR]',
+                    opcode: 'getDimension',
+                    text: 'dimension of [VECTOR]',
+                    blockType: BlockType.REPORTER,
                     arguments: {
-                        VECTOR: Vector.Argument
-                    },
-                    extensions: ["colours_motion"],
-                    filter: [TargetType.SPRITE]
-                },
-                "---",
-                {
-                    opcode: 'getStretch',
-                    text: 'stretch',
-                    extensions: ["colours_looks"],
-                    filter: [TargetType.SPRITE],
-                    ...Vector.Block
-                },
-                {
-                    opcode: 'setStretch',
-                    text: 'set stretch to [VECTOR]',
-                    arguments: {
-                        VECTOR: Vector.Argument
-                    },
-                    extensions: ["colours_looks"],
-                    filter: [TargetType.SPRITE]
-                },
-                "---",
-                {
-                    opcode: 'getMouse',
-                    text: 'mouse position',
-                    extensions: ["colours_sensing"],
-                    ...Vector.Block
-                },
+                        VECTOR: jwVector.Argument
+                    }
+                }
             ],
             menus: {
-                roundingFunctions: {
-                    acceptReporters: false,
+                component: {
+                    type: MenuType.STRICT,
                     items: [
-                        {
-                            text: 'round',
-                            value: 'round'
-                        },
-                        {
-                            text: 'ceil', // might as well go full in on the inconsistencies since we are already doing "round of"
-                            value: 'ceil'
-                        },
-                        {
-                            text: 'floor',
-                            value: 'floor'
-                        }
+                        { text: 'x', value: 'x' },
+                        { text: 'y', value: 'y' },
+                        { text: 'z', value: 'z' }
                     ]
-                },
+                }
             }
         };
     }
 
-    newVector(args) {
-        const X = Cast.toNumber(args.X)
-        const Y = Cast.toNumber(args.Y)
+    extendCompiler({IntermediateStackBlock, IntermediateInput, InputType, InputOpcode}) {
+        const opcodes = {
+            FROM_COMPONENTS: 'jwVector.fromComponents',
+            FROM_MAGNITUDE: 'jwVector.fromMagnitude',
 
-        return new VectorType(X, Y)
-    }
+            GET_COMPONENT: 'jwVector.getComponent',
+            GET_DIMENSION: 'jwVector.getDimension'
+        };
 
-    newVectorFromMagnitude(args) {
-        return this.rotate({VECTOR: new VectorType(0, Cast.toNumber(args.X)), ANGLE: args.Y})
-    }
+        return {
+            ir: {
+                reporter(block) {
+                    switch (block.opcode) {
+                        case 'jwVector_newVector':
+                            return new IntermediateInput(opcodes.FROM_COMPONENTS, InputType.CUSTOM_TYPE, {
+                                components: [
+                                    this.descendInputOfBlock(block, 'X').toType(InputType.NUMBER),
+                                    this.descendInputOfBlock(block, 'Y').toType(InputType.NUMBER)
+                                ]
+                            });
+                        case 'jwVector_newVectorFromMagnitude':
+                            return new IntermediateInput(opcodes.FROM_MAGNITUDE, InputType.CUSTOM_TYPE, {
+                                magnitude: this.descendInputOfBlock(block, 'X').toType(InputType.NUMBER),
+                                angle: this.descendInputOfBlock(block, 'Y').toType(InputType.NUMBER)
+                            });
 
-    vectorX(args) {
-        return VectorType.toVector(args.VECTOR).x
-    }
+                        case 'jwVector_newVector3':
+                            return new IntermediateInput(opcodes.FROM_COMPONENTS, InputType.CUSTOM_TYPE, {
+                                components: [
+                                    this.descendInputOfBlock(block, 'X').toType(InputType.NUMBER),
+                                    this.descendInputOfBlock(block, 'Y').toType(InputType.NUMBER),
+                                    this.descendInputOfBlock(block, 'Z').toType(InputType.NUMBER)
+                                ]
+                            });
+                        
+                        case 'jwVector_vectorX':
+                            return new IntermediateInput(opcodes.GET_COMPONENT, InputType.NUMBER, {
+                                component: this.createConstantInput(1),
+                                vector: this.descendInputOfBlock(block, 'VECTOR')
+                            });
+                        case 'jwVector_vectorY':
+                            return new IntermediateInput(opcodes.GET_COMPONENT, InputType.NUMBER, {
+                                component: this.createConstantInput(2),
+                                vector: this.descendInputOfBlock(block, 'VECTOR')
+                            });
+                        case 'jwVector_getComponentMenu':
+                            let component = (["x", "y", "z"]).indexOf(block.fields.COMPONENT.value) + 1;
+                            if (component === 0) return this.createConstantInput(0);
+                            return new IntermediateInput(opcodes.GET_COMPONENT, InputType.NUMBER, {
+                                component: this.createConstantInput(component),
+                                vector: this.descendInputOfBlock(block, 'VECTOR')
+                            });
+                        case 'jwVector_getComponent':
+                            return new IntermediateInput(opcodes.GET_COMPONENT, InputType.NUMBER, {
+                                component: this.descendInputOfBlock(block, 'COMPONENT').toType(InputType.NUMBER),
+                                vector: this.descendInputOfBlock(block, 'VECTOR')
+                            });
+                        case 'jwVector_getDimension':
+                            return new IntermediateInput(opcodes.GET_DIMENSION, InputType.NUMBER_WHOLE, {
+                                vector: this.descendInputOfBlock(block, 'VECTOR')
+                            });
+                    }
+                }
+            },
+            js: {
+                reporter(block) {
+                    const node = block.inputs;
 
-    vectorY(args) {
-        return VectorType.toVector(args.VECTOR).y
-    }
+                    switch (block.opcode) {
+                        case opcodes.FROM_COMPONENTS:
+                            return `(new vm.jwVector.Type(${node.components.map(v => this.descendInput(v)).join(', ')}))`;
+                        case opcodes.FROM_MAGNITUDE:
+                            return `vm.jwVector.Type.fromMagnitude(${this.descendInput(node.magnitude)}, ${this.descendInput(node.angle)})`;
 
-    add(args) {
-        const X = VectorType.toVector(args.X)
-        const Y = VectorType.toVector(args.Y)
-
-        return new VectorType(X.x + Y.x, X.y + Y.y)
-    }
-
-    subtract(args) {
-        const X = VectorType.toVector(args.X)
-        const Y = VectorType.toVector(args.Y)
-
-        return new VectorType(X.x - Y.x, X.y - Y.y)
-    }
-
-    multiplyA(args) {
-        const X = VectorType.toVector(args.X)
-        const Y = Cast.toNumber(args.Y)
-
-        return new VectorType(X.x * Y, X.y * Y)
-    }
-
-    multiplyB(args) {
-        const X = VectorType.toVector(args.X)
-        const Y = VectorType.toVector(args.Y)
-
-        return new VectorType(X.x * Y.x, X.y * Y.y)
-    }
-
-    divideA(args) {
-        const X = VectorType.toVector(args.X)
-        const Y = Cast.toNumber(args.Y)
-
-        return new VectorType(X.x / Y, X.y / Y)
-    }
-
-    divideB(args) {
-        const X = VectorType.toVector(args.X)
-        const Y = VectorType.toVector(args.Y)
-
-        return new VectorType(X.x / Y.x, X.y / Y.y)
-    }
-
-    dot(args) {
-        const X = VectorType.toVector(args.X);
-        const Y = VectorType.toVector(args.Y);
-
-        return X.x * Y.x + X.y * Y.y;
-    }
-
-    magnitude(args) {
-        return VectorType.toVector(args.VECTOR).magnitude
-    }
-
-    angle(args) {
-        return VectorType.toVector(args.VECTOR).angle
-    }
-
-    normalize(args) {
-        const v = VectorType.toVector(args.VECTOR)
-
-        return new VectorType(v.x / v.magnitude, v.y / v.magnitude)
-    }
-
-    absolute(args) {
-        const v = VectorType.toVector(args.VECTOR)
-
-        return new VectorType(Math.abs(v.x), Math.abs(v.y))
-    }
-
-    rotate(args) {
-        const v = VectorType.toVector(args.VECTOR)
-        const ANGLE = Cast.toNumber(args.ANGLE) / 180 * -Math.PI
-        const cos = Math.cos(ANGLE)
-        const sin = Math.sin(ANGLE)
-
-        return new VectorType(
-            v.x * cos - v.y * sin,
-            v.x * sin + v.y * cos
-        )
-    }
-
-    round(args) {
-        const v = VectorType.toVector(args.VECTOR)
-        const r = Cast.toString(args.ROUNDING)
-
-        switch (r) {
-            case 'floor':
-                return new VectorType(Math.floor(v.x), Math.floor(v.y))
-            case 'ceil':
-                return new VectorType(Math.ceil(v.x), Math.ceil(v.y))
-        }
-
-        return new VectorType(Math.round(v.x), Math.round(v.y))
-    }
-
-    stepsForward({STEPS}, util) {
-        STEPS = Cast.toNumber(STEPS);
-
-        const radians = MathUtil.degToRad(90 - util.target.direction);
-        return new Vector.Type(
-            STEPS * Math.cos(radians),
-            STEPS * Math.sin(radians)
-        )
-    }
-    
-    getPos({}, util) {
-        return new Vector.Type(
-            util.target.x,
-            util.target.y
-        )
-    }
-
-    setPos({VECTOR}, util) {
-        VECTOR = Vector.Type.toVector(VECTOR)
-
-        util.target.setXY(VECTOR.x, VECTOR.y)
-    }
-
-    getStretch({}, util) {
-        return new Vector.Type(...util.target.stretch)
-    }
-
-    setStretch({VECTOR}, util) {
-        VECTOR = Vector.Type.toVector(VECTOR)
-
-        util.target.setStretch(VECTOR.x, VECTOR.y)
-    }
-
-    getMouse({}, util) {
-        return new Vector.Type(vm.runtime.ioDevices.mouse.getScratchX(), vm.runtime.ioDevices.mouse.getScratchY())
+                        case opcodes.GET_COMPONENT:
+                            return `vm.jwVector.Type.toVector(${this.descendInput(node.vector)}).getComponent(${this.descendInput(node.component)})`;
+                        case opcodes.GET_DIMENSION:
+                            return `vm.jwVector.Type.toVector(${this.descendInput(node.vector)}).components.length`;
+                    }
+                }
+            }
+        };
     }
 }
 
