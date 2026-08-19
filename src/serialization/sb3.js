@@ -496,6 +496,7 @@ const serializeVariableValue = function(value, runtime) {
     if (value === null) return null;
 
     if (value.customId) {
+        if (!runtime.serializers[value.customId]) return null;
         const {serialize} = runtime.serializers[value.customId];
         return {
             customType: true,
