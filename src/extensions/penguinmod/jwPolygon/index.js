@@ -235,6 +235,11 @@ let jwPolygon = {
 class Extension {
     constructor() {
         vm.jwPolygon = jwPolygon;
+        vm.runtime.registerSerializer(
+            "jwPolygon", 
+            v => v.points, 
+            v => new jwPolygon.Type(v)
+        );
 
         vm.extensionManager.addExtensionDependency("jwPolygon", "jwArray", () => jwArray = vm.jwArray);
         vm.extensionManager.addExtensionDependency("jwPolygon", "jwVector", () => jwVector = vm.jwVector);
