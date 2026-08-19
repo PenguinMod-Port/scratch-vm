@@ -292,14 +292,14 @@ class Extension {
                             let source = '';
                             source += `(new vm.jwLambda.Type(function*(_jwLambdaArgument, thread, target, runtime, stage, _jwLambdaThis) {\n`;
                             source += this.descendStackInline(node.substack);
-                            source += `}))`;
+                            source += `}, thread))`;
                             return source;
                         }
                         case opcodes.NEW_R: {
                             let source = '';
                             source += `(new vm.jwLambda.Type(function*(_jwLambdaArgument, thread, target, runtime, stage, _jwLambdaThis) {\n`;
                             source += `return ${this.descendInput(node.value)};\n`;
-                            source += `}))`;
+                            source += `}, thread))`;
                             return source;
                         }
                         case opcodes.THIS:
