@@ -111,8 +111,8 @@ class PolygonType {
         return {
             left: Math.min(...this.points.map(v => v.x)),
             right: Math.max(...this.points.map(v => v.x)),
-            top: Math.min(...this.points.map(v => v.y)),
-            bottom: Math.max(...this.points.map(v => v.y))
+            top: Math.max(...this.points.map(v => v.y)),
+            bottom: Math.min(...this.points.map(v => v.y))
         }
     }
 
