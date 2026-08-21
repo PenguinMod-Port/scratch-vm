@@ -630,6 +630,7 @@ class Extension {
                 {
                     opcode: 'blank',
                     text: 'blank object',
+                    hideFromPalette: true,
                     ...dogeiscutObject.Block,
                 },
                 {
@@ -638,6 +639,8 @@ class Extension {
                     arguments: {
                         EXPANDABLE: {
                             type: ArgumentType.EXPANDABLE,
+                            minValue: 0,
+                            defaultValue: 0,
                             text: '[KEY]: [VALUE]',
                             arguments: {
                                 KEY: {

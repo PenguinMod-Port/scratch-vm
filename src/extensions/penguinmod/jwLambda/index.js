@@ -1,20 +1,9 @@
-const BlockType = require('../../../extension-support/block-type')
-const BlockShape = require('../../../extension-support/block-shape')
-const ArgumentType = require('../../../extension-support/argument-type')
-const Cast = require('../../../util/cast')
+const ArgumentType = require('../../../extension-support/argument-type');
+const BlockShape = require('../../../extension-support/block-shape');
+const BlockType = require('../../../extension-support/block-type');
+const ImageURI = require('../../../extension-support/image-uri');
 
-/**
- * @param {number} x
- * @returns {string}
- */
-function formatNumber(x) {
-    if (x >= 1e6) {
-        return x.toExponential(4)
-    } else {
-        x = Math.floor(x * 1000) / 1000
-        return x.toFixed(Math.min(3, (String(x).split('.')[1] || '').length))
-    }
-}
+const Cast = require('../../../util/cast');
 
 function span(text) {
     let el = document.createElement('span')
@@ -152,10 +141,15 @@ class Extension {
                 },
                 {
                     opcode: 'newLambdaR',
-                    text: 'new lambda [ARG] [VALUE]',
+                    text: 'new lambda [ARG] [ARROW] [VALUE]',
                     arguments: {
                         ARG: {
                             fillIn: 'arg'
+                        },
+                        ARROW: {
+                            type: ArgumentType.IMAGE,
+                            dataURI: ImageURI.ARROW,
+                            flipRTL: true
                         },
                         VALUE: {
                             type: ArgumentType.STRING

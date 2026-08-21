@@ -489,6 +489,25 @@ class Extension {
                 {
                     opcode: 'blank',
                     text: 'blank array',
+                    hideFromPalette: true,
+                    ...jwArray.Block
+                },
+                {
+                    opcode: 'expandable',
+                    text: 'new array [EXPANDABLE]',
+                    arguments: {
+                        EXPANDABLE: {
+                            type: ArgumentType.EXPANDABLE,
+                            minValue: 0,
+                            defaultValue: 0,
+                            text: '[VALUE]',
+                            arguments: {
+                                VALUE: {
+                                    type: ArgumentType.STRING
+                                }
+                            }
+                        }
+                    },
                     ...jwArray.Block
                 },
                 {
@@ -503,22 +522,6 @@ class Extension {
                     ...jwArray.Block
                 },
                 "---",
-                {
-                    opcode: 'expandable',
-                    text: 'new array [EXPANDABLE]',
-                    arguments: {
-                        EXPANDABLE: {
-                            type: ArgumentType.EXPANDABLE,
-                            text: '[VALUE]',
-                            arguments: {
-                                VALUE: {
-                                    type: ArgumentType.STRING
-                                }
-                            }
-                        }
-                    },
-                    ...jwArray.Block
-                },
                 {
                     opcode: 'range',
                     text: 'range from [START] to [END]',
@@ -957,10 +960,9 @@ class Extension {
             PARSE: 'jwArray.parse',
             VALIDATE: 'jwArray.validate',
 
-            BLANK: 'jwArray.blank',
+            EXPANDABLE: 'jwArray.expandable',
             BLANK_LENGTH: 'jwArray.blankLength',
 
-            EXPANDABLE: 'jwArray.expandable',
             RANGE: 'jwArray.range',
             SPLIT: 'jwArray.split',
             SPLIT_CHARS: 'jwArray.splitChars',
@@ -1015,7 +1017,9 @@ class Extension {
                             });
 
                         case 'jwArray_blank':
-                            return new IntermediateInput(opcodes.BLANK, InputType.CUSTOM_TYPE);
+                            return new IntermediateInput(opcodes.EXPANDABLE, InputType.CUSTOM_TYPE, {
+                                values: []
+                            });
                         case 'jwArray_blankLength':
                             return new IntermediateInput(opcodes.BLANK_LENGTH, InputType.CUSTOM_TYPE, {
                                 len: this.descendInputOfBlock(block, 'LENGTH').toType(InputType.NUMBER)
@@ -1196,13 +1200,11 @@ class Extension {
                         case opcodes.VALIDATE:
                             return `vm.jwArray.Type.validArray(${this.descendInput(node.input)})`;
 
-                        case opcodes.BLANK:
-                            return `(new vm.jwArray.Type([], true))`;
+                        case opcodes.EXPANDABLE:
+                            return `(new vm.jwArray.Type([${node.values.map(v => this.descendInput(v)).join(', ')}]${node.values.length == 0 ? ', true' : ''}))`
                         case opcodes.BLANK_LENGTH:
                             return `(new vm.jwArray.Type(Array(vm.jwArray.Type.parseLength(${this.descendInput(node.len)})).fill(null), true))`;
 
-                        case opcodes.EXPANDABLE:
-                            return `(new vm.jwArray.Type([${node.values.map(v => this.descendInput(v)).join(', ')}]))`
                         case opcodes.RANGE:
                             return `vm.jwArray.Type.range(${this.descendInput(node.start)}, ${this.descendInput(node.end)})`;
                         case opcodes.SPLIT:
