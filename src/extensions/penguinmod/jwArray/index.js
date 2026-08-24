@@ -1225,7 +1225,7 @@ class Extension {
                             return `(new vm.jwArray.Type(typeof _jwArrayBuilder !== "undefined" ? _jwArrayBuilder : [], true))`;
                         
                         case opcodes.GET:
-                            return `(vm.jwArray.Type.toArray(${this.descendInput(node.array)}).array[${this.descendInput(node.index)}-1] ?? null)`;
+                            return `(vm.jwArray.Type.toArray(${this.descendInput(node.array)}, true).array[${this.descendInput(node.index)}-1] ?? null)`;
                         case opcodes.ITEMS:
                             return `(new vm.jwArray.Type(vm.jwArray.Type.toArray(${this.descendInput(node.array)}, true).array.slice(Math.max(${this.descendInput(node.from)} - 1, 0), Math.max(${this.descendInput(node.to)}, 0)), true))`;
                         case opcodes.INDEX:
