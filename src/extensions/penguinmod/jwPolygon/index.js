@@ -503,7 +503,7 @@ class Extension {
         let bounds = POLYGON.bounds();
         switch (DIMENSION) {
             case "width": return bounds.right - bounds.left;
-            case "height": return bounds.bottom - bounds.top;
+            case "height": return bounds.top - bounds.bottom;
             default: return 0;
         }
     }
