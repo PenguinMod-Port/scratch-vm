@@ -285,7 +285,7 @@ class Extension {
                         case opcodes.NEW: {
                             let source = '';
                             source += `(new vm.jwLambda.Type(function*(_jwLambdaArgument, thread, target, runtime, stage, _jwLambdaThis) {\n`;
-                            source += this.descendStackInline(node.substack);
+                            source += this.descendStackInline(node.substack, {allowReturns: true});
                             source += `}, thread))`;
                             return source;
                         }
