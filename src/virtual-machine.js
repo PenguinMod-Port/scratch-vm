@@ -234,6 +234,9 @@ class VirtualMachine extends EventEmitter {
             Variable,
             pmSymbol,
 
+            // pm exported some of these before
+            Thread: require('./engine/thread.js'),
+
             these_broke_before_and_will_break_again: () => {
                 console.warn('You are using unsupported APIs. WHEN your code breaks, do not expect help.');
                 return {
