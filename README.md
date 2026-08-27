@@ -10,6 +10,23 @@ See https://github.com/TurboWarp/scratch-gui/wiki/Getting-Started to setup the c
 
 If you just want to play with the VM then it's the same process as upstream scratch-vm.
 
+## Github Codespace Setup
+
+To create a local version of this repository and have a local PenguinMod environment from a blank codespace you need run the following command in the terminal of the codepsace's:
+```bash
+corepack enable && \
+corepack prepare pnpm@10 --activate && \
+git clone https://github.com/PenguinMod-Port/scratch-vm.git && \
+git clone https://github.com/PenguinMod-Port/scratch-gui.git && \
+cd scratch-vm && \
+npm install && \
+cd ../scratch-gui && \
+rm -rf node_modules pnpm-lock.yaml && \
+pnpm install --shamefully-hoist && \
+pnpm link ../scratch-vm && \
+pnpm start
+```
+
 ## Extension authors
 
 If you only use the standard reporter, boolean, and command block types, everything should just work without any changes.
