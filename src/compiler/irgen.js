@@ -384,6 +384,25 @@ class ScriptTreeGenerator {
             return new IntermediateInput(InputOpcode.PM_LOOKS_GET_EFFECT, InputType.NUMBER, {
                 effect: block.fields.EFFECT.value.toLowerCase()
             });
+        case 'looks_getinputofcostume':
+            return new IntermediateInput(InputOpcode.PM_LOOKS_GET_COSTUME_VALUE, InputType.STRING | InputType.NUMBER, {
+                costume: this.descendInputOfBlock(block, 'COSTUME', true),
+                value: this.descendInputOfBlock(block, 'INPUT').toType(InputType.STRING),
+                old: true
+            });
+        case 'looks_getinputofcostumenew':
+            return new IntermediateInput(InputOpcode.PM_LOOKS_GET_COSTUME_VALUE, InputType.STRING | InputType.NUMBER, {
+                costume: this.descendInputOfBlock(block, 'COSTUME', true),
+                value: this.descendInputOfBlock(block, 'INPUT').toType(InputType.STRING)
+            });
+        case 'looks_getOtherSpriteVisible':
+            return new IntermediateInput(InputOpcode.PM_LOOKS_VISIBLE_SPRITE, InputType.BOOLEAN, {
+                option: this.descendInputOfBlock(block, 'VISIBLE_OPTION').toType(InputType.STRING)
+            });
+        case 'looks_getSpriteVisible':
+            return new IntermediateInput(InputOpcode.PM_LOOKS_VISIBLE_GET, InputType.BOOLEAN);
+        case 'looks_layersGetLayer':
+            return new IntermediateInput(InputOpcode.PM_LOOKS_LAYER_GET, InputType.NUMBER_WHOLE);
         case 'looks_stretchGetX':
             return new IntermediateInput(InputOpcode.PM_LOOKS_STRETCH_X, InputType.NUMBER);
         case 'looks_stretchGetY':
@@ -1158,7 +1177,8 @@ class ScriptTreeGenerator {
         case 'control_all_at_once':
             // In PenguinMod, this runs the substack as run without screen refresh.
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_ALL_AT_ONCE, {
-                stack: this.descendSubstack(block, 'SUBSTACK')
+                stack: this.descendSubstack(block, 'SUBSTACK'),
+                value: true
             });
         case 'control_case':
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_THROW_ERROR, {
@@ -1226,6 +1246,12 @@ class ScriptTreeGenerator {
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_RUN_AS, {
                 sprite: this.descendInputOfBlock(block, 'RUN_AS_OPTION').toType(InputType.STRING),
                 substack: this.descendSubstack(block, 'SUBSTACK')
+            });
+        case 'control_runwithoutscreenrefresh':
+            // In PenguinMod, this runs the substack as run without screen refresh.
+            return new IntermediateStackBlock(StackOpcode.PM_CONTROL_ALL_AT_ONCE, {
+                stack: this.descendSubstack(block, 'SUBSTACK'),
+                value: block.fields.CHECKBOX.value === 'TRUE'
             });
         case 'control_set_counter':
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_SET_COUNTER, {
@@ -1461,21 +1487,50 @@ class ScriptTreeGenerator {
                 x: this.descendInputOfBlock(block, 'X').toType(InputType.NUMBER),
                 y: this.descendInputOfBlock(block, 'Y').toType(InputType.NUMBER)
             });
+        case 'looks_changeVisibilityOfSprite':
+            return new IntermediateStackBlock(block.fields.VISIBLE_TYPE.value === "show" ? StackOpcode.PM_LOOKS_SHOW_SPRITE : StackOpcode.PM_LOOKS_HIDE_SPRITE, {
+                option: this.descendInputOfBlock(block, 'VISIBLE_OPTION').toType(InputType.STRING)
+            });
+        case 'looks_changeVisibilityOfSpriteHide':
+            return new IntermediateStackBlock(StackOpcode.PM_LOOKS_HIDE_SPRITE, {
+                option: this.descendInputOfBlock(block, 'VISIBLE_OPTION').toType(InputType.STRING)
+            });
+        case 'looks_changeVisibilityOfSpriteShow':
+            return new IntermediateStackBlock(StackOpcode.PM_LOOKS_SHOW_SPRITE, {
+                option: this.descendInputOfBlock(block, 'VISIBLE_OPTION').toType(InputType.STRING)
+            });
+        case 'looks_goTargetLayer':
+            return new IntermediateStackBlock(StackOpcode.PM_LOOKS_LAYER_TARGET, {
+                option: this.descendInputOfBlock(block, 'VISIBLE_OPTION').toType(InputType.STRING),
+                infront: block.fields.FORWARD_BACKWARD.value === "infront"
+            });
+        case 'looks_layersSetLayer':
+            return new IntermediateStackBlock(StackOpcode.PM_LOOKS_LAYER_SET, {
+                layer: this.descendInputOfBlock(block, 'NUM').toType(InputType.NUMBER)
+            });
+        case 'looks_previousbackdrop':
+            return new IntermediateStackBlock(StackOpcode.PM_LOOKS_BACKDROP_PREVIOUS);
+        case 'looks_previouscostume':
+            return new IntermediateStackBlock(StackOpcode.PM_LOOKS_COSTUME_PREVIOUS);
         case 'looks_set_blend_mode':
             return new IntermediateStackBlock(StackOpcode.PM_LOOKS_SET_BLENDMODE, {
                 mode: block.fields.BLENDMODE.value.toLowerCase()
+            });
+        case 'looks_setSpriteVisible':
+            return new IntermediateStackBlock(StackOpcode.PM_LOOKS_VISIBLE_SET, {
+                visible: this.descendInputOfBlock(block, 'VISIBILITY').toType(InputType.BOOLEAN)
             });
         case 'looks_setStretch':
             return new IntermediateStackBlock(StackOpcode.PM_LOOKS_SET_STRETCH, {
                 x: this.descendInputOfBlock(block, 'X').toType(InputType.NUMBER),
                 y: this.descendInputOfBlock(block, 'Y').toType(InputType.NUMBER)
             });
+        case 'looks_stoptalking':
+            return new IntermediateStackBlock(StackOpcode.PM_LOOKS_STOP_SPEAKING, {});
         case 'looks_setTintColor':
             return new IntermediateStackBlock(StackOpcode.PM_LOOKS_SET_TINT, {
                 tint: this.descendInputOfBlock(block, 'color').toType(InputType.STRING)
             });
-        case 'looks_stoptalking':
-            return new IntermediateStackBlock(StackOpcode.PM_LOOKS_STOP_SPEAKING, {});
 
         case 'motion_changexby':
             return new IntermediateStackBlock(StackOpcode.MOTION_X_CHANGE, {
@@ -1883,6 +1938,26 @@ class ScriptTreeGenerator {
             },
             yields: !this.script.isWarp && procedureCode === this.script.procedureCode
         };
+    }
+
+    descendExpandableValue (block, fieldName, valueName, cast) {
+        let amount = Number(block.fields[fieldName].value);
+        let inputs = [];
+        for (let i = 1; i <= amount; i++) {
+            let input = this.descendInputOfBlock(block, `${fieldName}.${i}.${valueName}`);
+            if (cast) input = input.toType(cast);
+            inputs.push(input);
+        }
+        return inputs;
+    }
+
+    descendExpandableField (block, fieldName, valueName) {
+        let amount = Number(block.fields[fieldName].value);
+        let values = [];
+        for (let i = 1; i <= amount; i++) {
+            values.push(block.fields[`${fieldName}.${i}.${valueName}`].value);
+        }
+        return values;
     }
 
     /**

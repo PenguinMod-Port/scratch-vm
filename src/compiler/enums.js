@@ -189,11 +189,18 @@ const StackOpcode = {
     LOOKS_SAY: 'looks.say',
     LOOKS_THINK: 'looks.think',
 
+    PM_LOOKS_BACKDROP_PREVIOUS: 'looks.previousBackdrop',
     PM_LOOKS_CHANGE_STRETCH: 'looks.changeStretch',
+    PM_LOOKS_COSTUME_PREVIOUS: 'looks.previousCostume',
+    PM_LOOKS_HIDE_SPRITE: 'looks.hideSprite',
+    PM_LOOKS_LAYER_SET: 'looks.setLayer',
+    PM_LOOKS_LAYER_TARGET: 'looks.goTargetLayer',
     PM_LOOKS_SET_BLENDMODE: 'looks.setBlendMode',
     PM_LOOKS_SET_STRETCH: 'looks.setStretch',
     PM_LOOKS_SET_TINT: 'looks.setTint',
+    PM_LOOKS_SHOW_SPRITE: 'looks.showSprite',
     PM_LOOKS_STOP_SPEAKING: 'looks.stopSpeaking',
+    PM_LOOKS_VISIBLE_SET: 'looks.setVisibility',
 
     MOTION_X_SET: 'motion.setX',
     MOTION_X_CHANGE: 'motion.changeX',
@@ -270,10 +277,14 @@ const InputOpcode = {
     LOOKS_COSTUME_NAME: 'looks.costumeName',
     LOOKS_SIZE_GET: 'looks.size',
 
+    PM_LOOKS_GET_COSTUME_VALUE: 'looks.getCostumeValue',
     PM_LOOKS_GET_EFFECT: 'looks.getEffect',
     PM_LOOKS_GET_TINT: 'looks.getTint',
+    PM_LOOKS_LAYER_GET: 'looks.getLayer',
     PM_LOOKS_STRETCH_X: 'looks.stretchX',
     PM_LOOKS_STRETCH_Y: 'looks.stretchY',
+    PM_LOOKS_VISIBLE_GET: 'looks.getVisibility',
+    PM_LOOKS_VISIBLE_SPRITE: 'looks.getSpriteVisibility',
 
     VAR_GET: 'var.get',
 

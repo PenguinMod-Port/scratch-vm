@@ -32,7 +32,7 @@ class jwUnite {
                     opcode: 'always',
                     text: 'always',
                     disableMonitor: true,
-                    blockType: BlockType.EVENT
+                    blockType: BlockType.HAT
                 },
                 {
                     opcode: 'whenanything',
@@ -385,6 +385,10 @@ class jwUnite {
 
     replacers = {}
     knownLinks = {}
+
+    always(args, util) {
+        return true;
+    }
 
     whenanything(args, util) {
         return Boolean(args.ANYTHING || false)

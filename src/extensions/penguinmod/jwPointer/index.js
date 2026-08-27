@@ -45,7 +45,6 @@ class PointerType {
     }
 
     static toPointer(x) {
-        console.debug(x)
         if (x instanceof PointerType) return x;
 
         let num = Cast.toNumber(x);

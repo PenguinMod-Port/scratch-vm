@@ -2,6 +2,7 @@ const ArgumentAlignment = require('./argument-alignment');
 const ArgumentType = require('./argument-type');
 const BlockType = require('./block-type');
 const BlockShape = require('./block-shape');
+const ImageURI = require('./image-uri');
 const MenuType = require('./menu-type');
 const TargetType = require('./target-type');
 const Cast = require('../util/cast');
@@ -14,6 +15,7 @@ const Scratch = {
     ArgumentType,
     BlockType,
     BlockShape,
+    ImageURI,
     MenuType,
     TargetType,
     Cast,

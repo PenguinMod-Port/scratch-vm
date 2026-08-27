@@ -2,10 +2,8 @@ const BlockType = require('../../../extension-support/block-type');
 const ArgumentType = require('../../../extension-support/argument-type');
 
 class jwProto {
-    constructor(runtime) {
-        this.runtime = runtime;
-        // register compiled blocks
-        this.runtime.registerCompiledExtensionBlocks('jwProto', this.getCompileInfo());
+    constructor() {
+        vm.extensionManager.extendCompiler("jwProto", this.extendCompiler.bind(this));
     }
 
     getInfo() {
@@ -18,7 +16,8 @@ class jwProto {
                 {
                     opcode: 'labelHat',
                     text: '// [LABEL]',
-                    blockType: BlockType.HAT,
+                    blockType: BlockType.EVENT,
+                    isEdgeActivated: false,
                     arguments: {
                         LABEL: {
                             type: ArgumentType.STRING,
@@ -105,52 +104,37 @@ class jwProto {
             ]
         };
     }
-    /**
-     * This function is used for any compiled blocks in the extension if they exist.
-     * Data in this function is given to the IR & JS generators.
-     * Data must be valid otherwise errors may occur.
-     * @returns {object} functions that create data for compiled blocks.
-     */
-    getCompileInfo() {
+    
+    extendCompiler({IntermediateStackBlock, IntermediateStack, StackOpcode}) {
         return {
             ir: {
-                labelFunction: (generator, block) => ({
-                    kind: 'stack',
-                    branch: generator.descendSubstack(block, 'SUBSTACK')
-                })
-            },
-            js: {
-                labelFunction: (node, compiler, imports) => {
-                    compiler.descendStack(node.branch, new imports.Frame(false));
+                reporter(block) {
+                    switch (block.opcode) {
+                        case 'jwProto_labelReporter':
+                        case 'jwProto_labelBoolean':
+                            return this.descendInputOfBlock(block, 'VALUE');
+                        case 'jwProto_placeholderReporter':
+                            return this.createConstantInput(null);
+                        case 'jwProto_placeholderBoolean':
+                            return this.createConstantInput(false);
+                    }
+                },
+                command(block) {
+                    switch (block.opcode) {
+                        case 'jwProto_labelFunction':
+                            return new IntermediateStackBlock(StackOpcode.CONTROL_IF_ELSE, {
+                                condition: this.createConstantInput(true),
+                                whenTrue: this.descendSubstack(block, 'SUBSTACK'),
+                                whenFalse: new IntermediateStack()
+                            });
+                        case 'jwProto_labelCommand':
+                        case 'jwProto_placeholderCommand':
+                        case 'jwProto_placeholderReporter':
+                            return new IntermediateStackBlock(StackOpcode.NOP);
+                    }
                 }
             }
         };
-    }
-
-    labelHat() {
-        return false;
-    }
-    labelFunction(_, util) {
-        util.startBranch(1, false);
-    }
-    labelCommand() {
-        return;
-    }
-    labelReporter(args) {
-        return args.VALUE;
-    }
-    labelBoolean(args) {
-        return args.VALUE;
-    }
-
-    placeholderCommand() {
-        return;
-    }
-    placeholderReporter() {
-        return null;
-    }
-    placeholderBoolean() {
-        return false;
     }
 }
 

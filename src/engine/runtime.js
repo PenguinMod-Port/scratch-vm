@@ -152,6 +152,9 @@ const ArgumentTypeMap = (() => {
     map[ArgumentType.CUSTOM] = {
         fieldType: 'field_custom'
     };
+    map[ArgumentType.EXPANDABLE] = {
+        fieldType: 'field_expandable'
+    }
     return map;
 })();
 
@@ -1834,11 +1837,76 @@ class Runtime extends EventEmitter {
             // TODO these probably shouldn't be hardcoded...?
             width: 24,
             height: 24,
+            alt: argInfo.altText || '*',
             // Whether or not the inline image should be flipped horizontally
             // in RTL languages. Defaults to false, indicating that the
             // image will not be flipped.
             flip_rtl: argInfo.flipRTL || false
         };
+    }
+
+    _constructExpandableJson (context, placeholder, argInfo) {
+        const regex = /\[(.+?)]/g;
+        const args = argInfo.arguments ?? {};
+        const json = [];
+
+        context.inputList.push(`<field name="${xmlEscape(placeholder)}">${argInfo.defaultValue ?? 1}</field>`);
+
+        let match;
+        let previousIndex = 0;
+        while ((match = regex.exec(argInfo.text)) !== null) {
+            const labelText = argInfo.text.slice(previousIndex, match.index);
+            if (labelText) json.push(labelText);
+
+            // no expandables in expandables cause im LAZY
+            if (args[match[1]].type === ArgumentType.EXPANDABLE) throw "Expandables inside expandables are not allowed.";
+
+            const argJSON = this._convertArgJSON(context, match[1], args[match[1]]);
+            if (argJSON._shadow) {
+                const { valueName, shadowType, fieldName, variableID, variableName, variableType, defaultValue } = argJSON._shadow;
+                let shadow = "";
+
+                // The <shadow> is a placeholder for a reporter and is visible when there's no reporter in this input.
+                if (shadowType) {
+                    shadow += `<shadow type="${xmlEscape(shadowType)}">`;
+                }
+
+                // A <field> displays a dynamic value: a user-editable text field, a drop-down menu, etc.
+                // Leave out the field if defaultValue or fieldName are not specified
+                if (defaultValue !== null && fieldName && !variableID) {
+                    shadow += `<field name="${xmlEscape(fieldName)}">${xmlEscape(defaultValue)}</field>`;
+                }
+
+                if (variableID) {
+                    // eslint-disable-next-line max-len
+                    shadow += `<field name="${fieldName}" id="${variableID}" variableType="${variableType}">${variableName}</field>`;
+                }
+
+                if (shadowType) {
+                    shadow += '</shadow>';
+                }
+
+                if (shadow !== "") {
+                    argJSON.shadow = shadow;
+                    for (let i = 1; i <= (argInfo.defaultValue ?? 1); i++) {
+                        context.inputList.push(`<value name="${xmlEscape(`${placeholder}.${i}.${match[1]}`)}">${shadow}</value>`)
+                    }
+                }
+            }
+            json.push(argJSON);
+
+            previousIndex = regex.lastIndex;
+        }
+
+        return {
+            type: 'field_expandable_json',
+            name: placeholder,
+            value: argInfo.defaultValue,
+            min: argInfo.minValue,
+            max: argInfo.maxValue,
+            args: json,
+            sep: argInfo.separator
+        }
     }
 
     /**
@@ -1853,9 +1921,62 @@ class Runtime extends EventEmitter {
     _convertPlaceholders (context, match, placeholder) {
         // Determine whether the argument type is one of the known standard field types
         const argInfo = context.blockInfo.arguments[placeholder] || {};
-        let argTypeInfo = ArgumentTypeMap[argInfo.type] || {};
 
-        // Field type not a standard field type, see if extension has registered custom field type
+        const argJSON = this._convertArgJSON(context, placeholder, argInfo);
+
+        if (argJSON._shadow) {
+            const { valueName, shadowType, fieldName, variableID, variableName, variableType, defaultValue } = argJSON._shadow;
+            // <value> is the ScratchBlocks name for a block input.
+            if (valueName) {
+                context.inputList.push(`<value name="${xmlEscape(placeholder)}">`);
+            }
+
+            // The <shadow> is a placeholder for a reporter and is visible when there's no reporter in this input.
+            if (shadowType) {
+                context.inputList.push(`<shadow type="${xmlEscape(shadowType)}">`);
+            }
+
+            // A <field> displays a dynamic value: a user-editable text field, a drop-down menu, etc.
+            // Leave out the field if defaultValue or fieldName are not specified
+            if (defaultValue !== null && fieldName && !variableID) {
+                context.inputList.push(`<field name="${xmlEscape(fieldName)}">${xmlEscape(defaultValue)}</field>`);
+            }
+
+            if (variableID) {
+                // eslint-disable-next-line max-len
+                context.inputList.push(`<field name="${fieldName}" id="${variableID}" variableType="${variableType}">${variableName}</field>`);
+            }
+
+            if (shadowType) {
+                context.inputList.push('</shadow>');
+            }
+
+            if (valueName) {
+                context.inputList.push('</value>');
+            }
+        }
+
+        const argsName = `args${context.outLineNum}`;
+        const blockArgs = (context.blockJSON[argsName] = context.blockJSON[argsName] || []);
+        if (argJSON) blockArgs.push(argJSON);
+        const argNum = blockArgs.length;
+        context.argsMap[placeholder] = argNum;
+
+        // expandable fix
+        if (argJSON && argJSON.type === 'field_expandable_json') {
+            blockArgs.push({
+                type: 'input_dummy',
+                name: placeholder
+            });
+
+            return `%${argNum} %${argNum + 1}`;
+        }
+        return `%${argNum}`;
+    }
+
+    _convertArgJSON (context, placeholder, argInfo) {
+        // argtypeinfo
+        let argTypeInfo = ArgumentTypeMap[argInfo.type] || {};
         if (!ArgumentTypeMap[argInfo.type] && context.categoryInfo.customFieldTypes[argInfo.type]) {
             argTypeInfo = context.categoryInfo.customFieldTypes[argInfo.type].argumentTypeInfo;
         }
@@ -1881,6 +2002,8 @@ class Runtime extends EventEmitter {
                 id: argInfo.id,
                 value: argInfo.defaultValue
             };
+        } else if (argTypeInfo.fieldType === 'field_expandable') {
+            argJSON = this._constructExpandableJson(context, placeholder, argInfo);
         } else {
             // Construct input value
 
@@ -1996,45 +2119,10 @@ class Runtime extends EventEmitter {
                     shadowType = argInfo.fillInGlobal || `${context.categoryInfo.id}_${argInfo.fillIn}`;
                 }
             }
-
-            // <value> is the ScratchBlocks name for a block input.
-            if (valueName) {
-                context.inputList.push(`<value name="${xmlEscape(placeholder)}">`);
-            }
-
-            // The <shadow> is a placeholder for a reporter and is visible when there's no reporter in this input.
-            // Boolean inputs don't need to specify a shadow in the XML.
-            if (shadowType) {
-                context.inputList.push(`<shadow type="${xmlEscape(shadowType)}">`);
-            }
-
-            // A <field> displays a dynamic value: a user-editable text field, a drop-down menu, etc.
-            // Leave out the field if defaultValue or fieldName are not specified
-            if (defaultValue !== null && fieldName && !variableID) {
-                context.inputList.push(`<field name="${xmlEscape(fieldName)}">${xmlEscape(defaultValue)}</field>`);
-            }
-
-            if (variableID) {
-                // eslint-disable-next-line max-len
-                context.inputList.push(`<field name="${fieldName}" id="${variableID}" variableType="${variableType}">${variableName}</field>`);
-            }
-
-            if (shadowType) {
-                context.inputList.push('</shadow>');
-            }
-
-            if (valueName) {
-                context.inputList.push('</value>');
-            }
+            argJSON._shadow = { valueName, shadowType, fieldName, variableID, variableName, variableType, defaultValue };
         }
 
-        const argsName = `args${context.outLineNum}`;
-        const blockArgs = (context.blockJSON[argsName] = context.blockJSON[argsName] || []);
-        if (argJSON) blockArgs.push(argJSON);
-        const argNum = blockArgs.length;
-        context.argsMap[placeholder] = argNum;
-
-        return `%${argNum}`;
+        return argJSON;
     }
 
     /**
@@ -3997,7 +4085,7 @@ class Runtime extends EventEmitter {
             const n1 = +a;
             if (Number.isNaN(n1) || (n1 === 0 && isNotActuallyZero(a))) return ('' + a).toLowerCase() === ('' + b).toLowerCase();
             const n2 = +b;
-            if (Number.isNaN(n2) || (n2 === 0 && isNotActuallyZero(b))) return ('' + b).toLowerCase() === ('' + b).toLowerCase();
+            if (Number.isNaN(n2) || (n2 === 0 && isNotActuallyZero(b))) return ('' + a).toLowerCase() === ('' + b).toLowerCase();
             return n1 === n2;
         }
     }

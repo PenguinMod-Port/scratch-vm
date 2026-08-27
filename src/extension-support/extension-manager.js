@@ -64,6 +64,7 @@ const defaultBuiltinExtensions = {
     jgTween: () => require('../extensions/penguinmod/jgTween'),
     jgExtendedAudio: () => require('../extensions/penguinmod/jgExtendedAudio'),
     jgRuntime: () => require('../extensions/penguinmod/jgRuntime'),
+    jgPrism: () => require('../extensions/penguinmod/jgPrism'),
 
     // gsa
     tempVars: () => require('../extensions/penguinmod/tempVars'),
@@ -227,11 +228,10 @@ class ExtensionManager {
 
         const extension = this.builtinExtensions[extensionId]();
         const extensionInstance = new extension(this.runtime);
-        this._loadedExtensions.set(extensionId, 'fakeServiceName');
+        this.runtime.compilerRegisterExtension(extensionId, extensionInstance);
         return this.loadNewDependencies(extensionId).then(() => {
             const serviceName = this._registerInternalExtension(extensionInstance);
             this._loadedExtensions.set(extensionId, serviceName);
-            this.runtime.compilerRegisterExtension(extensionId, extensionInstance);
         })
     }
 

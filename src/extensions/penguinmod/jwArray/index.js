@@ -1,6 +1,7 @@
-const BlockType = require('../../../extension-support/block-type');
-const BlockShape = require('../../../extension-support/block-shape');
 const ArgumentType = require('../../../extension-support/argument-type');
+const BlockShape = require('../../../extension-support/block-shape');
+const BlockType = require('../../../extension-support/block-type');
+const ImageURI = require('../../../extension-support/image-uri');
 const Cast = require('../../../util/cast');
 const pmSymbol = require('../../../util/symbol.js');
 
@@ -84,6 +85,7 @@ class ArrayType {
     static validArray(x) {
         if (x instanceof ArrayType) return true;
         if (x instanceof Array) return true;
+        if (x === null) return false;
         if (typeof x == "object" && typeof x.toJSON == "function") return true;
         try {
             let parsed = JSON.parse(Cast.toString(x));
@@ -162,7 +164,9 @@ class ArrayType {
                 return text.outerHTML
             }
 
-            limitedArray.forEach((value, index) => {
+            const filledArray = Array.from(limitedArray, value => value ?? null); // we love sparse arrays
+
+            filledArray.forEach((value, index) => {
                 const centeringDiv = document.createElement('div')
                 centeringDiv.style.display = 'flex'
                 centeringDiv.style.justifyContent = 'center'
@@ -377,9 +381,11 @@ class ArrayType {
         return this;
     }
 
-    concat(other) {
-        this.array = this.array.concat(other.array);
-        return this;
+    static concat(...arrays) {
+        return new ArrayType(Array.prototype.concat(...arrays.map(v => v.array)), true);
+    }
+    concat(...arrays) {
+        return ArrayType.concat(this, ...arrays);
     }
 
     fill(value) {
@@ -483,6 +489,25 @@ class Extension {
                 {
                     opcode: 'blank',
                     text: 'blank array',
+                    hideFromPalette: true,
+                    ...jwArray.Block
+                },
+                {
+                    opcode: 'expandable',
+                    text: 'new array [EXPANDABLE]',
+                    arguments: {
+                        EXPANDABLE: {
+                            type: ArgumentType.EXPANDABLE,
+                            minValue: 0,
+                            defaultValue: 0,
+                            text: '[VALUE]',
+                            arguments: {
+                                VALUE: {
+                                    type: ArgumentType.STRING
+                                }
+                            }
+                        }
+                    },
                     ...jwArray.Block
                 },
                 {
@@ -496,6 +521,7 @@ class Extension {
                     },
                     ...jwArray.Block
                 },
+                "---",
                 {
                     opcode: 'range',
                     text: 'range from [START] to [END]',
@@ -675,10 +701,27 @@ class Extension {
                 },
                 {
                     opcode: 'concat',
-                    text: 'merge [ONE] with [TWO]',
+                    text: 'merge [ONE] [TWO]',
                     arguments: {
                         ONE: jwArray.Argument,
                         TWO: jwArray.Argument
+                    },
+                    hideFromPalette: true,
+                    ...jwArray.Block
+                },
+                {
+                    opcode: 'concatExpandable',
+                    text: 'merge [EXPANDABLE]',
+                    arguments: {
+                        EXPANDABLE: {
+                            type: ArgumentType.EXPANDABLE,
+                            minValue: 2,
+                            defaultValue: 2,
+                            text: '[ARRAY]',
+                            arguments: {
+                                ARRAY: jwArray.Argument
+                            }
+                        }
                     },
                     ...jwArray.Block
                 },
@@ -809,7 +852,7 @@ class Extension {
                 },
                 {
                     opcode: 'filter',
-                    text: 'filter [ARRAY] [I] [V] > [PREDICATE]',
+                    text: 'filter [ARRAY] [I] [V] [ARROW] [PREDICATE]',
                     arguments: {
                         ARRAY: jwArray.Argument,
                         I: {
@@ -817,6 +860,11 @@ class Extension {
                         },
                         V: {
                             fillIn: 'forEachV'
+                        },
+                        ARROW: {
+                            type: ArgumentType.IMAGE,
+                            dataURI: ImageURI.ARROW,
+                            flipRTL: true
                         },
                         PREDICATE: {
                             type: ArgumentType.BOOLEAN,
@@ -827,7 +875,7 @@ class Extension {
                 },
                 {
                     opcode: 'map',
-                    text: 'map [ARRAY] [I] [V] > [VALUE]',
+                    text: 'map [ARRAY] [I] [V] [ARROW] [VALUE]',
                     arguments: {
                         ARRAY: jwArray.Argument,
                         I: {
@@ -835,6 +883,11 @@ class Extension {
                         },
                         V: {
                             fillIn: 'forEachV'
+                        },
+                        ARROW: {
+                            type: ArgumentType.IMAGE,
+                            dataURI: ImageURI.ARROW,
+                            flipRTL: true
                         },
                         VALUE: {
                             type: ArgumentType.STRING
@@ -844,7 +897,7 @@ class Extension {
                 },
                 {
                     opcode: 'basicSort',
-                    text: 'sort [ARRAY] [I] [V] > [VALUE]',
+                    text: 'sort [ARRAY] [I] [V] [ARROW] [VALUE]',
                     arguments: {
                         ARRAY: jwArray.Argument,
                         I: {
@@ -852,6 +905,11 @@ class Extension {
                         },
                         V: {
                             fillIn: 'forEachV'
+                        },
+                        ARROW: {
+                            type: ArgumentType.IMAGE,
+                            dataURI: ImageURI.ARROW,
+                            flipRTL: true
                         },
                         VALUE: {
                             type: ArgumentType.NUMBER,
@@ -902,8 +960,9 @@ class Extension {
             PARSE: 'jwArray.parse',
             VALIDATE: 'jwArray.validate',
 
-            BLANK: 'jwArray.blank',
+            EXPANDABLE: 'jwArray.expandable',
             BLANK_LENGTH: 'jwArray.blankLength',
+
             RANGE: 'jwArray.range',
             SPLIT: 'jwArray.split',
             SPLIT_CHARS: 'jwArray.splitChars',
@@ -958,10 +1017,17 @@ class Extension {
                             });
 
                         case 'jwArray_blank':
-                            return new IntermediateInput(opcodes.BLANK, InputType.CUSTOM_TYPE);
+                            return new IntermediateInput(opcodes.EXPANDABLE, InputType.CUSTOM_TYPE, {
+                                values: []
+                            });
                         case 'jwArray_blankLength':
                             return new IntermediateInput(opcodes.BLANK_LENGTH, InputType.CUSTOM_TYPE, {
                                 len: this.descendInputOfBlock(block, 'LENGTH').toType(InputType.NUMBER)
+                            });
+
+                        case 'jwArray_expandable':
+                            return new IntermediateInput(opcodes.EXPANDABLE, InputType.CUSTOM_TYPE, {
+                                values: this.descendExpandableValue(block, 'EXPANDABLE', 'VALUE')
                             });
                         case 'jwArray_range':
                             return new IntermediateInput(opcodes.RANGE, InputType.CUSTOM_TYPE, {
@@ -1025,9 +1091,12 @@ class Extension {
                             });
                         case 'jwArray_concat':
                             return new IntermediateInput(opcodes.CONCAT, InputType.CUSTOM_TYPE, {
-                                array1: this.descendInputOfBlock(block, 'ONE'),
-                                array2: this.descendInputOfBlock(block, 'TWO')
+                                values: [this.descendInputOfBlock(block, 'ONE'), this.descendInputOfBlock(block, 'TWO')]
                             });
+                        case 'jwArray_concatExpandable':
+                            return new IntermediateInput(opcodes.CONCAT, InputType.CUSTOM_TYPE, {
+                                values: this.descendExpandableValue(block, 'EXPANDABLE', 'ARRAY')
+                            })
                         case 'jwArray_fill':
                             return new IntermediateInput(opcodes.FILL, InputType.CUSTOM_TYPE, {
                                 array: this.descendInputOfBlock(block, 'ARRAY'),
@@ -1131,10 +1200,11 @@ class Extension {
                         case opcodes.VALIDATE:
                             return `vm.jwArray.Type.validArray(${this.descendInput(node.input)})`;
 
-                        case opcodes.BLANK:
-                            return `(new vm.jwArray.Type([], true))`;
+                        case opcodes.EXPANDABLE:
+                            return `(new vm.jwArray.Type([${node.values.map(v => this.descendInput(v)).join(', ')}]${node.values.length == 0 ? ', true' : ''}))`
                         case opcodes.BLANK_LENGTH:
                             return `(new vm.jwArray.Type(Array(vm.jwArray.Type.parseLength(${this.descendInput(node.len)})).fill(null), true))`;
+
                         case opcodes.RANGE:
                             return `vm.jwArray.Type.range(${this.descendInput(node.start)}, ${this.descendInput(node.end)})`;
                         case opcodes.SPLIT:
@@ -1155,7 +1225,7 @@ class Extension {
                             return `(new vm.jwArray.Type(typeof _jwArrayBuilder !== "undefined" ? _jwArrayBuilder : [], true))`;
                         
                         case opcodes.GET:
-                            return `(vm.jwArray.Type.toArray(${this.descendInput(node.array)}).array[${this.descendInput(node.index)}-1] ?? null)`;
+                            return `(vm.jwArray.Type.toArray(${this.descendInput(node.array)}, true).array[${this.descendInput(node.index)}-1] ?? null)`;
                         case opcodes.ITEMS:
                             return `(new vm.jwArray.Type(vm.jwArray.Type.toArray(${this.descendInput(node.array)}, true).array.slice(Math.max(${this.descendInput(node.from)} - 1, 0), Math.max(${this.descendInput(node.to)}, 0)), true))`;
                         case opcodes.INDEX:
@@ -1170,7 +1240,7 @@ class Extension {
                         case opcodes.APPEND:
                             return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).append(${this.descendInput(node.value)})`;
                         case opcodes.CONCAT:
-                            return `vm.jwArray.Type.toArray(${this.descendInput(node.array1)}).concat(vm.jwArray.Type.toArray(${this.descendInput(node.array2)}, true))`;
+                            return `vm.jwArray.Type.concat(${node.values.map(v => `vm.jwArray.Type.toArray(${this.descendInput(v)}, true)`).join(', ')})`;
                         case opcodes.FILL:
                             return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).fill(${this.descendInput(node.value)})`;
                         
@@ -1243,7 +1313,7 @@ class Extension {
                         }
 
                         case opcodes.FROM_LIST:
-                            return `(new vm.jwArray.Type(${this.referenceVariable(node.list)}.value, true))`;
+                            return `(new vm.jwArray.Type(${this.referenceVariable(node.list)}.value))`;
                     }
                 },
                 command(block) {
@@ -1267,7 +1337,7 @@ class Extension {
                             return true;
                             
                         case opcodes.TO_LIST:
-                            this.source += `${this.referenceVariable(node.list)}.value = vm.jwArray.Type.toArray(${this.descendInput(node.array)}, true).array;\n`;
+                            this.source += `${this.referenceVariable(node.list)}.value = vm.jwArray.Type.toArray(${this.descendInput(node.array)}).array;\n`;
                             return true;
                     }
                 }

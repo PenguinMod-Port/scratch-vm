@@ -1,6 +1,7 @@
 /* eslint-disable space-infix-ops */
 const BlockType = require('../../../extension-support/block-type');
 const ArgumentType = require('../../../extension-support/argument-type');
+const ImageURI = require('../../../extension-support/image-uri');
 const Cast = require('../../../util/cast');
 const MathUtil = require('../../../util/math-util');
 
@@ -58,7 +59,7 @@ class PenguinModCamera {
                     arguments: {
                         DIRECTION: {
                             type: ArgumentType.IMAGE,
-                            dataURI: `${pathToMedia}/rotate-right.svg`
+                            dataURI: ImageURI.ROTATE_RIGHT
                         },
                         DEGREES: {
                             type: ArgumentType.NUMBER,
@@ -73,7 +74,7 @@ class PenguinModCamera {
                     arguments: {
                         DIRECTION: {
                             type: ArgumentType.IMAGE,
-                            dataURI: `${pathToMedia}/rotate-left.svg`
+                            dataURI: ImageURI.ROTATE_LEFT
                         },
                         DEGREES: {
                             type: ArgumentType.NUMBER,

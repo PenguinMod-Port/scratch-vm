@@ -27,6 +27,8 @@ function formatNumber(x) {
 }
 
 class PolygonType {
+    customId = "jwPolygon"
+
     /** @type {{x: number, y: number}[]} */
     points = []
 
@@ -109,8 +111,8 @@ class PolygonType {
         return {
             left: Math.min(...this.points.map(v => v.x)),
             right: Math.max(...this.points.map(v => v.x)),
-            top: Math.min(...this.points.map(v => v.y)),
-            bottom: Math.max(...this.points.map(v => v.y))
+            top: Math.max(...this.points.map(v => v.y)),
+            bottom: Math.min(...this.points.map(v => v.y))
         }
     }
 
@@ -233,6 +235,11 @@ let jwPolygon = {
 class Extension {
     constructor() {
         vm.jwPolygon = jwPolygon;
+        vm.runtime.registerSerializer(
+            "jwPolygon", 
+            v => v.points, 
+            v => new jwPolygon.Type(v)
+        );
 
         vm.extensionManager.addExtensionDependency("jwPolygon", "jwArray", () => jwArray = vm.jwArray);
         vm.extensionManager.addExtensionDependency("jwPolygon", "jwVector", () => jwVector = vm.jwVector);
@@ -496,7 +503,7 @@ class Extension {
         let bounds = POLYGON.bounds();
         switch (DIMENSION) {
             case "width": return bounds.right - bounds.left;
-            case "height": return bounds.bottom - bounds.top;
+            case "height": return bounds.top - bounds.bottom;
             default: return 0;
         }
     }

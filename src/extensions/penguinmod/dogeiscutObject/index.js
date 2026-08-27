@@ -1,6 +1,7 @@
 const BlockType = require('../../../extension-support/block-type');
 const BlockShape = require('../../../extension-support/block-shape');
 const ArgumentType = require('../../../extension-support/argument-type');
+const ImageURI = require('../../../extension-support/image-uri');
 const Cast = require('../../../util/cast');
 const pmSymbol = require('../../../util/symbol.js');
 
@@ -119,6 +120,7 @@ class ObjectType {
     static validObject(x) {
         if (x instanceof ObjectType) return true;
         if (x instanceof Map) return true;
+        if (x === null) return false;
         if (isPlainObject(x)) return true;
         if (typeof x == "object" && typeof x.toJSON == "function") return true;
         try {
@@ -172,7 +174,9 @@ class ObjectType {
                 return text.outerHTML
             }
 
-            limitedArray.forEach((value, index) => {
+            const filledArray = Array.from(limitedArray, value => value ?? null); // we love sparse arrays
+
+            filledArray.forEach((value, index) => {
                 const centeringDiv = document.createElement('div')
                 centeringDiv.style.display = 'flex'
                 centeringDiv.style.justifyContent = 'center'
@@ -480,10 +484,11 @@ class ObjectType {
         return updateRecursive(this.map, 0);
     }
 
-    merge(other) {
-        other = ObjectType.toObject(other, true)
-        const OBJECT = ObjectType.toObject(new Map([...other.map, ...this.map]), true)
-        return OBJECT
+    static merge(...objects) {
+        return new ObjectType(new Map(objects.flatMap(v => [...v.map])));
+    }
+    merge(...objects) {
+        return ObjectType.merge(this, ...objects);
     }
 
     get keys() {
@@ -625,7 +630,31 @@ class Extension {
                 {
                     opcode: 'blank',
                     text: 'blank object',
+                    hideFromPalette: true,
                     ...dogeiscutObject.Block,
+                },
+                {
+                    opcode: 'expandable',
+                    text: 'new object [EXPANDABLE]',
+                    arguments: {
+                        EXPANDABLE: {
+                            type: ArgumentType.EXPANDABLE,
+                            minValue: 0,
+                            defaultValue: 0,
+                            text: '[KEY]: [VALUE]',
+                            arguments: {
+                                KEY: {
+                                    type: ArgumentType.STRING,
+                                    exemptFromNormalization: true
+                                },
+                                VALUE: {
+                                    type: ArgumentType.STRING
+                                }
+                            },
+                            separator: ", "
+                        }
+                    },
+                    ...dogeiscutObject.Block
                 },
                 {
                     opcode: 'fromEntries',
@@ -790,12 +819,29 @@ class Extension {
                 },
                 {
                     opcode: 'merge',
-                    text: 'merge [ONE] into [TWO]',
+                    text: 'merge [ONE] [TWO]',
                     arguments: {
                         ONE: dogeiscutObject.Argument,
                         TWO: dogeiscutObject.Argument,
                     },
+                    hideFromPalette: true,
                     ...dogeiscutObject.Block,
+                },
+                {
+                    opcode: 'mergeExpandable',
+                    text: 'merge [EXPANDABLE]',
+                    arguments: {
+                        EXPANDABLE: {
+                            type: ArgumentType.EXPANDABLE,
+                            minValue: 2,
+                            defaultValue: 2,
+                            text: '[OBJECT]',
+                            arguments: {
+                                OBJECT: dogeiscutObject.Argument
+                            }
+                        }
+                    },
+                    ...dogeiscutObject.Block
                 },
                 '---',
                 {
@@ -810,6 +856,16 @@ class Extension {
                         }
                     }
                 },
+                // disabled cause you can do this with the map block
+                // this might be faster though so i'll add it for real if people want it
+                // {
+                //     opcode: 'invert',
+                //     text: 'invert [OBJECT]',
+                //     arguments: {
+                //         OBJECT: dogeiscutObject.Argument,
+                //     },
+                //     ...dogeiscutObject.Block,
+                // },
                 '---',
                 {
                     opcode: 'keys',
@@ -865,6 +921,103 @@ class Extension {
                         }
                     }
                 },
+                {
+                    opcode: 'filter',
+                    text: 'filter [OBJECT] [K] [V] [ARROW] [PREDICATE]',
+                    arguments: {
+                        OBJECT: dogeiscutObject.Argument,
+                        K: {
+                            fillIn: 'forEachK'
+                        },
+                        V: {
+                            fillIn: 'forEachV'
+                        },
+                        ARROW: {
+                            type: ArgumentType.IMAGE,
+                            dataURI: ImageURI.ARROW,
+                            flipRTL: true
+                        },
+                        PREDICATE: {
+                            type: ArgumentType.BOOLEAN,
+                            defaultValue: true
+                        }
+                    },
+                    ...dogeiscutObject.Block
+                },
+                {
+                    opcode: 'map',
+                    text: 'map [OBJECT] [K] [V] [ARROW] [KEY]: [VALUE]',
+                    arguments: {
+                        OBJECT: dogeiscutObject.Argument,
+                        K: {
+                            fillIn: 'forEachK'
+                        },
+                        V: {
+                            fillIn: 'forEachV'
+                        },
+                        ARROW: {
+                            type: ArgumentType.IMAGE,
+                            dataURI: ImageURI.ARROW,
+                            flipRTL: true
+                        },
+                        KEY: {
+                            type: ArgumentType.STRING
+                        },
+                        VALUE: {
+                            type: ArgumentType.STRING
+                        }
+                    },
+                    ...dogeiscutObject.Block
+                },
+                {
+                    opcode: 'basicSort',
+                    text: 'sort [OBJECT] [K] [V] [ARROW] [VALUE]',
+                    arguments: {
+                        OBJECT: dogeiscutObject.Argument,
+                        K: {
+                            fillIn: 'forEachK'
+                        },
+                        V: {
+                            fillIn: 'forEachV'
+                        },
+                        ARROW: {
+                            type: ArgumentType.IMAGE,
+                            dataURI: ImageURI.ARROW,
+                            flipRTL: true
+                        },
+                        VALUE: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 1
+                        }
+                    },
+                    ...dogeiscutObject.Block
+                },
+                // these blocks have pretty easy workarounds with the filter block
+                // unsure if I should actually add them!! (much like the invert block)
+                // {
+                //     opcode: 'findFirst',
+                //     blockType: BlockType.REPORTER,
+                //     text: 'find key [OBJECT] where [K] [V] [ARROW] [PREDICATE]',
+                //     arguments: {
+                //         OBJECT: dogeiscutObject.Argument,
+                //         K: { fillIn: 'forEachK' },
+                //         V: { fillIn: 'forEachV' },
+                //         ARROW: { type: ArgumentType.IMAGE, dataURI: ImageURI.ARROW, flipRTL: true },
+                //         PREDICATE: { type: ArgumentType.BOOLEAN, defaultValue: true }
+                //     }
+                // },
+                // {
+                //     opcode: 'find',
+                //     text: 'find keys [OBJECT] where [K] [V] [ARROW] [PREDICATE]',
+                //     arguments: {
+                //         OBJECT: dogeiscutObject.Argument,
+                //         K: { fillIn: 'forEachK' },
+                //         V: { fillIn: 'forEachV' },
+                //         ARROW: { type: ArgumentType.IMAGE, dataURI: ImageURI.ARROW, flipRTL: true },
+                //         PREDICATE: { type: ArgumentType.BOOLEAN, defaultValue: true }
+                //     },
+                //     ...jwArray.Block,
+                // }
             ],
             menus: {
                 stringifyFormat: {
@@ -880,8 +1033,11 @@ class Extension {
 
     extendCompiler({ IntermediateStackBlock, IntermediateInput, InputType, InputOpcode }) {
         const opcodes = {
-            BLANK: 'dogeiscutObject.blank',
             PARSE: 'dogeiscutObject.parse',
+            IS: 'dogeiscutObject.is',
+
+            BLANK: 'dogeiscutObject.blank',
+            EXPANDABLE: 'dogeiscutObject.expandable',
             FROM_ENTIRES: 'dogeiscutObject.fromEntires',
 
             CURRENT_OBJECT: 'dogeiscutObject.currentObject',
@@ -907,22 +1063,34 @@ class Extension {
             VALUES: 'dogeiscutObject.values',
             ENTRIES: 'dogeiscutObject.entries',
 
-            IS: 'dogeiscutObject.is',
-
-            FOR_EACH_K: 'dogeiscutObject.forEachK',
-            FOR_EACH_V: 'dogeiscutObject.forEachV',
+            LOOP_KEY: 'dogeiscutObject.forEachK',
+            LOOP_VALUE: 'dogeiscutObject.forEachV',
             FOR_EACH: 'dogeiscutObject.forEach',
+            FILTER: 'dogeiscutObject.filter',
+            MAP: 'dogeiscutObject.map',
+            BASIC_SORT: 'dogeiscutObject.basicSort',
+            FIND_FIRST: 'dogeiscutObject.findFirst',
+            FIND: 'dogeiscutObject.find',
         }
 
         return {
             ir: {
                 reporter(block) {
                     switch (block.opcode) {
-                        case 'dogeiscutObject_blank':
-                            return new IntermediateInput(opcodes.BLANK, InputType.CUSTOM_TYPE);
                         case 'dogeiscutObject_parse':
                             return new IntermediateInput(opcodes.PARSE, InputType.CUSTOM_TYPE, {
                                 value: this.descendInputOfBlock(block, 'VALUE'),
+                            });
+                        case 'dogeiscutObject_is':
+                            return new IntermediateInput(opcodes.IS, InputType.BOOLEAN, {
+                                value: this.descendInputOfBlock(block, 'VALUE'),
+                            });
+                        case 'dogeiscutObject_blank':
+                            return new IntermediateInput(opcodes.BLANK, InputType.CUSTOM_TYPE);
+                        case 'dogeiscutObject_expandable':
+                            return new IntermediateInput(opcodes.EXPANDABLE, InputType.CUSTOM_TYPE, {
+                                keys: this.descendExpandableValue(block, 'EXPANDABLE', 'KEY'),
+                                values: this.descendExpandableValue(block, 'EXPANDABLE', 'VALUE'),
                             });
                         case 'dogeiscutObject_fromEntries':
                             return new IntermediateInput(opcodes.FROM_ENTIRES, InputType.CUSTOM_TYPE, {
@@ -977,9 +1145,12 @@ class Extension {
                             });
                         case 'dogeiscutObject_merge':
                             return new IntermediateInput(opcodes.MERGE, InputType.CUSTOM_TYPE, {
-                                one: this.descendInputOfBlock(block, 'ONE'),
-                                two: this.descendInputOfBlock(block, 'TWO'),
+                                values: [this.descendInputOfBlock(block, 'ONE'), this.descendInputOfBlock(block, 'TWO')],
                             });
+                        case 'dogeiscutObject_mergeExpandable':
+                            return new IntermediateInput(opcodes.MERGE, InputType.CUSTOM_TYPE, {
+                                values: this.descendExpandableValue(block, 'EXPANDABLE', 'OBJECT')
+                            })
                         case 'dogeiscutObject_toString':
                             return new IntermediateInput(opcodes.TO_STRING, InputType.STRING, {
                                 object: this.descendInputOfBlock(block, 'OBJECT'),
@@ -997,14 +1168,36 @@ class Extension {
                             return new IntermediateInput(opcodes.ENTRIES, InputType.CUSTOM_TYPE, {
                                 object: this.descendInputOfBlock(block, 'OBJECT'),
                             });
-                        case 'dogeiscutObject_is':
-                            return new IntermediateInput(opcodes.IS, InputType.BOOLEAN, {
+                        case 'dogeiscutObject_forEachK':
+                            return new IntermediateInput(opcodes.LOOP_KEY, InputType.STRING);
+                        case 'dogeiscutObject_forEachV':
+                            return new IntermediateInput(opcodes.LOOP_VALUE, InputType.ANY);
+                        case 'dogeiscutObject_filter':
+                            return new IntermediateInput(opcodes.FILTER, InputType.CUSTOM_TYPE, {
+                                object: this.descendInputOfBlock(block, 'OBJECT'),
+                                predicate: this.descendInputOfBlock(block, 'PREDICATE').toType(InputType.BOOLEAN)
+                            }, true);
+                        case 'dogeiscutObject_map':
+                            return new IntermediateInput(opcodes.MAP, InputType.CUSTOM_TYPE, {
+                                object: this.descendInputOfBlock(block, 'OBJECT'),
+                                key: this.descendInputOfBlock(block, 'KEY'),
                                 value: this.descendInputOfBlock(block, 'VALUE'),
                             });
-                        case 'dogeiscutObject_forEachK':
-                            return new IntermediateInput(opcodes.FOR_EACH_K, InputType.STRING);
-                        case 'dogeiscutObject_forEachV':
-                            return new IntermediateInput(opcodes.FOR_EACH_V, InputType.ANY);
+                        case 'dogeiscutObject_basicSort':
+                            return new IntermediateInput(opcodes.BASIC_SORT, InputType.CUSTOM_TYPE, {
+                                object: this.descendInputOfBlock(block, 'OBJECT'),
+                                value: this.descendInputOfBlock(block, 'VALUE')
+                            }, true);
+                        case 'dogeiscutObject_findFirst':
+                            return new IntermediateInput(opcodes.FIND_FIRST, InputType.ANY, {
+                                object: this.descendInputOfBlock(block, 'OBJECT'),
+                                predicate: this.descendInputOfBlock(block, 'PREDICATE').toType(InputType.BOOLEAN)
+                            }, true);
+                        case 'dogeiscutObject_find':
+                            return new IntermediateInput(opcodes.FIND, InputType.CUSTOM_TYPE, {
+                                object: this.descendInputOfBlock(block, 'OBJECT'),
+                                predicate: this.descendInputOfBlock(block, 'PREDICATE').toType(InputType.BOOLEAN)
+                            }, true);
                     }
                 },
                 command(block) {
@@ -1035,10 +1228,14 @@ class Extension {
                     const node = block.inputs;
 
                     switch (block.opcode) {
-                        case opcodes.BLANK:
-                            return `vm.dogeiscutObject.Type.blank`
                         case opcodes.PARSE:
                             return `vm.dogeiscutObject.Type.toObject(${this.descendInput(node.value)})`
+                        case opcodes.IS:
+                            return `vm.dogeiscutObject.Type.validObject(${this.descendInput(node.value)})`
+                        case opcodes.BLANK:
+                            return `vm.dogeiscutObject.Type.blank`
+                        case opcodes.EXPANDABLE:
+                            return `vm.dogeiscutObject.Type.fromEntries([${node.keys.map((key, i) => `[vm.dogeiscutObject.Type.forKey(${this.descendInput(key)}), ${this.descendInput(node.values[i])}]`).join(', ')}])`
                         case opcodes.FROM_ENTIRES:
                             return `vm.dogeiscutObject.Type.fromEntries(vm.jwArray.Type.toArray(${this.descendInput(node.array)}))`
                         case opcodes.CURRENT_OBJECT:
@@ -1067,7 +1264,7 @@ class Extension {
                         case opcodes.DELETE_AT_PATH:
                             return `vm.dogeiscutObject.Type.toObject(${this.descendInput(node.object)}).deleteAtPath(vm.jwArray.Type.toArray(${this.descendInput(node.array)}))`
                         case opcodes.MERGE:
-                            return `vm.dogeiscutObject.Type.toObject(${this.descendInput(node.one)}, true).merge(${this.descendInput(node.two)})`
+                            return `vm.dogeiscutObject.Type.merge(${node.values.map(v => `vm.dogeiscutObject.Type.toObject(${this.descendInput(v)}, true)`).join(', ')})`;
                         case opcodes.TO_STRING:
                             return `vm.dogeiscutObject.Type.toObject(${this.descendInput(node.object)}, true).toString(${node.format === "pretty"})`
                         case opcodes.KEYS:
@@ -1076,12 +1273,97 @@ class Extension {
                             return `vm.jwArray.Type.toArray(vm.dogeiscutObject.Type.toObject(${this.descendInput(node.object)}, true).values)`
                         case opcodes.ENTRIES:
                             return `vm.jwArray.Type.toArray(vm.dogeiscutObject.Type.toObject(${this.descendInput(node.object)}, true).entries.map(([_dogeiscutObjectEntriesKey, _dogeiscutObjectEntriesValue]) => vm.jwArray.Type.toArray([_dogeiscutObjectEntriesKey, _dogeiscutObjectEntriesValue])))`
-                        case opcodes.IS:
-                            return `vm.dogeiscutObject.Type.validObject(${this.descendInput(node.value)})`
-                        case opcodes.FOR_EACH_K:
+                        case opcodes.INVERT:
+                            return `vm.dogeiscutObject.Type.invert(${this.descendInput(node.object)})`;
+                        case opcodes.GROUP_BY_VALUE:
+                            return `vm.dogeiscutObject.Type.groupByValue(${this.descendInput(node.object)})`;
+                        case opcodes.LOOP_KEY:
                             return `(typeof _dogeiscutObjectForEachKey !== "undefined" ? _dogeiscutObjectForEachKey : null)`
-                        case opcodes.FOR_EACH_V:
+                        case opcodes.LOOP_VALUE:
                             return `(typeof _dogeiscutObjectForEachValue !== "undefined" ? _dogeiscutObjectForEachValue : null)`
+                        case opcodes.FILTER: {
+                            let source = "";
+                            source += `vm.dogeiscutObject.Type.fromEntries(yield* (function*() {\n`;
+                            const obj = this.localVariables.next();
+                            source += `const ${obj} = vm.dogeiscutObject.Type.toObject(${this.descendInput(node.object)}, true).map;\n`;
+                            const output = this.localVariables.next();
+                            source += `const ${output} = [];\n`;
+                            source += `for (const [_dogeiscutObjectForEachKey, _dogeiscutObjectForEachValue] of ${obj}.entries()) {\n`;
+                            source += `  if (${this.descendInput(node.predicate)}) ${output}.push([_dogeiscutObjectForEachKey, _dogeiscutObjectForEachValue]);\n`;
+                            source += `  ${this.yieldLoopInline()}\n`;
+                            source += `}\n`;
+                            source += `return ${output};\n`;
+                            source += `}()), true)\n`;
+                            return source;
+                        }
+                        case opcodes.MAP: {
+                            let source = "";
+                            source += `vm.dogeiscutObject.Type.fromEntries(yield* (function*() {\n`;
+                            const obj = this.localVariables.next();
+                            source += `const ${obj} = vm.dogeiscutObject.Type.toObject(${this.descendInput(node.object)}, true).map;\n`;
+                            const output = this.localVariables.next();
+                            source += `const ${output} = [];\n`;
+                            source += `for (const [_dogeiscutObjectForEachKey, _dogeiscutObjectForEachValue] of ${obj}.entries()) {\n`;
+                            
+                            source += `  ${output}.push([${this.descendInput(node.key)}, ${this.descendInput(node.value)}]);\n`;
+                            
+                            source += `  ${this.yieldLoopInline()}\n`;
+                            source += `}\n`;
+                            source += `return ${output};\n`;
+                            source += `}()), true)\n`;
+                            return source;
+                        }
+                        case opcodes.BASIC_SORT: {
+                            let source = "";
+                            source += `vm.dogeiscutObject.Type.fromEntries(yield* (function*() {\n`;
+                            const obj = this.localVariables.next();
+                            source += `const ${obj} = vm.dogeiscutObject.Type.toObject(${this.descendInput(node.object)}, true).map;\n`;
+                            const entries = this.localVariables.next();
+                            source += `const ${entries} = Array.from(${obj}.entries());\n`;
+                            const sortValues = this.localVariables.next();
+                            source += `const ${sortValues} = [];\n`;
+                            source += `for (const [_dogeiscutObjectForEachKey, _dogeiscutObjectForEachValue] of ${entries}) {\n`;
+                            source += `  ${sortValues}.push(${this.descendInput(node.value)});\n`;
+                            source += `  ${this.yieldLoopInline()}\n`;
+                            source += `}\n`;
+                            source += `return ${entries}.map((_, i) => i)\n`;
+                            source += `  .sort((a, b) => ${sortValues}[a] > ${sortValues}[b] ? 1 : ${sortValues}[a] < ${sortValues}[b] ? -1 : 0)\n`;
+                            source += `  .map(i => ${entries}[i]);\n`;
+                            source += `}()), true)\n`;
+                            return source;
+                        }
+                        case opcodes.FIND_FIRST: {
+                            let source = "";
+                            source += `(yield* (function*() {\n`;
+                            const obj = this.localVariables.next();
+                            source += `const ${obj} = vm.dogeiscutObject.Type.toObject(${this.descendInput(node.object)}, true).map;\n`;
+                            source += `for (const [_dogeiscutObjectForEachKey, _dogeiscutObjectForEachValue] of ${obj}.entries()) {\n`;
+                            source += `  if (${this.descendInput(node.predicate)}) {\n`;
+                            source += `    return _dogeiscutObjectForEachKey;\n`;
+                            source += `  }\n`;
+                            source += `  ${this.yieldLoopInline()}\n`;
+                            source += `}\n`;
+                            source += `return "";\n`;
+                            source += `}()))\n`;
+                            return source;
+                        }
+                        case opcodes.FIND: {
+                            let source = "";
+                            source += `(yield* (function*() {\n`;
+                            const obj = this.localVariables.next();
+                            const matches = this.localVariables.next();
+                            source += `const ${obj} = vm.dogeiscutObject.Type.toObject(${this.descendInput(node.object)}, true).map;\n`;
+                            source += `const ${matches} = [];\n`;
+                            source += `for (const [_dogeiscutObjectForEachKey, _dogeiscutObjectForEachValue] of ${obj}.entries()) {\n`;
+                            source += `  if (${this.descendInput(node.predicate)}) {\n`;
+                            source += `    ${matches}.push(_dogeiscutObjectForEachKey);\n`;
+                            source += `  }\n`;
+                            source += `  ${this.yieldLoopInline()}\n`;
+                            source += `}\n`;
+                            source += `return new vm.jwArray.Type(${matches});\n`;
+                            source += `}()))\n`;
+                            return source;
+                        }
                     }
                 },
                 command(block) {

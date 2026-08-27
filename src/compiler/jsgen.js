@@ -308,14 +308,22 @@ class JSGenerator {
             return '(target.currentCostume + 1)';
 
         //pm looks
+        case InputOpcode.PM_LOOKS_GET_COSTUME_VALUE:
+            return `runtime.ext_scratch3_looks._getCostumeValue(target, ${this.descendInput(node.costume)}, ${this.descendInput(node.value)}${node.old ? `, true` : ''})`;
         case InputOpcode.PM_LOOKS_GET_EFFECT:
             return `target.getEffect("${sanitize(node.effect)}")`;
+        case InputOpcode.PM_LOOKS_GET_TINT:
+            return 'runtime.ext_scratch3_looks._getTintColor(target)';
+        case InputOpcode.PM_LOOKS_LAYER_GET:
+            return `target.getLayerOrder()`;
         case InputOpcode.PM_LOOKS_STRETCH_X:
             return 'target.stretch[0]';
         case InputOpcode.PM_LOOKS_STRETCH_Y:
             return 'target.stretch[1]';
-        case InputOpcode.PM_LOOKS_GET_TINT:
-            return 'runtime.ext_scratch3_looks._getTintColor(target)';
+        case InputOpcode.PM_LOOKS_VISIBLE_GET:
+            return `target.visible`;
+        case InputOpcode.PM_LOOKS_VISIBLE_SPRITE:
+            return `runtime.ext_scratch3_looks._getOtherSpriteVisible(target, ${this.descendInput(node.option)})`;
 
         case InputOpcode.MOTION_DIRECTION_GET:
             return 'target.direction';
@@ -947,7 +955,7 @@ class JSGenerator {
 
         //pm control
         case StackOpcode.PM_CONTROL_ALL_AT_ONCE:
-            this.descendStack(node.stack, {isWarp: true});
+            this.descendStack(node.stack, {isWarp: node.value});
             break;
         case StackOpcode.PM_CONTROL_CONTINUE_LOOP:
             if (this.inLoop) {
@@ -1267,8 +1275,27 @@ class JSGenerator {
             break;
 
         //pm looks
+        case StackOpcode.PM_LOOKS_BACKDROP_PREVIOUS:
+            this.source += 'runtime.ext_scratch3_looks._setBackdrop(stage, stage.currentCostume - 1, true);\n';
+            break;
         case StackOpcode.PM_LOOKS_CHANGE_STRETCH:
             this.source += `target.setStretch(${this.descendInput(node.x)} + target.stretch[0], ${this.descendInput(node.y)} + target.stretch[1]);\n`;
+            break;
+        case StackOpcode.PM_LOOKS_COSTUME_PREVIOUS:
+            this.source += 'target.setCostume(target.currentCostume - 1);\n';
+            break;
+        case StackOpcode.PM_LOOKS_HIDE_SPRITE:
+            this.source += `runtime.ext_scratch3_looks._setSpriteVisibility(target, ${this.descendInput(node.option)}, false);`
+            break;
+        case StackOpcode.PM_LOOKS_LAYER_SET:
+            if (!this.target.isStage) {
+                this.source += `target.goForwardLayers(${this.descendInput(node.layer)} - target.getLayerOrder());\n`;
+            }
+            break;
+        case StackOpcode.PM_LOOKS_LAYER_TARGET:
+            if (!this.target.isStage) {
+                this.source += `runtime.ext_scratch3_looks._goTargetLayer(target, ${this.descendInput(node.option)}, ${node.infront});\n`;
+            }
             break;
         case StackOpcode.PM_LOOKS_SET_BLENDMODE:
             this.source += `runtime.ext_scratch3_looks._setBlendMode("${sanitize(node.mode)}", target);\n`;
@@ -1279,8 +1306,15 @@ class JSGenerator {
         case StackOpcode.PM_LOOKS_SET_TINT:
             this.source += `runtime.ext_scratch3_looks._setTintColor(${this.descendInput(node.tint)}, target);\n`;
             break;
+        case StackOpcode.PM_LOOKS_SHOW_SPRITE:
+            this.source += `runtime.ext_scratch3_looks._setSpriteVisibility(target, ${this.descendInput(node.option)}, true);`
+            break;
         case StackOpcode.PM_LOOKS_STOP_SPEAKING:
             this.source += `runtime.ext_scratch3_looks._say('', target);\n`;
+            break;
+        case StackOpcode.PM_LOOKS_VISIBLE_SET:
+            this.source += `target.setVisible(${this.descendInput(node.visible)});\n`;
+            this.source += `runtime.ext_scratch3_looks._renderBubble(target);\n`;
             break;
 
         case StackOpcode.MOTION_X_CHANGE:
