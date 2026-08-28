@@ -329,7 +329,18 @@ class IntermediateScript {
          * @type {string[]}
          */
         this.arguments = [];
+
+        /**
+         * List of argument ids of this function, if it is a procedure.
+         * @type {string[]}
+         */
         this.argumentIds = [];
+        
+        /**
+         * Set of arguments that are reevaluated, if it is a procedure.
+         * @type {Set<number>}
+         */
+        this.reevaled = new Set();
 
         /**
          * Whether this script should be run in warp mode.

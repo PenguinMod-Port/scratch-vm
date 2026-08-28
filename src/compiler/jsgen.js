@@ -738,13 +738,20 @@ class JSGenerator {
 
             const procedureReference = `thread.procedures["${sanitize(procedureVariant)}"]`;
             const args = [];
-            for (const input of node.arguments) {
+            const tempFn = this.localVariables.next();
+            for (let i = 0; i < node.arguments.length; i++) {
+                const input = node.arguments[i]
                 if (input instanceof IntermediateStack) {
                     //is a stack input
                     let stack = this.descendStackInline(input, {isWarp: procedureData.isWarp, allowReturns: true});
                     args.push(`function*(thread, target, runtime, stage) {${stack}}`);
                 } else {
-                    args.push(`function*() {return ${this.descendInput(input)};}`);
+                    // Only wrap in function if it's reevaluated
+                    args.push(
+                        procedureData.reevaled.has(i) 
+                        ? `yield* (function*() {const ${tempFn} = function*() {return ${this.descendInput(input)};}; return [yield* ${tempFn}(), ${tempFn}]})()`  
+                        : this.descendInput(input)
+                    );
                 }
             }
             const joinedArgs = args.join(',');
@@ -1431,13 +1438,20 @@ class JSGenerator {
             }
             this.source += `thread.procedures["${sanitize(procedureVariant)}"](`;
             const args = [];
-            for (const input of node.arguments) {
+            const tempFn = this.localVariables.next();
+            for (let i = 0; i < node.arguments.length; i++) {
+                const input = node.arguments[i]
                 if (input instanceof IntermediateStack) {
                     //is a stack input
                     let stack = this.descendStackInline(input, {isWarp: procedureData.isWarp, allowReturns: true});
                     args.push(`function*(thread, target, runtime, stage) {${stack}}`);
                 } else {
-                    args.push(`function*() {return ${this.descendInput(input)};}`);
+                    // Only wrap in function if it's reevaluated
+                    args.push(
+                        procedureData.reevaled.has(i)
+                        ? `yield* (function*() {const ${tempFn} = function*() {return ${this.descendInput(input)};}; return [yield* ${tempFn}(), ${tempFn}]})()` 
+                        : this.descendInput(input)
+                    );
                 }
             }
             this.source += args.join(',');
@@ -1786,7 +1800,10 @@ class JSGenerator {
         if (this.script.arguments.length) {
             const args = [];
             for (let i = 0; i < this.script.arguments.length; i++) {
-                args.push(this.script.argumentIds[i].startsWith("SUBSTACK") ? `p${i}` : `px${i}`);
+                args.push(
+                    this.script.argumentIds[i].startsWith("SUBSTACK") 
+                    || !this.script.reevaled.has(i) ? `p${i}` : `[p${i}, px${i}]`
+                );
             }
             script += args.join(',');
         }
@@ -1794,10 +1811,10 @@ class JSGenerator {
 
         if (!this.isProcedure) script += `try {\n`
 
-        for (let i in this.script.arguments) {
-            if (this.script.argumentIds[i].startsWith("SUBSTACK")) continue;
-            script += `let p${i} = yield* px${i}();\n`;
-        }        
+        // for (let i = 0; i < this.script.arguments.length; i++) {
+        //     if (this.script.argumentIds[i].startsWith("SUBSTACK") || !this.script.reevaled.has(i)) continue;
+        //     script += `let p${i} = yield* px${i}();\n`;
+        // }
 
         let allowBubble = this.script.stackClicked && !this.isProcedure;
         if (allowBubble) {
