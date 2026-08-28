@@ -426,7 +426,8 @@ class Blocks {
                 id: e.blockId,
                 element: e.element,
                 name: e.name,
-                value: e.newValue
+                value: e.newValue,
+                oldValue: e.oldValue
             });
             break;
         case 'move':
@@ -458,10 +459,26 @@ class Blocks {
                 this._blocks[e.blockId].shadow) {
                 return;
             }
+
+            const block = this._blocks[e.blockId];
             // Inform any runtime to forget about glows on this script.
-            if (this._blocks[e.blockId].topLevel) {
+            if (block.topLevel) {
                 this.runtime.quietGlow(e.blockId);
+
+                // Compiler: If this block is the head of a running script,
+                // force end the script.
+                if (this.runtime.compilerOptions.enabled) {
+                    setTimeout(() => {
+                        // Slightly delay script termination as this event
+                        // could be caused from tab/sprite switching.
+                        if (!this._blocks[e.blockId]) {
+                            const thread = this.runtime.threads.find(t => t.getId() === `${editingTarget.id}&${e.blockId}`);
+                            if (thread) this.runtime._stopThread(thread);
+                        }
+                    }, 100);
+                }
             }
+
             this.deleteBlock(e.blockId);
             break;
         case 'var_create':
@@ -682,7 +699,6 @@ class Blocks {
 
 
                 if (!block.fields[args.name]) {
-                    // make field i dont care
                     block.fields[args.name] = {
                         name: args.name,
                         id: undefined,
