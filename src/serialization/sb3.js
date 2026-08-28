@@ -1269,9 +1269,9 @@ const parseScratchObject = function (object, runtime, pmVersion, extensions, zip
     
             if (
                 blockJSON.opcode === 'procedures_prototype' &&
-                block.mutation.global === 'true'
+                blockJSON.mutation.global === 'true'
             ) {
-                globalBlocksToRepair.push(block.mutation.proccode);
+                globalBlocksToRepair.push(blockJSON.mutation.proccode);
             }
 
             // If the block is from an extension, record it.
