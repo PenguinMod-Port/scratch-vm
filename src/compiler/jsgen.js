@@ -747,7 +747,7 @@ class JSGenerator {
                 } else {
                     // Only wrap in function if it's reevaluated
                     args.push(
-                        procedureData.reevaled.includes(i) 
+                        procedureData.reevaled.has(i) 
                         ? `function*() {return ${this.descendInput(input)};}` 
                         : this.descendInput(input)
                     );
@@ -1446,7 +1446,7 @@ class JSGenerator {
                 } else {
                     // Only wrap in function if it's reevaluated
                     args.push(
-                        procedureData.reevaled.includes(i) 
+                        procedureData.reevaled.has(i) 
                         ? `function*() {return ${this.descendInput(input)};}` 
                         : this.descendInput(input)
                     );
@@ -1800,7 +1800,7 @@ class JSGenerator {
             for (let i = 0; i < this.script.arguments.length; i++) {
                 args.push(
                     this.script.argumentIds[i].startsWith("SUBSTACK") 
-                    || !this.script.reevaled.includes(i) ? `p${i}` : `px${i}`
+                    || !this.script.reevaled.has(i) ? `p${i}` : `px${i}`
                 );
             }
             script += args.join(',');
@@ -1810,7 +1810,7 @@ class JSGenerator {
         if (!this.isProcedure) script += `try {\n`
 
         for (let i = 0; i < this.script.arguments.length; i++) {
-            if (this.script.argumentIds[i].startsWith("SUBSTACK") || !this.script.reevaled.includes(i)) continue;
+            if (this.script.argumentIds[i].startsWith("SUBSTACK") || !this.script.reevaled.has(i)) continue;
             script += `let p${i} = yield* px${i}();\n`;
         }
 

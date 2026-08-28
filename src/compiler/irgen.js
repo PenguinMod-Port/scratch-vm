@@ -1710,7 +1710,7 @@ class ScriptTreeGenerator {
 
             return new IntermediateStackBlock(StackOpcode.PM_PROCEDURE_REEVALUATE, {
                 index: param.inputs.index
-            })
+            }, true)
         case 'procedures_set': {
             let param = this.descendInputOfBlock(block, 'PARAM');
             if (param.opcode !== InputOpcode.PROCEDURE_ARGUMENT) {
@@ -1842,14 +1842,12 @@ class ScriptTreeGenerator {
             const node = this.descendStackedBlock(block);
             this.script.yields = this.script.yields || node.yields;
             if(this.script.isProcedure && node.opcode === StackOpcode.PM_PROCEDURE_REEVALUATE) {
-                this.script.reevaled.push(node.inputs.index)
+                this.script.reevaled.add(node.inputs.index)
             }
             result.blocks.push(node);
 
             blockId = block.next;
         }
-
-        this.script.yields = this.script.yields || this.script.reevaled.length !== 0;
 
         return result;
     }
