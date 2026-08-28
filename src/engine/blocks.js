@@ -765,7 +765,7 @@ class Blocks {
                     const mutation = block.mutation;
                     if (mutation.global === 'true') {
                         delete globalMap[oldMutation.proccode];
-                        globalMap[mutation.proccode] = this.runtime._editingTarget.id;
+                        globalMap[mutation.proccode] = this.parentId ?? this.runtime._editingTarget.id;
                         this.updateGlobalProcedureMutation(oldMutation, mutation);
                     } else {
                         delete globalMap[mutation.proccode];
@@ -964,8 +964,6 @@ class Blocks {
      * @param {!string} blockId Id of block to delete
      */
     deleteBlock (blockId) {
-        // @todo In runtime, stop threads running on this script.
-
         // Get block
         const block = this._blocks[blockId];
         if (!block) {

@@ -1248,6 +1248,10 @@ const parseScratchObject = function (object, runtime, pmVersion, extensions, zip
     // Blocks container for this object.
     const blocks = new Blocks(runtime);
 
+    // After creating the Target, repair instances of global block prototypes
+    // with their respective parent (target) ID.
+    const globalBlocksToRepair = [];
+
     // @todo: For now, load all Scratch objects (stage/sprites) as a Sprite.
     const sprite = new Sprite(blocks, runtime);
 
@@ -1262,6 +1266,13 @@ const parseScratchObject = function (object, runtime, pmVersion, extensions, zip
             if (!Object.prototype.hasOwnProperty.call(object.blocks, blockId)) continue;
             const blockJSON = object.blocks[blockId];
             blocks.createBlock(blockJSON);
+    
+            if (
+                blockJSON.opcode === 'procedures_prototype' &&
+                block.mutation.global === 'true'
+            ) {
+                globalBlocksToRepair.push(block.mutation.proccode);
+            }
 
             // If the block is from an extension, record it.
             const extensionID = getExtensionIdForOpcode(blockJSON.opcode);
@@ -1401,6 +1412,14 @@ const parseScratchObject = function (object, runtime, pmVersion, extensions, zip
     if (Object.prototype.hasOwnProperty.call(object, 'extensionStorage')) {
         target.extensionStorage = object.extensionStorage;
     }
+
+    // Repair global block target links
+    if (globalBlocksToRepair.length) {
+        for (const proccode of globalBlocksToRepair) {
+            runtime._globalProcedureSourceMap[proccode] = target.id;
+        }
+    }
+
     Promise.all(costumePromises).then(costumes => {
         sprite.costumes = costumes;
     });
@@ -1661,6 +1680,7 @@ const deserialize = async function (json, runtime, zip, isSingleSprite) {
     if (json.config) deserializeConfig(json.config, runtime);
 
     // Clear old global blocks
+    console.log("Clearing global blocks");
     runtime._globalProcedureSourceMap = {};
 
     return fontPromise.then(() => targetObjects.map(target => parseScratchAssets(target, runtime, zip)))
