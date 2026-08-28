@@ -115,7 +115,7 @@ class ScriptTreeGenerator {
         this.script.procedureVariant = procedureVariant;
         this.script.procedureCode = procedureCode;
         this.script.isProcedure = true;
-        this.script.yields = true;
+        this.script.yields = false;
 
         const paramNamesIdsAndDefaults = this.blocks.getProcedureParamNamesIdsAndDefaults(procedureCode);
         if (paramNamesIdsAndDefaults === null) {
@@ -1841,10 +1841,15 @@ class ScriptTreeGenerator {
 
             const node = this.descendStackedBlock(block);
             this.script.yields = this.script.yields || node.yields;
+            if(this.script.isProcedure && node.opcode === StackOpcode.PM_PROCEDURE_REEVALUATE) {
+                this.script.reevaled.push(node.inputs.index)
+            }
             result.blocks.push(node);
 
             blockId = block.next;
         }
+
+        this.script.yields = this.script.yields || this.script.reevaled.length !== 0;
 
         return result;
     }
