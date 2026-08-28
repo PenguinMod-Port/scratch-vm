@@ -1151,7 +1151,7 @@ class ScriptTreeGenerator {
             } else if (level === 'this script') {
                 return new IntermediateStackBlock(StackOpcode.CONTROL_STOP_SCRIPT);
             } else if (level === 'this thread') {
-                return new IntermediateStackBlock(StackOpcode.CONTROL_STOP_THREAD);
+                return new IntermediateStackBlock(StackOpcode.PM_CONTROL_STOP_THREAD, {}, true);
             }
             return new IntermediateStackBlock(StackOpcode.NOP);
         }
