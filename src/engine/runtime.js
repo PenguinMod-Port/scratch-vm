@@ -313,6 +313,13 @@ class Runtime extends EventEmitter {
         this._flowing = {};
 
         /**
+         * Map to look up the source targets for a global procedure.
+         * Keys are proccode, values are target ids.
+         * @type {Object.<string, VM.Target.id>}
+         */
+        this._globalProcedureSourceMap = {};
+
+        /**
          * A list of script block IDs that were glowing during the previous frame.
          * @type {!Array.<!string>}
          */

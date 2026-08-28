@@ -458,10 +458,26 @@ class Blocks {
                 this._blocks[e.blockId].shadow) {
                 return;
             }
+
+            const block = this._blocks[e.blockId];
             // Inform any runtime to forget about glows on this script.
-            if (this._blocks[e.blockId].topLevel) {
+            if (block.topLevel) {
                 this.runtime.quietGlow(e.blockId);
+
+                // Compiler: If this block is the head of a running script,
+                // force end the script.
+                if (this.runtime.compilerOptions.enabled) {
+                    setTimeout(() => {
+                        // Slightly delay script termination as this event
+                        // could be caused from tab/sprite switching.
+                        if (!this._blocks[e.blockId]) {
+                            const thread = this.runtime.threads.find(t => t.getId() === `${editingTarget.id}&${e.blockId}`);
+                            if (thread) this.runtime._stopThread(thread);
+                        }
+                    }, 100);
+                }
             }
+
             this.deleteBlock(e.blockId);
             break;
         case 'var_create':
@@ -654,6 +670,16 @@ class Blocks {
             this._addScript(block.id);
         }
 
+        if (block.opcode === 'procedures_prototype') {
+            // Push global blocks to the source map.
+            const globalMap = this.runtime._globalProcedureSourceMap;
+            if (block.mutation.global === 'true') {
+                globalMap[block.mutation.proccode] = this.runtime._editingTarget.id;
+            } else {
+                delete globalMap[block.mutation.proccode];
+            }
+        }
+
         this.resetCache();
 
         // A new block was actually added to the block container,
@@ -682,7 +708,6 @@ class Blocks {
 
 
                 if (!block.fields[args.name]) {
-                    // make field i dont care
                     block.fields[args.name] = {
                         name: args.name,
                         id: undefined,
@@ -725,7 +750,22 @@ class Blocks {
                 }
                 break;
             case 'mutation':
+                const oldMutation = block.mutation;
                 block.mutation = mutationAdapter(args.value);
+
+                if (block.opcode === 'procedures_prototype') {
+                    // Push global blocks to the source map.
+                    const globalMap = this.runtime._globalProcedureSourceMap;
+                    const mutation = block.mutation;
+                    if (mutation.global === 'true') {
+                        delete globalMap[oldMutation.proccode];
+                        globalMap[mutation.proccode] = this.runtime._editingTarget.id;
+                        this.updateGlobalProcedureMutation(oldMutation, mutation);
+                    } else {
+                        delete globalMap[mutation.proccode];
+                    }
+                }
+
                 break;
             case 'checkbox': {
                 // A checkbox usually has a one to one correspondence with the monitor
@@ -927,6 +967,14 @@ class Blocks {
             return;
         }
 
+        if (block.opcode === 'procedures_prototype') {
+            // Remove global block from the source map.
+            const globalMap = this.runtime._globalProcedureSourceMap;
+            if (block.mutation.global === 'true') {
+                delete globalMap[block.mutation.proccode];
+            }
+        }
+
         // Delete children
         if (block.next !== null) {
             this.deleteBlock(block.next);
@@ -1104,6 +1152,33 @@ class Blocks {
         }
         if (blockUpdated) this.resetCache();
         return blockUpdated;
+    }
+
+    /**
+     * Update global procedures of a certain type across all sprites when the mutation changes.
+     * @param {object} oldMutation representing the old mutation.
+     * @param {object} newMutation representing the new mutation.
+     */
+    updateGlobalProcedureMutation(oldMutation, newMutation) {
+        const editingTargetId = this.runtime._editingTarget.id;
+        const proccode = oldMutation.proccode;
+
+        for (const target of this.runtime.targets) {
+            if (target.id === editingTargetId) continue;
+
+            const blocks = Object.values(target.blocks._blocks)
+                .filter((b) => b.opcode === "procedures_call");
+            for (let i = 0; i < blocks.length; i++) {
+                const block = blocks[i];
+                if (!block.mutation || block.mutation.proccode !== proccode) continue;
+
+                // The 'structuredClone' route shouldnt run as 'children' is unused
+                block.mutation = newMutation.children.length
+                    ? structuredClone(newMutation)
+                    : { ...newMutation };
+                block.mutation.generateshadows = "true";
+            }
+        }
     }
 
     /**
