@@ -381,6 +381,11 @@ class ArrayType {
         return this;
     }
 
+    insert(value, index) {
+        this.array.splice(index - 1, 0, ArrayType.forArray(value));
+        return this;
+    }
+
     static concat(...arrays) {
         return new ArrayType(Array.prototype.concat(...arrays.map(v => v.array)), true);
     }
@@ -700,6 +705,23 @@ class Extension {
                     ...jwArray.Block
                 },
                 {
+                    opcode: 'insert',
+                    text: 'insert [VALUE] at [INDEX] in [ARRAY]',
+                    arguments: {
+                        ARRAY: jwArray.Argument,
+                        VALUE: {
+                            type: ArgumentType.STRING,
+                            defaultValue: "foo",
+                            exemptFromNormalization: true
+                        },
+                        INDEX: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 1
+                        }
+                    },
+                    ...jwArray.Block
+                },
+                {
                     opcode: 'concat',
                     text: 'merge [ONE] [TWO]',
                     arguments: {
@@ -980,6 +1002,7 @@ class Extension {
 
             SET: 'jwArray.set',
             APPEND: 'jwArray.append',
+            INSERT: 'jwArray.insert',
             CONCAT: 'jwArray.concat',
             FILL: 'jwArray.fill',
 
@@ -1087,6 +1110,12 @@ class Extension {
                         case 'jwArray_append':
                             return new IntermediateInput(opcodes.APPEND, InputType.CUSTOM_TYPE, {
                                 array: this.descendInputOfBlock(block, 'ARRAY'),
+                                value: this.descendInputOfBlock(block, 'VALUE')
+                            });
+                        case 'jwArray_insert':
+                            return new IntermediateInput(opcodes.INSERT, InputType.CUSTOM_TYPE, {
+                                array: this.descendInputOfBlock(block, 'ARRAY'),
+                                index: this.descendInputOfBlock(block, 'INDEX').toType(InputType.NUMBER),
                                 value: this.descendInputOfBlock(block, 'VALUE')
                             });
                         case 'jwArray_concat':
@@ -1239,6 +1268,8 @@ class Extension {
                             return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).set(${this.descendInput(node.index)}, ${this.descendInput(node.value)})`;
                         case opcodes.APPEND:
                             return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).append(${this.descendInput(node.value)})`;
+                        case opcodes.INSERT:
+                            return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).insert(${this.descendInput(node.value)}, ${this.descendInput(node.index)})`;
                         case opcodes.CONCAT:
                             return `vm.jwArray.Type.concat(${node.values.map(v => `vm.jwArray.Type.toArray(${this.descendInput(v)}, true)`).join(', ')})`;
                         case opcodes.FILL:
