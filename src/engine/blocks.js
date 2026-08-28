@@ -22,7 +22,7 @@ const getMonitorIdForBlockWithArgs = require('../util/get-monitor-id');
  * should not request glows. This does not affect glows when clicking on a block to execute it.
  */
 class Blocks {
-    constructor (runtime, optNoGlow) {
+    constructor (runtime, optNoGlow, optParentId) {
         this.runtime = runtime;
 
         /**
@@ -110,6 +110,12 @@ class Blocks {
          * @type {boolean}
          */
         this.forceNoGlow = optNoGlow || false;
+
+        /**
+         * The ID of the target that holds these blocks.
+         * @type {String|VM.Target.id}
+         */
+        this.parentId = optParentId || null;
     }
 
     /**
@@ -674,7 +680,7 @@ class Blocks {
             // Push global blocks to the source map.
             const globalMap = this.runtime._globalProcedureSourceMap;
             if (block.mutation.global === 'true') {
-                globalMap[block.mutation.proccode] = this.runtime._editingTarget.id;
+                globalMap[block.mutation.proccode] = this.parentId ?? this.runtime._editingTarget.id;
             } else {
                 delete globalMap[block.mutation.proccode];
             }
@@ -1177,6 +1183,18 @@ class Blocks {
                     ? structuredClone(newMutation)
                     : { ...newMutation };
                 block.mutation.generateshadows = "true";
+
+                if (newMutation.terminal === "true") {
+                    // Disconnect the next block and add it as a
+                    // new script if the new mutation is a terminal.
+                    const connectedBlock = blocks[block.next];
+                    if (connectedBlock) {
+                        connectedBlock.parent = null;
+                        target.blocks._addScript(connectedBlock.id);
+                    }
+
+                    block.next = null;
+                }
             }
         }
     }

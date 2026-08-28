@@ -24,10 +24,6 @@ class Target extends EventEmitter {
     constructor (runtime, blocks) {
         super();
 
-        if (!blocks) {
-            blocks = new Blocks(runtime);
-        }
-
         /**
          * Reference to the runtime.
          * @type {Runtime}
@@ -75,6 +71,11 @@ class Target extends EventEmitter {
          * @type {Object.<string, object>}
          */
         this.extensionStorage = {};
+
+        if (!blocks) {
+            // Initialize the blocks class with this target as the parent.
+            blocks = new Blocks(runtime, undefined, this.id);
+        }
     }
 
     /**

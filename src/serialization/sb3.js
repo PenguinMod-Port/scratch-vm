@@ -1660,6 +1660,9 @@ const deserialize = async function (json, runtime, zip, isSingleSprite) {
 
     if (json.config) deserializeConfig(json.config, runtime);
 
+    // Clear old global blocks
+    runtime._globalProcedureSourceMap = {};
+
     return fontPromise.then(() => targetObjects.map(target => parseScratchAssets(target, runtime, zip)))
         // Force this promise to wait for the next loop in the js tick. Let
         // storage have some time to send off asset requests.
