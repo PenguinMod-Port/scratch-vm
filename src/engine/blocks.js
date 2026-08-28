@@ -758,8 +758,8 @@ class Blocks {
                     const globalMap = this.runtime._globalProcedureSourceMap;
                     const mutation = block.mutation;
                     if (mutation.global === 'true') {
-                        globalMap[mutation.proccode] = this.runtime._editingTarget.id;
                         delete globalMap[oldMutation.proccode];
+                        globalMap[mutation.proccode] = this.runtime._editingTarget.id;
                         this.updateGlobalProcedureMutation(oldMutation, mutation);
                     } else {
                         delete globalMap[mutation.proccode];
