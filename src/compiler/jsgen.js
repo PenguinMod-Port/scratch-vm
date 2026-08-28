@@ -738,6 +738,7 @@ class JSGenerator {
 
             const procedureReference = `thread.procedures["${sanitize(procedureVariant)}"]`;
             const args = [];
+            const tempFn = this.localVariables.next();
             for (let i = 0; i < node.arguments.length; i++) {
                 const input = node.arguments[i]
                 if (input instanceof IntermediateStack) {
@@ -748,7 +749,7 @@ class JSGenerator {
                     // Only wrap in function if it's reevaluated
                     args.push(
                         procedureData.reevaled.has(i) 
-                        ? `function*() {return ${this.descendInput(input)};}` 
+                        ? `yield* (function*() {const ${tempFn} = function*() {return ${this.descendInput(input)};}; return [yield* ${tempFn}(), ${tempFn}]})()`  
                         : this.descendInput(input)
                     );
                 }
@@ -1437,6 +1438,7 @@ class JSGenerator {
             }
             this.source += `thread.procedures["${sanitize(procedureVariant)}"](`;
             const args = [];
+            const tempFn = this.localVariables.next();
             for (let i = 0; i < node.arguments.length; i++) {
                 const input = node.arguments[i]
                 if (input instanceof IntermediateStack) {
@@ -1446,8 +1448,8 @@ class JSGenerator {
                 } else {
                     // Only wrap in function if it's reevaluated
                     args.push(
-                        procedureData.reevaled.has(i) 
-                        ? `function*() {return ${this.descendInput(input)};}` 
+                        procedureData.reevaled.has(i)
+                        ? `yield* (function*() {const ${tempFn} = function*() {return ${this.descendInput(input)};}; return [yield* ${tempFn}(), ${tempFn}]})()` 
                         : this.descendInput(input)
                     );
                 }
@@ -1800,7 +1802,7 @@ class JSGenerator {
             for (let i = 0; i < this.script.arguments.length; i++) {
                 args.push(
                     this.script.argumentIds[i].startsWith("SUBSTACK") 
-                    || !this.script.reevaled.has(i) ? `p${i}` : `px${i}`
+                    || !this.script.reevaled.has(i) ? `p${i}` : `[p${i}, px${i}]`
                 );
             }
             script += args.join(',');
@@ -1809,10 +1811,10 @@ class JSGenerator {
 
         if (!this.isProcedure) script += `try {\n`
 
-        for (let i = 0; i < this.script.arguments.length; i++) {
-            if (this.script.argumentIds[i].startsWith("SUBSTACK") || !this.script.reevaled.has(i)) continue;
-            script += `let p${i} = yield* px${i}();\n`;
-        }
+        // for (let i = 0; i < this.script.arguments.length; i++) {
+        //     if (this.script.argumentIds[i].startsWith("SUBSTACK") || !this.script.reevaled.has(i)) continue;
+        //     script += `let p${i} = yield* px${i}();\n`;
+        // }
 
         let allowBubble = this.script.stackClicked && !this.isProcedure;
         if (allowBubble) {
