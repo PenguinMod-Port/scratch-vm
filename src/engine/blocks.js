@@ -1182,19 +1182,26 @@ class Blocks {
                     : { ...newMutation };
                 block.mutation.generateshadows = "true";
 
-                if (
-                    newMutation.terminal === "true" ||
-                    (
-                        oldMutation.forceoutput !== newMutation.forceoutput &&
-                        (oldMutation.forceoutput === "0" || newMutation.forceoutput === "0")
-                    )
-                ) {
-                    // Isolate the next block as a new script if the new
-                    // mutation is a terminal or switches between a stack or reporter.
-                    const connectedBlock = blocks[block.next];
-                    if (connectedBlock) {
-                        connectedBlock.parent = null;
-                        target.blocks._addScript(connectedBlock.id);
+                // Isolate the caller and/or surrounding blocks as new scripts if the new
+                // mutation is a terminal or switches between a stack or reporter.
+                const isChangedOutput = oldMutation.forceoutput !== newMutation.forceoutput &&
+                    (oldMutation.forceoutput == "0" || newMutation.forceoutput == "0");
+
+                if (newMutation.terminal === "true" || isChangedOutput) {
+                    if (isChangedOutput) {
+                        const prevBlock = blocks[block.parent];
+                        if (prevBlock) {
+                            prevBlock.next = null;
+                        }
+
+                        block.parent = null;
+                        target.blocks._addScript(block.id);
+                    }
+
+                    const nextBlock = blocks[block.next];
+                    if (nextBlock) {
+                        nextBlock.parent = null;
+                        target.blocks._addScript(nextBlock.id);
                     }
 
                     block.next = null;
