@@ -955,8 +955,10 @@ class Blocks {
         // Remove from any old parent.
         if (typeof e.oldParent !== 'undefined') {
             const oldParent = this._blocks[e.oldParent];
-            if (typeof e.oldInput !== 'undefined' &&
-                oldParent.inputs[e.oldInput].block === e.id) {
+            if (
+                typeof e.oldInput !== 'undefined' &&
+                oldParent.inputs[e.oldInput]?.block === e.id
+            ) {
                 // This block was connected to the old parent's input.
                 oldParent.inputs[e.oldInput].block = null;
             } else if (oldParent.next === e.id) {
