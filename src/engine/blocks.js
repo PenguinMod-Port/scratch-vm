@@ -287,7 +287,7 @@ class Blocks {
     }
 
     /**
-     * Get source target id, blocklist, prototype and definition id for a given global procedure.
+     * Get source target blocklist, and prototype and definition blocks for a given global procedure.
      * @param {?string} name Name of procedure to query.
      * @return {?Object.<string,*>|null} Object of data for a global procedure.
      */
@@ -305,11 +305,8 @@ class Blocks {
             const prototypeBlock = target.blocks.getBlock(prototypeId);
 
             return {
-                sourceId: globalTarget,
                 sourceContainer: target.blocks,
-                definitionId: definitionId,
                 definitionBlock: definitionBlock,
-                prototypeId: prototypeId,
                 prototypeBlock: prototypeBlock
             };
         }

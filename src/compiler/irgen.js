@@ -136,8 +136,13 @@ class ScriptTreeGenerator {
     }
 
     getBlockById (blockId) {
-        // TOODO
-        console.log(this, this.script.globalProcedureData);
+        if (this.script.globalProcedureData) {
+            const container = this.script.globalProcedureData.sourceContainer;
+            const block = container.getBlock(blockId);
+
+            if (block) return block;
+        }
+
         // Flyout blocks are stored in a special container.
         return this.blocks.getBlock(blockId) || this.blocks.runtime.flyoutBlocks.getBlock(blockId);
     }
