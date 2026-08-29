@@ -108,6 +108,8 @@ class JSGenerator {
         this.isProcedure = script.isProcedure;
         this.warpTimer = script.warpTimer;
 
+        this.globalProcedureData = null;
+
         this.allowReturns = false;
         this.isLastBlock = false;
 
@@ -740,7 +742,7 @@ class JSGenerator {
             const args = [];
             const tempFn = this.localVariables.next();
             for (let i = 0; i < node.arguments.length; i++) {
-                const input = node.arguments[i]
+                const input = node.arguments[i];
                 if (input instanceof IntermediateStack) {
                     //is a stack input
                     let stack = this.descendStackInline(input, {isWarp: procedureData.isWarp, allowReturns: true});

@@ -278,6 +278,46 @@ class Blocks {
     }
 
     /**
+     * Returns whether or not a procedure by a given name is a global procedure.
+     * @param {?string} name Name of procedure to query.
+     * @return {?boolean} True if the procedure is global.
+     */
+    isGlobalProcedure(name) {
+        return this.runtime._globalProcedureSourceMap[name] !== undefined;
+    }
+
+    /**
+     * Get source target id, blocklist, prototype and definition id for a given global procedure.
+     * @param {?string} name Name of procedure to query.
+     * @return {?Object.<string,*>|null} Object of data for a global procedure.
+     */
+    getGlobalProcedureData(name) {
+        if (!this.isGlobalProcedure(name)) return null;
+
+        const globalTarget = this.runtime._globalProcedureSourceMap[name];
+        const target = this.runtime.getTargetById(globalTarget);
+        if (target) {
+            const definitionId = target.blocks.getProcedureDefinition(name);
+            const definitionBlock = target.blocks.getBlock(definitionId);
+            if (!definitionBlock) return null;
+
+            const prototypeId = target.blocks.getBlock(definitionBlock.inputs.custom_block.block);
+            const prototypeBlock = target.blocks.getBlock(prototypeId);
+
+            return {
+                sourceId: globalTarget,
+                sourceContainer: target.blocks,
+                definitionId: definitionId,
+                definitionBlock: definitionBlock,
+                prototypeId: prototypeId,
+                prototypeBlock: prototypeBlock
+            };
+        }
+
+        return null;
+    }
+
+    /**
      * Get the procedure definition for a given name.
      * @param {?string} name Name of procedure to query.
      * @return {?string} ID of procedure definition.
@@ -286,6 +326,15 @@ class Blocks {
         const blockID = this._cache.procedureDefinitions[name];
         if (typeof blockID !== 'undefined') {
             return blockID;
+        }
+
+        const globalTarget = this.runtime._globalProcedureSourceMap[name];
+        if (globalTarget && globalTarget !== this.parentId) {
+            // This is a global procedure
+            const target = this.runtime.getTargetById(globalTarget);
+            if (target) {
+                return target.blocks.getProcedureDefinition(name);
+            }
         }
 
         for (const id in this._blocks) {
@@ -325,18 +374,43 @@ class Blocks {
             return cachedNames;
         }
 
+        const protoFoundCallback = (block) => {
+            // tw: make sure that populateProcedureCache is kept up to date with this method
+            const names = JSON.parse(block.mutation.argumentnames);
+            const ids = JSON.parse(block.mutation.argumentids);
+            const defaults = JSON.parse(block.mutation.argumentdefaults);
+
+            this._cache.procedureParamNames[name] = [names, ids, defaults];
+            return this._cache.procedureParamNames[name];
+        };
+
+        const globalTarget = this.runtime._globalProcedureSourceMap[name];
+        if (globalTarget && globalTarget !== this.parentId) {
+            // This is a global procedure.
+            const target = this.runtime.getTargetById(globalTarget);
+            if (target) {
+                const blocksToSearch = target.blocks._blocks;
+                for (const id in blocksToSearch) {
+                    if (!Object.prototype.hasOwnProperty.call(blocksToSearch, id)) continue;
+                    const block = blocksToSearch[id];
+                    if (
+                        block.opcode === 'procedures_prototype' &&
+                        block.mutation.proccode === name
+                    ) {
+                        return protoFoundCallback(block);
+                    }
+                }
+            }
+        }
+    
         for (const id in this._blocks) {
             if (!Object.prototype.hasOwnProperty.call(this._blocks, id)) continue;
             const block = this._blocks[id];
-            if (block.opcode === 'procedures_prototype' &&
-                block.mutation.proccode === name) {
-                // tw: make sure that populateProcedureCache is kept up to date with this method
-                const names = JSON.parse(block.mutation.argumentnames);
-                const ids = JSON.parse(block.mutation.argumentids);
-                const defaults = JSON.parse(block.mutation.argumentdefaults);
-
-                this._cache.procedureParamNames[name] = [names, ids, defaults];
-                return this._cache.procedureParamNames[name];
+            if (
+                block.opcode === 'procedures_prototype' &&
+                block.mutation.proccode === name
+            ) {
+                return protoFoundCallback(block);
             }
         }
 

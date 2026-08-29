@@ -132,6 +132,8 @@ class ScriptTreeGenerator {
     }
 
     getBlockById (blockId) {
+        // TOODO
+        console.log(this, this.globalProcedureData);
         // Flyout blocks are stored in a special container.
         return this.blocks.getBlock(blockId) || this.blocks.runtime.flyoutBlocks.getBlock(blockId);
     }
@@ -1865,6 +1867,8 @@ class ScriptTreeGenerator {
     getProcedureInfo (block) {
         const procedureCode = block.mutation.proccode;
         const paramNamesIdsAndDefaults = this.blocks.getProcedureParamNamesIdsAndDefaults(procedureCode);
+        const isGlobalProcedure = this.blocks.isGlobalProcedure(procedureCode);
+        const globalProcedureData = this.blocks.getGlobalProcedureData(procedureCode);
 
         if (paramNamesIdsAndDefaults === null) {
             return {opcode: StackOpcode.NOP, yields: false};
@@ -1896,12 +1900,21 @@ class ScriptTreeGenerator {
             };
         }
 
-        const definitionId = this.blocks.getProcedureDefinition(procedureCode);
-        const definitionBlock = this.blocks.getBlock(definitionId);
+        let definitionBlock;
+        if (isGlobalProcedure) {
+            definitionBlock = globalProcedureData.definitionBlock;
+        } else {
+            const definitionId = this.blocks.getProcedureDefinition(procedureCode);
+            definitionBlock = this.blocks.getBlock(definitionId);
+        }
+
         if (!definitionBlock) {
             return {opcode: StackOpcode.NOP, yields: false};
         }
-        const innerDefinition = this.blocks.getBlock(definitionBlock.inputs.custom_block.block);
+
+        const innerDefinition = isGlobalProcedure
+            ? globalProcedureData.prototypeBlock
+            : this.blocks.getBlock(definitionBlock.inputs.custom_block.block);
 
         let isWarp = this.script.isWarp;
         if (!isWarp) {
@@ -1934,12 +1947,16 @@ class ScriptTreeGenerator {
             args.push(value);
         }
 
+        if (isGlobalProcedure) {
+            this.globalProcedureData = globalProcedureData;
+        }
+
         return {
             opcode: StackOpcode.PROCEDURE_CALL,
             inputs: {
                 code: procedureCode,
                 variant,
-                arguments: args
+                arguments: args,
             },
             yields: !this.script.isWarp && procedureCode === this.script.procedureCode
         };
