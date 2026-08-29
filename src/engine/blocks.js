@@ -1259,7 +1259,7 @@ class Blocks {
                 // mutation is a terminal or switches between a stack or reporter.
                 const isChangedOutput = oldMutation.forceoutput !== newMutation.forceoutput &&
                     (oldMutation.forceoutput == "0" || newMutation.forceoutput == "0") &&
-                    JSON.parse(newMutation.return)[1] !== 0;
+                    (oldMutation.forceoutput == "0" && JSON.parse(newMutation.return)[1] == 0);
 
                 if (newMutation.terminal === "true" || isChangedOutput) {
                     if (isChangedOutput) {
