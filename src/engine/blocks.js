@@ -1182,9 +1182,15 @@ class Blocks {
                     : { ...newMutation };
                 block.mutation.generateshadows = "true";
 
-                if (newMutation.terminal === "true") {
-                    // Disconnect the next block and add it as a
-                    // new script if the new mutation is a terminal.
+                if (
+                    newMutation.terminal === "true" ||
+                    (
+                        oldMutation.forceoutput !== newMutation.forceoutput &&
+                        (oldMutation.forceoutput === "0" || newMutation.forceoutput === "0")
+                    )
+                ) {
+                    // Isolate the next block as a new script if the new
+                    // mutation is a terminal or switches between a stack or reporter.
                     const connectedBlock = blocks[block.next];
                     if (connectedBlock) {
                         connectedBlock.parent = null;
