@@ -1170,10 +1170,10 @@ class Blocks {
         for (const target of this.runtime.targets) {
             if (target.id === editingTargetId) continue;
 
-            const blocks = Object.values(target.blocks._blocks)
-                .filter((b) => b.opcode === "procedures_call");
-            for (let i = 0; i < blocks.length; i++) {
-                const block = blocks[i];
+            const blocks = target.blocks._blocks;
+            const callers = Object.values(blocks).filter((b) => b.opcode === "procedures_call");
+            for (let i = 0; i < callers.length; i++) {
+                const block = callers[i];
                 if (!block.mutation || block.mutation.proccode !== proccode) continue;
 
                 // The 'structuredClone' route shouldnt run as 'children' is unused
