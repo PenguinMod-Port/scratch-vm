@@ -125,6 +125,10 @@ class ScriptTreeGenerator {
         const [paramNames, paramIds, _paramDefaults] = paramNamesIdsAndDefaults;
         this.script.arguments = paramNames;
         this.script.argumentIds = paramIds;
+
+        if (this.blocks.isGlobalProcedure(procedureCode)) {
+            this.script.globalProcedureData = this.blocks.getGlobalProcedureData(procedureCode);
+        }
     }
 
     enableWarp () {
@@ -133,7 +137,7 @@ class ScriptTreeGenerator {
 
     getBlockById (blockId) {
         // TOODO
-        console.log(this, this.globalProcedureData);
+        console.log(this, this.script.globalProcedureData);
         // Flyout blocks are stored in a special container.
         return this.blocks.getBlock(blockId) || this.blocks.runtime.flyoutBlocks.getBlock(blockId);
     }
@@ -1945,10 +1949,6 @@ class ScriptTreeGenerator {
                 value = this.createConstantInput(paramDefaults[i], true);
             }
             args.push(value);
-        }
-
-        if (isGlobalProcedure) {
-            this.globalProcedureData = globalProcedureData;
         }
 
         return {
