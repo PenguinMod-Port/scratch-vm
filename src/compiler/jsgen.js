@@ -1796,6 +1796,12 @@ class JSGenerator {
         script += 'const target = thread.target; ';
         script += 'const runtime = target.runtime; ';
         script += 'const stage = runtime.getTargetForStage();\n';
+
+        if (this.isProcedure && this.script.globalProcedureData) {
+            const globalTarget = this.script.globalProcedureData.target;
+            script += `setupGlobalProcState(target, "${globalTarget.id}");\n`;
+        }
+
         for (const varValue of Object.keys(this._setupVariables)) {
             const varName = this._setupVariables[varValue];
             script += `const ${varName} = ${varValue};\n`;
@@ -1822,14 +1828,7 @@ class JSGenerator {
         }
         script += ') {\n';
 
-        if (this.isProcedure) {
-            if (this.script.globalProcedureData) {
-                const globalTarget = this.script.globalProcedureData.target;
-                script += `setupGlobalProcState(target, "${globalTarget.id}");\n`;
-            }
-        } else {
-            script += `try {\n`;
-        }
+        if (!this.isProcedure) script += `try {\n`;
 
         // for (let i = 0; i < this.script.arguments.length; i++) {
         //     if (this.script.argumentIds[i].startsWith("SUBSTACK") || !this.script.reevaled.has(i)) continue;
