@@ -392,7 +392,9 @@ class RenderedTarget extends Target {
             return;
         }
         // Keep direction between -179 and +180.
-        this.direction = MathUtil.wrapClamp(direction, -179, 180);
+        this.direction = this.runtime.runtimeOptions.disableDirectionClamping
+            ? direction
+            : MathUtil.wrapClamp(direction, -179, 180);
         if (this.renderer) {
             const {direction: renderedDirection, scale} = this._getRenderedDirectionAndScale();
             this.renderer.updateDrawableDirectionScale(this.drawableID, renderedDirection, scale);
