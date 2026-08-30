@@ -717,6 +717,26 @@ class Blocks {
         this._cache.compiledScripts = {};
         this._cache.compiledProcedures = {};
         this._cache.proceduresPopulated = false;
+
+        const globalEntries = Object.entries(this.runtime._globalProcedureSourceMap);
+        const globalEntry = globalEntries.find((e) => e[1] === this.parentId);
+        if (globalEntry) {
+            // Since this blocks instance has a global block definition,
+            // we should reset the cache of other targets using it.
+            for (const target of this.runtime.targets) {
+                if (target.blocks.parentId === this.parentId) continue;
+
+                for (const blockId in target.blocks._blocks) {
+                    const block = target.blocks._blocks[blockId];
+                    if (
+                        block.opcode === 'procedures_call' &&
+                        block.mutation.proccode === globalEntry[0]
+                    ) {
+                        target.blocks.resetCache();
+                    }
+                }
+            }
+        }
     }
 
     /**

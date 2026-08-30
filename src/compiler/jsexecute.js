@@ -568,7 +568,7 @@ runtimeFunctions.tan = `const tan = (angle) => {
  * @param {VM.Target.id} sourceId The id of the global source target.
  */
 runtimeFunctions.setupGlobalProcState = `const setupGlobalProcState = function (target, sourceId) {
-    const sourceTarget = runtime.getTargetById(sourceId);
+    const sourceTarget = target.runtime.getTargetById(sourceId);
     const sourceVariables = sourceTarget.variables;
     for (const varId in sourceTarget.variables) {
         const variable = sourceTarget.variables[varId];
