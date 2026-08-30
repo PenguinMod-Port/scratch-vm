@@ -1758,7 +1758,7 @@ class JSGenerator {
     stopScript () {
         if (this.isProcedure) {
             if (this.script.globalProcedureData) {
-                this.source += `resetGlobalProcState(target.variables));\n`;
+                this.source += `resetGlobalProcState(target.variables);\n`;
             }
 
             this.source += 'return;\n';
@@ -1775,7 +1775,7 @@ class JSGenerator {
             this.source += `retire(); return ${valueJS};\n`;
         } else if (this.isProcedure || this.script.stackClicked || this.allowReturns) {
             if (this.script.globalProcedureData) {
-                this.source += `resetGlobalProcState(target.variables));\n`;
+                this.source += `resetGlobalProcState(target.variables);\n`;
             }
 
             this.source += `return ${valueJS};\n`;
@@ -1822,7 +1822,14 @@ class JSGenerator {
         }
         script += ') {\n';
 
-        if (!this.isProcedure) script += `try {\n`
+        if (this.isProcedure) {
+            if (this.script.globalProcedureData) {
+                const globalTarget = this.script.globalProcedureData.target;
+                script += `setupGlobalProcState(target, ${globalTarget.id});\n`;
+            }
+        } else {
+            script += `try {\n`;
+        }
 
         // for (let i = 0; i < this.script.arguments.length; i++) {
         //     if (this.script.argumentIds[i].startsWith("SUBSTACK") || !this.script.reevaled.has(i)) continue;
