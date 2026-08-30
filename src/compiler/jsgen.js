@@ -1825,7 +1825,7 @@ class JSGenerator {
         if (this.isProcedure) {
             if (this.script.globalProcedureData) {
                 const globalTarget = this.script.globalProcedureData.target;
-                script += `setupGlobalProcState(target, ${globalTarget.id});\n`;
+                script += `setupGlobalProcState(target, "${globalTarget.id}");\n`;
             }
         } else {
             script += `try {\n`;
