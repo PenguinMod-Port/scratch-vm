@@ -305,6 +305,7 @@ class Blocks {
             const prototypeBlock = target.blocks.getBlock(prototypeId);
 
             return {
+                target: target,
                 sourceContainer: target.blocks,
                 definitionBlock: definitionBlock,
                 prototypeBlock: prototypeBlock

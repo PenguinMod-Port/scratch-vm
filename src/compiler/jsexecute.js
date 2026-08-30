@@ -562,6 +562,18 @@ runtimeFunctions.tan = `const tan = (angle) => {
 }`;
 
 /**
+ * Resets private variables back to their original sprites after a global procedure.
+ * Performs the 'separate' task commented in 'irgen.setProcedureVariant'.
+ * @param {function} callback The generator function to run
+ * @param {VM.Target.variables} variables The joined variables of a target.
+ */
+//_glob_sourceTargId
+runtimeFunctions.resetGlobalProcState = `const resetGlobalProcState = function (variables) {
+    console.log("RESET", variables);
+    window.test(variables);
+}`;
+
+/**
  * @param {function} callback The function to run
  * @param {...unknown} args The arguments to pass to the function
  * @returns {unknown} A generator that will yield once then call the function and return its value.

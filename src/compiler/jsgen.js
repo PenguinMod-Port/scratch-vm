@@ -1757,6 +1757,10 @@ class JSGenerator {
 
     stopScript () {
         if (this.isProcedure) {
+            if (this.script.globalProcedureData) {
+                this.source += `resetGlobalProcState(target.variables));\n`;
+            }
+
             this.source += 'return;\n';
         } else {
             this.retire();
@@ -1770,6 +1774,10 @@ class JSGenerator {
         if (!this.isProcedure && !this.allowReturns && !this.script.stackClicked) {
             this.source += `retire(); return ${valueJS};\n`;
         } else if (this.isProcedure || this.script.stackClicked || this.allowReturns) {
+            if (this.script.globalProcedureData) {
+                this.source += `resetGlobalProcState(target.variables));\n`;
+            }
+
             this.source += `return ${valueJS};\n`;
         } else {
             this.retire();

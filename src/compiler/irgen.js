@@ -128,6 +128,20 @@ class ScriptTreeGenerator {
 
         if (this.blocks.isGlobalProcedure(procedureCode)) {
             this.script.globalProcedureData = this.blocks.getGlobalProcedureData(procedureCode);
+
+            // To prevent issues with private/public variables, we will
+            // merge and re-separate them (with their changes).
+            const sourceTarget = this.script.globalProcedureData.target;
+            const sourceVariables = sourceTarget.variables;
+            for (const varId in sourceTarget.variables) {
+                const variable = sourceTarget.variables[varId];
+                variable._glob_sourceTargId = sourceTarget.id;
+            }
+
+            this.target.variables = {
+                ...this.target.variables,
+                ...sourceVariables,
+            }
         }
     }
 
