@@ -1665,6 +1665,7 @@ class Runtime extends EventEmitter {
         if (blockInfo.blockShape) blockJSON.outputShape = blockInfo.blockShape; // Allow extensions to override outputShape
         if (blockInfo.forceOutputType !== undefined) blockJSON.output = blockInfo.forceOutputType; // Allow extensions to override output type
         if (blockInfo.outputCheck !== undefined) blockJSON.output = blockInfo.outputCheck; // ditto for above but i wanted a nicer name
+        if (blockInfo.tooltip) blockJSON.tooltip = blockInfo.tooltip; // Allow extensions to add a tooltip
         if (blockInfo.canDragDuplicate) blockJSON.canDragDuplicate = true;
         if (blockInfo.dualBlock) {
             blockJSON.previousStatement = 'normal';
