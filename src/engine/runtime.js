@@ -3171,7 +3171,7 @@ class Runtime extends EventEmitter {
         this.emit(Runtime.RUNTIME_OPTIONS_CHANGED, this.runtimeOptions);
         if (this.renderer) {
             this.renderer.offscreenTouching = !this.runtimeOptions.fencing;
-            this.renderer.setRenderOffscreen(this.runtimeOptions.disableOffscreenRendering);
+            this.renderer.setRenderOffscreen(!this.runtimeOptions.disableOffscreenRendering);
         }
     }
 
