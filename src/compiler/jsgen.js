@@ -922,6 +922,10 @@ class JSGenerator {
         case StackOpcode.CONTROL_STOP_SCRIPT:
             this.stopScript();
             break;
+        case StackOpcode.CONTROL_STOP_THREAD:
+            // Stops threads entirely, including custom blocks contexts.
+            this.source += `thread.status = 4;\n`;
+            break;
         case StackOpcode.CONTROL_WAIT: {
             const duration = this.localVariables.next();
             this.source += `thread.timer = timer();\n`;

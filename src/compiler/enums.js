@@ -123,6 +123,7 @@ const StackOpcode = {
     CONTROL_STOP_ALL: 'control.stopAll',
     CONTROL_STOP_OTHERS: 'control.stopOthers',
     CONTROL_STOP_SCRIPT: 'control.stopScript',
+    CONTROL_STOP_THREAD: 'control.stopThread',
     CONTROL_WAIT: 'control.wait',
     CONTROL_WAIT_UNTIL: 'control.waitUntil',
     CONTROL_CLEAR_COUNTER: 'control.counterClear',
