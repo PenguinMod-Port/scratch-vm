@@ -214,6 +214,11 @@ class VirtualMachine extends EventEmitter {
         this.securityManager = this.extensionManager.securityManager;
         this.runtime.extensionManager = this.extensionManager;
 
+        this.customPrompt = function () {
+            // Defined by GUI.
+            console.warn("Custom Prompt is not implemented!");
+        }
+
         // Load core extensions
         for (const id of CORE_EXTENSIONS) {
             this.extensionManager.loadExtensionIdSync(id);
