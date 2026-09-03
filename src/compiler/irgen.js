@@ -1971,6 +1971,23 @@ class ScriptTreeGenerator {
         let amount = Number(block.fields[fieldName].value);
         let inputs = [];
         for (let i = 1; i <= amount; i++) {
+            if (valueName === null) {
+                const regex = new RegExp(`${fieldName}\.${i}\.(.*)`);
+
+                const keys = Array.from(new Set(Object.keys(block.inputs).filter((v) => regex.test(v)).map((v) => regex.exec(v)?.at(1) ?? null)));
+                let obj = {};
+                for (const key of keys) {
+                    if (key === null) {
+                        continue;
+                    }
+                    let input = this.descendInputOfBlock(block, `${fieldName}.${i}.${key}`);
+                    Object.assign(obj, {[key]: input});
+                }
+
+                inputs.push(obj);
+
+                continue;
+            }
             let input = this.descendInputOfBlock(block, `${fieldName}.${i}.${valueName}`);
             if (cast) input = input.toType(cast);
             inputs.push(input);
@@ -1982,6 +1999,23 @@ class ScriptTreeGenerator {
         let amount = Number(block.fields[fieldName].value);
         let values = [];
         for (let i = 1; i <= amount; i++) {
+            if (valueName === null) {
+                const regex = new RegExp(`${fieldName}\.${i}\.(.*)`);
+                
+                const keys = Array.from(new Set(Object.keys(block.fields).filter((v) => regex.test(v)).map((v) => regex.exec(v)?.at(1) ?? null)));
+                let obj = {};
+                for (const key of keys) {
+                    if (key === null) {
+                        continue;
+                    }
+                    let value = block.fields[`${fieldName}.${i}.${key}`].value;
+                    Object.assign(obj, {[key]: value});
+                }
+                
+                values.push(obj);
+                
+                continue;
+            }
             values.push(block.fields[`${fieldName}.${i}.${valueName}`].value);
         }
         return values;
