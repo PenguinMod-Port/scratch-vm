@@ -414,6 +414,10 @@ class ScriptTreeGenerator {
             return new IntermediateInput(InputOpcode.PM_LOOKS_VISIBLE_GET, InputType.BOOLEAN);
         case 'looks_layersGetLayer':
             return new IntermediateInput(InputOpcode.PM_LOOKS_LAYER_GET, InputType.NUMBER_WHOLE);
+        case 'looks_sayHeight':
+            return new IntermediateInput(InputOpcode.PM_LOOKS_BUBBLE_HEIGHT, InputType.NUMBER);
+        case 'looks_sayWidth':
+            return new IntermediateInput(InputOpcode.PM_LOOKS_BUBBLE_WIDTH, InputType.NUMBER);
         case 'looks_stretchGetX':
             return new IntermediateInput(InputOpcode.PM_LOOKS_STRETCH_X, InputType.NUMBER);
         case 'looks_stretchGetY':

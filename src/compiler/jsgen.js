@@ -310,6 +310,10 @@ class JSGenerator {
             return '(target.currentCostume + 1)';
 
         //pm looks
+        case InputOpcode.PM_LOOKS_BUBBLE_HEIGHT:
+            return `runtime.ext_scratch3_looks._getBubbleSize(target, 1)`;
+        case InputOpcode.PM_LOOKS_BUBBLE_WIDTH:
+            return `runtime.ext_scratch3_looks._getBubbleSize(target, 0)`;
         case InputOpcode.PM_LOOKS_GET_COSTUME_VALUE:
             return `runtime.ext_scratch3_looks._getCostumeValue(target, ${this.descendInput(node.costume)}, ${this.descendInput(node.value)}${node.old ? `, true` : ''})`;
         case InputOpcode.PM_LOOKS_GET_EFFECT:

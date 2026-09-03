@@ -278,6 +278,8 @@ const InputOpcode = {
     LOOKS_COSTUME_NAME: 'looks.costumeName',
     LOOKS_SIZE_GET: 'looks.size',
 
+    PM_LOOKS_BUBBLE_WIDTH: 'looks.bubbleWidth',
+    PM_LOOKS_BUBBLE_HEIGHT: 'looks.bubbleHeight',
     PM_LOOKS_GET_COSTUME_VALUE: 'looks.getCostumeValue',
     PM_LOOKS_GET_EFFECT: 'looks.getEffect',
     PM_LOOKS_GET_TINT: 'looks.getTint',

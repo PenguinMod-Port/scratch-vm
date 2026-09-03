@@ -314,6 +314,8 @@ class Scratch3LooksBlocks {
             looks_getEffectValue: ({EFFECT}, {target}) => target.getEffect(Cast.toString(EFFECT).toLowerCase()),
             looks_getSpriteVisible: ({}, {target}) => target.visible,
             looks_layersGetLayer: ({}, {target}) => target.getLayerOrder(),
+            looks_sayHeight: ({}, {target}) => this._getBubbleSize(target, 1),
+            looks_sayWidth: ({}, {target}) => this._getBubbleSize(target, 0),
             looks_stretchGetX: ({}, {target}) => target.stretch[0],
             looks_stretchGetY: ({}, {target}) => target.stretch[1], 
             looks_tintColor: ({}, {target}) => this._getTintColor(target),
@@ -346,6 +348,14 @@ class Scratch3LooksBlocks {
             looks_layersGetLayer: {
                 isSpriteSpecific: true,
                 getId: targetId => `${targetId}_layersGetLayer`
+            },
+            looks_sayHeight: {
+                isSpriteSpecific: true,
+                getId: targetId => `${targetId}_sayHeight`
+            },
+            looks_sayWidth: {
+                isSpriteSpecific: true,
+                getId: targetId => `${targetId}_sayWidth`
             },
             looks_stretchGetX: {
                 isSpriteSpecific: true,
@@ -772,6 +782,16 @@ class Scratch3LooksBlocks {
                 return 0;
             default:
                 return '';
+        }
+    }
+
+    _getBubbleSize (target, component) {
+        try {
+            const bubbleState = this._getBubbleState(target);
+            const size = this.runtime.renderer.getSkinSize(bubbleState.skinId);
+            return size[component];
+        } catch {
+            return 0;
         }
     }
 }
