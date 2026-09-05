@@ -2196,6 +2196,7 @@ class Runtime extends EventEmitter {
             xml += ` id="${xmlEscape(categoryInfo.id)}"`;
             xml += ` ${statusButtonXML}`;
             xml += ` ${colorXML}`;
+            xml += ` ${textColorXML}`;
             xml += ` ${menuIconXML}>`;
             xml += paletteBlocks.map(block => block.xml).join('');
             xml += '</category>';
