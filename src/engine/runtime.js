@@ -2157,7 +2157,7 @@ class Runtime extends EventEmitter {
      */
     getBlocksXML (target) {
         return this._blockInfo.map(categoryInfo => {
-            const {name, color} = categoryInfo;
+            const {name, color, blockText} = categoryInfo;
             // Filter out blocks that aren't supposed to be shown on this target, as determined by the block info's
             // `hideFromPalette` and `filter` properties.
             const paletteBlocks = categoryInfo.blocks.filter(block => {
@@ -2174,6 +2174,7 @@ class Runtime extends EventEmitter {
             });
 
             const colorXML = `colour="${xmlEscape(color)}"`;
+            const textColorXML = `textColour="${xmlEscape(blockText ?? "#fff")}"`;
 
             // Use a menu icon if there is one. Otherwise, use the block icon. If there's no icon,
             // the category menu will show its default colored circle.
