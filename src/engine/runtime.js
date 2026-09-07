@@ -1735,7 +1735,7 @@ class Runtime extends EventEmitter {
                 blockJSON[`args${outLineNum}`] = [{
                     type: 'input_statement',
                     name: `SUBSTACK${branch.name}`,
-                    check: blockInfo.branches[inBranchNum].accepts ?? 'normal'
+                    check: blockInfo.branches?.[inBranchNum]?.accepts ?? 'normal'
                 }];
                 ++inBranchNum;
                 ++outLineNum;
