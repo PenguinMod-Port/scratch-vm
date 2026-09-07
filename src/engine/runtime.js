@@ -1676,9 +1676,9 @@ class Runtime extends EventEmitter {
         if (blockInfo.tooltip) blockJSON.tooltip = blockInfo.tooltip; // Allow extensions to add a tooltip
         if (blockInfo.canDragDuplicate) blockJSON.canDragDuplicate = true;
         if (blockInfo.dualBlock) {
-            blockJSON.previousStatement = 'normal';
+            blockJSON.previousStatement = notchAccepts;
             if (!blockInfo.isTerminal) {
-                blockJSON.nextStatement = 'normal';
+                blockJSON.nextStatement = notchAccepts;
             }
         }
 
