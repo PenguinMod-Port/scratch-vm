@@ -1632,12 +1632,14 @@ class Runtime extends EventEmitter {
             ];
         }
 
+        let notchAccepts = blockInfo.notchAccepts ?? 'normal';
+
         switch (blockInfo.blockType) {
         case BlockType.COMMAND:
             blockJSON.outputShape = ScratchBlocksConstants.OUTPUT_SHAPE_SQUARE;
-            blockJSON.previousStatement = 'normal'; // null = available connection; undefined = hat
+            blockJSON.previousStatement = notchAccepts; // null = available connection; undefined = hat
             if (!blockInfo.isTerminal) {
-                blockJSON.nextStatement = 'normal'; // null = available connection; undefined = terminal
+                blockJSON.nextStatement = notchAccepts; // null = available connection; undefined = terminal
             }
             break;
         case BlockType.REPORTER:
@@ -1655,15 +1657,15 @@ class Runtime extends EventEmitter {
                 blockInfo.isEdgeActivated = true;
             }
             blockJSON.outputShape = ScratchBlocksConstants.OUTPUT_SHAPE_SQUARE;
-            blockJSON.nextStatement = 'normal'; // null = available connection; undefined = terminal
+            blockJSON.nextStatement = notchAccepts; // null = available connection; undefined = terminal
             break;
         case BlockType.CONDITIONAL:
         case BlockType.LOOP:
             blockInfo.branchCount = blockInfo.branchCount || 1;
             blockJSON.outputShape = ScratchBlocksConstants.OUTPUT_SHAPE_SQUARE;
-            blockJSON.previousStatement = 'normal'; // null = available connection; undefined = hat
+            blockJSON.previousStatement = notchAccepts; // null = available connection; undefined = hat
             if (!blockInfo.isTerminal) {
-                blockJSON.nextStatement = 'normal'; // null = available connection; undefined = terminal
+                blockJSON.nextStatement = notchAccepts; // null = available connection; undefined = terminal
             }
             break;
         }
@@ -1732,7 +1734,8 @@ class Runtime extends EventEmitter {
                 blockJSON[`message${outLineNum}`] = '%1';
                 blockJSON[`args${outLineNum}`] = [{
                     type: 'input_statement',
-                    name: `SUBSTACK${branch.name}`
+                    name: `SUBSTACK${branch.name}`,
+                    check: blockInfo.branches[inBranchNum].accepts ?? 'normal'
                 }];
                 ++inBranchNum;
                 ++outLineNum;
