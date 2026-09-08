@@ -416,6 +416,15 @@ class ArrayType {
     [pmSymbol.equals](other) {
         return this === other || (this.array.length == other.array.length && this.array.every((v, i) => vm.runtime.equals(v, other.array[i])));
     }
+    
+    shuffle() {
+        const arr = this.array;
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return this;
+    }
 }
 
 const jwArray = {
@@ -809,6 +818,14 @@ class Extension {
                     },
                     ...jwArray.Block
                 },
+                {
+                    opcode: 'shuffle',
+                    text: 'shuffle [ARRAY]',
+                    arguments: {
+                        ARRAY: jwArray.Argument,
+                    },
+                    ...jwArray.Block
+                },
                 "---",
                 {
                     opcode: 'toString',
@@ -1010,6 +1027,7 @@ class Extension {
             SPLICE: 'jwArray.splice',
             REPEAT: 'jwArray.repeat',
             FLAT: 'jwArray.flat',
+            SHUFFLE: 'jwArray.shuffle',
 
             TO_STRING: 'jwArray.toString',
             JOIN: 'jwArray.join',
@@ -1152,6 +1170,10 @@ class Extension {
                                 array: this.descendInputOfBlock(block, 'ARRAY'),
                                 depth: this.descendInputOfBlock(block, 'DEPTH').toType(InputType.NUMBER)
                             });
+                        case 'jwArray_shuffle':
+                            return new IntermediateInput(opcodes.SHUFFLE, InputType.CUSTOM_TYPE, {
+                                array: this.descendInputOfBlock(block, 'ARRAY'),
+                            });
 
                         case 'jwArray_toString':
                             return new IntermediateInput(opcodes.TO_STRING, InputType.STRING, {
@@ -1283,6 +1305,8 @@ class Extension {
                             return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).repeat(${this.descendInput(node.times)})`;
                         case opcodes.FLAT:
                             return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).flat(${this.descendInput(node.depth)})`;
+                        case opcodes.SHUFFLE:
+                            return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).shuffle()`;
                         
                         case opcodes.TO_STRING:
                             return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).toString(${node.pretty ? 'true' : ''})`;
