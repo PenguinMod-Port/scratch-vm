@@ -562,6 +562,38 @@ runtimeFunctions.tan = `const tan = (angle) => {
 }`;
 
 /**
+ * Joins global procedure target private variables to the caller's variables.
+ * JavaScript aliasing does us a favour here, we don't have to update any values.
+ * @param {VM.Target} target The caller target.
+ * @param {VM.Target.id} sourceId The id of the global source target.
+ */
+runtimeFunctions.setupGlobalProcState = `const setupGlobalProcState = function (target, sourceId) {
+    if (sourceId === target.id) return;
+    const sourceTarget = target.runtime.getTargetById(sourceId);
+    const sourceVariables = sourceTarget.variables;
+    for (const varId in sourceTarget.variables) {
+        const variable = sourceTarget.variables[varId];
+        variable._glob_isFromOtherTarg = true;
+    }
+
+    target.variables = {
+        ...target.variables,
+        ...sourceVariables,
+    };
+}`;
+
+/**
+ * Separates private variables back to their original sprites after a global procedure.
+ * @param {VM.Target.variables} variables The joined variables of a target.
+ */
+runtimeFunctions.resetGlobalProcState = `const resetGlobalProcState = function (variables) {
+    for (varId in variables) {
+        const variable = variables[varId];
+        if (variable._glob_isFromOtherTarg) delete variables[varId];
+    }
+}`;
+
+/**
  * @param {function} callback The function to run
  * @param {...unknown} args The arguments to pass to the function
  * @returns {unknown} A generator that will yield once then call the function and return its value.

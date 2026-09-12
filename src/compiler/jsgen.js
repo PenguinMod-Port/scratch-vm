@@ -108,6 +108,8 @@ class JSGenerator {
         this.isProcedure = script.isProcedure;
         this.warpTimer = script.warpTimer;
 
+        this.globalProcedureData = null;
+
         this.allowReturns = false;
         this.isLastBlock = false;
 
@@ -308,6 +310,10 @@ class JSGenerator {
             return '(target.currentCostume + 1)';
 
         //pm looks
+        case InputOpcode.PM_LOOKS_BUBBLE_HEIGHT:
+            return `runtime.ext_scratch3_looks._getBubbleSize(target, 1)`;
+        case InputOpcode.PM_LOOKS_BUBBLE_WIDTH:
+            return `runtime.ext_scratch3_looks._getBubbleSize(target, 0)`;
         case InputOpcode.PM_LOOKS_GET_COSTUME_VALUE:
             return `runtime.ext_scratch3_looks._getCostumeValue(target, ${this.descendInput(node.costume)}, ${this.descendInput(node.value)}${node.old ? `, true` : ''})`;
         case InputOpcode.PM_LOOKS_GET_EFFECT:
@@ -740,7 +746,7 @@ class JSGenerator {
             const args = [];
             const tempFn = this.localVariables.next();
             for (let i = 0; i < node.arguments.length; i++) {
-                const input = node.arguments[i]
+                const input = node.arguments[i];
                 if (input instanceof IntermediateStack) {
                     //is a stack input
                     let stack = this.descendStackInline(input, {isWarp: procedureData.isWarp, allowReturns: true});
@@ -922,9 +928,8 @@ class JSGenerator {
         case StackOpcode.CONTROL_STOP_SCRIPT:
             this.stopScript();
             break;
-        case StackOpcode.CONTROL_STOP_THREAD:
-            // Stops threads entirely, including custom blocks contexts.
-            this.source += `thread.status = 4;\n`;
+        case StackOpcode.PM_CONTROL_STOP_THREAD:
+            this.retire();
             break;
         case StackOpcode.CONTROL_WAIT: {
             const duration = this.localVariables.next();
@@ -1756,6 +1761,10 @@ class JSGenerator {
 
     stopScript () {
         if (this.isProcedure) {
+            if (this.script.globalProcedureData) {
+                this.source += `resetGlobalProcState(target.variables);\n`;
+            }
+
             this.source += 'return;\n';
         } else {
             this.retire();
@@ -1769,6 +1778,10 @@ class JSGenerator {
         if (!this.isProcedure && !this.allowReturns && !this.script.stackClicked) {
             this.source += `retire(); return ${valueJS};\n`;
         } else if (this.isProcedure || this.script.stackClicked || this.allowReturns) {
+            if (this.script.globalProcedureData) {
+                this.source += `resetGlobalProcState(target.variables);\n`;
+            }
+
             this.source += `return ${valueJS};\n`;
         } else {
             this.retire();
@@ -1787,6 +1800,12 @@ class JSGenerator {
         script += 'const target = thread.target; ';
         script += 'const runtime = target.runtime; ';
         script += 'const stage = runtime.getTargetForStage();\n';
+
+        if (this.isProcedure && this.script.globalProcedureData) {
+            const globalTarget = this.script.globalProcedureData.target;
+            script += `setupGlobalProcState(target, "${globalTarget.id}");\n`;
+        }
+
         for (const varValue of Object.keys(this._setupVariables)) {
             const varName = this._setupVariables[varValue];
             script += `const ${varName} = ${varValue};\n`;
@@ -1813,7 +1832,7 @@ class JSGenerator {
         }
         script += ') {\n';
 
-        if (!this.isProcedure) script += `try {\n`
+        if (!this.isProcedure) script += `try {\n`;
 
         // for (let i = 0; i < this.script.arguments.length; i++) {
         //     if (this.script.argumentIds[i].startsWith("SUBSTACK") || !this.script.reevaled.has(i)) continue;

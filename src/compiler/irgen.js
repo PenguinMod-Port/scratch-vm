@@ -125,6 +125,10 @@ class ScriptTreeGenerator {
         const [paramNames, paramIds, _paramDefaults] = paramNamesIdsAndDefaults;
         this.script.arguments = paramNames;
         this.script.argumentIds = paramIds;
+
+        if (this.blocks.isGlobalProcedure(procedureCode)) {
+            this.script.globalProcedureData = this.blocks.getGlobalProcedureData(procedureCode);
+        }
     }
 
     enableWarp () {
@@ -132,6 +136,13 @@ class ScriptTreeGenerator {
     }
 
     getBlockById (blockId) {
+        if (this.script.globalProcedureData) {
+            const container = this.script.globalProcedureData.sourceContainer;
+            const block = container.getBlock(blockId);
+
+            if (block) return block;
+        }
+
         // Flyout blocks are stored in a special container.
         return this.blocks.getBlock(blockId) || this.blocks.runtime.flyoutBlocks.getBlock(blockId);
     }
@@ -403,6 +414,10 @@ class ScriptTreeGenerator {
             return new IntermediateInput(InputOpcode.PM_LOOKS_VISIBLE_GET, InputType.BOOLEAN);
         case 'looks_layersGetLayer':
             return new IntermediateInput(InputOpcode.PM_LOOKS_LAYER_GET, InputType.NUMBER_WHOLE);
+        case 'looks_sayHeight':
+            return new IntermediateInput(InputOpcode.PM_LOOKS_BUBBLE_HEIGHT, InputType.NUMBER);
+        case 'looks_sayWidth':
+            return new IntermediateInput(InputOpcode.PM_LOOKS_BUBBLE_WIDTH, InputType.NUMBER);
         case 'looks_stretchGetX':
             return new IntermediateInput(InputOpcode.PM_LOOKS_STRETCH_X, InputType.NUMBER);
         case 'looks_stretchGetY':
@@ -1151,7 +1166,7 @@ class ScriptTreeGenerator {
             } else if (level === 'this script') {
                 return new IntermediateStackBlock(StackOpcode.CONTROL_STOP_SCRIPT);
             } else if (level === 'this thread') {
-                return new IntermediateStackBlock(StackOpcode.CONTROL_STOP_THREAD);
+                return new IntermediateStackBlock(StackOpcode.PM_CONTROL_STOP_THREAD, {}, true);
             }
             return new IntermediateStackBlock(StackOpcode.NOP);
         }
@@ -1865,6 +1880,8 @@ class ScriptTreeGenerator {
     getProcedureInfo (block) {
         const procedureCode = block.mutation.proccode;
         const paramNamesIdsAndDefaults = this.blocks.getProcedureParamNamesIdsAndDefaults(procedureCode);
+        const isGlobalProcedure = this.blocks.isGlobalProcedure(procedureCode);
+        const globalProcedureData = this.blocks.getGlobalProcedureData(procedureCode);
 
         if (paramNamesIdsAndDefaults === null) {
             return {opcode: StackOpcode.NOP, yields: false};
@@ -1896,12 +1913,21 @@ class ScriptTreeGenerator {
             };
         }
 
-        const definitionId = this.blocks.getProcedureDefinition(procedureCode);
-        const definitionBlock = this.blocks.getBlock(definitionId);
+        let definitionBlock;
+        if (isGlobalProcedure) {
+            definitionBlock = globalProcedureData.definitionBlock;
+        } else {
+            const definitionId = this.blocks.getProcedureDefinition(procedureCode);
+            definitionBlock = this.blocks.getBlock(definitionId);
+        }
+
         if (!definitionBlock) {
             return {opcode: StackOpcode.NOP, yields: false};
         }
-        const innerDefinition = this.blocks.getBlock(definitionBlock.inputs.custom_block.block);
+
+        const innerDefinition = isGlobalProcedure
+            ? globalProcedureData.prototypeBlock
+            : this.blocks.getBlock(definitionBlock.inputs.custom_block.block);
 
         let isWarp = this.script.isWarp;
         if (!isWarp) {
@@ -1939,7 +1965,7 @@ class ScriptTreeGenerator {
             inputs: {
                 code: procedureCode,
                 variant,
-                arguments: args
+                arguments: args,
             },
             yields: !this.script.isWarp && procedureCode === this.script.procedureCode
         };

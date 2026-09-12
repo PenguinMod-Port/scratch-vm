@@ -12,6 +12,9 @@ const stacked = [
     'looks_changestretchby',
     'looks_hideallsprites',
     'looks_sayforsecs',
+    'looks_setColor',
+    'looks_setFont',
+    'looks_setShape',
     'looks_setstretchto',
     'looks_switchbackdroptoandwait',
     'looks_thinkforsecs',
@@ -37,7 +40,7 @@ const stacked = [
     'sound_set_stop_fadeout_to',
     'sound_setvolumeto',
     'sound_stop',
-    'sound_stopallsounds'
+    'sound_stopallsounds',
 ];
 
 const inputs = [

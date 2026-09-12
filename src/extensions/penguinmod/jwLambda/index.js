@@ -279,7 +279,7 @@ class Extension {
 
                     switch (block.opcode) {
                         case opcodes.ARG:
-                            return `(typeof _jwLambdaArgument === "undefined" ? _jwLambdaArgument : _jwLambdaArgument)`;
+                            return `(typeof _jwLambdaArgument !== "undefined" ? _jwLambdaArgument : null)`;
                         case opcodes.EXECUTE:
                             return `(yield* vm.jwLambda.Type.toLambda(${this.descendInput(node.lambda)}).execute(${this.descendInput(node.arg)}, thread, target, runtime, stage))`;
                         case opcodes.NEW: {
@@ -297,7 +297,7 @@ class Extension {
                             return source;
                         }
                         case opcodes.THIS:
-                            return `(typeof _jwLambdaThis === "undefined" ? _jwLambdaThis : _jwLambdaThis)`;
+                            return `(typeof _jwLambdaThis !== "undefined" ? _jwLambdaThis : (new vm.jwLambda.Type()))`;
                     }
                 },
                 command(block) {

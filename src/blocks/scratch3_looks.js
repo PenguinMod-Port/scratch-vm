@@ -35,6 +35,8 @@ class Scratch3LooksBlocks {
 
         // Enable other blocks to use bubbles like ask/answer
         this.runtime.on(Scratch3LooksBlocks.SAY_OR_THINK, this._updateBubble);
+
+        this.SAY_BUBBLE_LIMIT = Scratch3LooksBlocks.SAY_BUBBLE_LIMIT;
     }
 
     /**
@@ -48,7 +50,30 @@ class Scratch3LooksBlocks {
             skinId: null,
             text: '',
             type: 'say',
-            usageId: null
+            usageId: null,
+            style: Scratch3LooksBlocks.DEFAULT_BUBBLE_STYLE
+        };
+    }
+
+    static get DEFAULT_BUBBLE_STYLE () {
+        // taken from renderer
+        return {
+            maxLineWidth: 170, // Maximum width, in Scratch pixels, of a single line of text
+
+            minWidth: 50, // Minimum width, in Scratch pixels, of a text bubble
+            strokeWidth: 4, // Thickness of the stroke around the bubble. Only half's visible because it's drawn under the fill
+            padding: 10, // Padding around the text area
+            cornerRadius: 16, // Radius of the rounded corners
+            tailHeight: 12, // Height of the speech bubble's "tail". Probably should be a constant.
+
+            font: 'Helvetica', // Font to render the text with
+            fontSize: 14, // Font size, in Scratch pixels
+            fontHeightRatio: 0.9, // Height, in Scratch pixels, of the text, as a proportion of the font's size
+            lineHeight: 16, // Spacing between each line of text
+
+            bubbleFill: 'white',
+            bubbleStroke: 'rgba(0, 0, 0, 0.15)',
+            textFill: '#575E75'
         };
     }
 
@@ -106,6 +131,30 @@ class Scratch3LooksBlocks {
             target.setCustomState(Scratch3LooksBlocks.STATE_KEY, bubbleState);
         }
         return bubbleState;
+    }
+
+    /**
+     * resets the text bubble of a sprite
+     * @param {Target} target the target to reset
+     */
+    _resetBubbleStyle (target) {
+        this._getBubbleState(target).style = Scratch3LooksBlocks.DEFAULT_BUBBLE_STYLE;
+    }
+
+    /**
+     * set any property of the text bubble of any given target
+     * @param {Target} target the target to modify
+     * @param {array} style the property names to change
+     * @param {array} value the values the set the properties to
+     */
+    _setBubbleProperty (target, style, value) {
+        const object = this._getBubbleState(target);
+        if (!object.style) object.style = Scratch3LooksBlocks.DEFAULT_BUBBLE_STYLE;
+        style.forEach((prop, index) => {
+            object.style[prop] = value[index];
+        });
+
+        target.setCustomState(Scratch3LooksBlocks.STATE_KEY, object);
     }
 
     /**
@@ -228,11 +277,11 @@ class Scratch3LooksBlocks {
         }
 
         if (bubbleState.skinId) {
-            this.runtime.renderer.updateTextSkin(bubbleState.skinId, type, text, onSpriteRight, [0, 0]);
+            this.runtime.renderer.updateTextSkin(bubbleState.skinId, type, text, onSpriteRight, bubbleState.style);
         } else {
             target.onTargetVisualChange = this._onTargetChanged;
             bubbleState.drawableId = this.runtime.renderer.createDrawable(StageLayering.SPRITE_LAYER);
-            bubbleState.skinId = this.runtime.renderer.createTextSkin(type, text, bubbleState.onSpriteRight, [0, 0]);
+            bubbleState.skinId = this.runtime.renderer.createTextSkin(type, text, bubbleState.onSpriteRight, bubbleState.style);
             this.runtime.renderer.updateDrawableSkinId(bubbleState.drawableId, bubbleState.skinId);
         }
 
@@ -257,7 +306,7 @@ class Scratch3LooksBlocks {
         }
 
         // Limit the length of the string.
-        text = String(text).substr(0, Scratch3LooksBlocks.SAY_BUBBLE_LIMIT);
+        text = String(text).substr(0, this.SAY_BUBBLE_LIMIT);
 
         return text;
     }
@@ -314,9 +363,16 @@ class Scratch3LooksBlocks {
             looks_getEffectValue: ({EFFECT}, {target}) => target.getEffect(Cast.toString(EFFECT).toLowerCase()),
             looks_getSpriteVisible: ({}, {target}) => target.visible,
             looks_layersGetLayer: ({}, {target}) => target.getLayerOrder(),
+            looks_sayHeight: ({}, {target}) => this._getBubbleSize(target, 1),
+            looks_sayWidth: ({}, {target}) => this._getBubbleSize(target, 0),
             looks_stretchGetX: ({}, {target}) => target.stretch[0],
             looks_stretchGetY: ({}, {target}) => target.stretch[1], 
             looks_tintColor: ({}, {target}) => this._getTintColor(target),
+
+            //stupid bubble blocks that i hate
+            looks_setFont: this.setFont,
+            looks_setColor: this.setColor,
+            looks_setShape: this.setShape,
         };
     }
 
@@ -346,6 +402,14 @@ class Scratch3LooksBlocks {
             looks_layersGetLayer: {
                 isSpriteSpecific: true,
                 getId: targetId => `${targetId}_layersGetLayer`
+            },
+            looks_sayHeight: {
+                isSpriteSpecific: true,
+                getId: targetId => `${targetId}_sayHeight`
+            },
+            looks_sayWidth: {
+                isSpriteSpecific: true,
+                getId: targetId => `${targetId}_sayWidth`
             },
             looks_stretchGetX: {
                 isSpriteSpecific: true,
@@ -597,6 +661,7 @@ class Scratch3LooksBlocks {
 
     clearEffects (args, util) {
         util.target.clearEffects();
+        this._resetBubbleStyle(util.target);
     }
 
     changeSize (args, util) {
@@ -773,6 +838,66 @@ class Scratch3LooksBlocks {
             default:
                 return '';
         }
+    }
+
+    _getBubbleSize (target, component) {
+        try {
+            const bubbleState = this._getBubbleState(target);
+            const size = this.runtime.renderer.getSkinSize(bubbleState.skinId);
+            return size[component];
+        } catch {
+            return 0;
+        }
+    }
+
+    setFont (args, util) {
+        this._setBubbleProperty(
+            util.target,
+            ['font', 'fontSize'],
+            [args.font, args.size]
+        );
+    }
+
+    setColor (args, util) {
+        let prop = null;
+        switch (args.prop) {
+            case "BUBBLE_STROKE": prop = "bubbleStroke"; break;
+            case "BUBBLE_FILL": prop = "bubbleFill"; break;
+            case "TEXT_FILL": prop = "textFill"; break;
+        }
+        if (!prop) return;
+
+        args.color = Color.rgbToHex(Cast.toRgbColorObject(args.color));
+        this._setBubbleProperty(
+            util.target,
+            [prop],
+            [args.color]
+        );
+    }
+
+    setShape (args, util) {
+        if (args.prop === 'texlim') {
+            this.SAY_BUBBLE_LIMIT = Math.max(args.color, 1);
+            return;
+        }
+
+        let prop = null;
+        switch (args.prop) {
+            case "MIN_WIDTH": prop = "minWidth"; break;
+            case "MAX_LINE_WIDTH": prop = "maxLineWidth"; break;
+            case "STROKE_WIDTH": prop = "strokeWidth"; break;
+            case "PADDING": prop = "padding"; break;
+            case "CORNER_RADIUS": prop = "cornerRadius"; break;
+            case "TAIL_HEIGHT": prop = "tailHeight"; break;
+            case "FONT_HEIGHT_RATIO": prop = "fontHeightRatio"; break;
+        }
+        if (!prop) return;
+
+        this._setBubbleProperty(
+            util.target,
+            [prop],
+            [args.color]
+        );
     }
 }
 

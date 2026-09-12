@@ -22,7 +22,7 @@ const getMonitorIdForBlockWithArgs = require('../util/get-monitor-id');
  * should not request glows. This does not affect glows when clicking on a block to execute it.
  */
 class Blocks {
-    constructor (runtime, optNoGlow) {
+    constructor (runtime, optNoGlow, optParentId) {
         this.runtime = runtime;
 
         /**
@@ -110,6 +110,12 @@ class Blocks {
          * @type {boolean}
          */
         this.forceNoGlow = optNoGlow || false;
+
+        /**
+         * The ID of the target that holds these blocks.
+         * @type {String|VM.Target.id}
+         */
+        this.parentId = optParentId || null;
     }
 
     /**
@@ -272,6 +278,44 @@ class Blocks {
     }
 
     /**
+     * Returns whether or not a procedure by a given name is a global procedure.
+     * @param {?string} name Name of procedure to query.
+     * @return {?boolean} True if the procedure is global.
+     */
+    isGlobalProcedure(name) {
+        return this.runtime._globalProcedureSourceMap[name] !== undefined;
+    }
+
+    /**
+     * Get source target blocklist, and prototype and definition blocks for a given global procedure.
+     * @param {?string} name Name of procedure to query.
+     * @return {?Object.<string,*>|null} Object of data for a global procedure.
+     */
+    getGlobalProcedureData(name) {
+        if (!this.isGlobalProcedure(name)) return null;
+
+        const globalTarget = this.runtime._globalProcedureSourceMap[name];
+        const target = this.runtime.getTargetById(globalTarget);
+        if (target) {
+            const definitionId = target.blocks.getProcedureDefinition(name);
+            const definitionBlock = target.blocks.getBlock(definitionId);
+            if (!definitionBlock) return null;
+
+            const prototypeId = target.blocks.getBlock(definitionBlock.inputs.custom_block.block);
+            const prototypeBlock = target.blocks.getBlock(prototypeId);
+
+            return {
+                target: target,
+                sourceContainer: target.blocks,
+                definitionBlock: definitionBlock,
+                prototypeBlock: prototypeBlock
+            };
+        }
+
+        return null;
+    }
+
+    /**
      * Get the procedure definition for a given name.
      * @param {?string} name Name of procedure to query.
      * @return {?string} ID of procedure definition.
@@ -280,6 +324,15 @@ class Blocks {
         const blockID = this._cache.procedureDefinitions[name];
         if (typeof blockID !== 'undefined') {
             return blockID;
+        }
+
+        const globalTarget = this.runtime._globalProcedureSourceMap[name];
+        if (globalTarget && globalTarget !== this.parentId) {
+            // This is a global procedure
+            const target = this.runtime.getTargetById(globalTarget);
+            if (target) {
+                return target.blocks.getProcedureDefinition(name);
+            }
         }
 
         for (const id in this._blocks) {
@@ -319,18 +372,43 @@ class Blocks {
             return cachedNames;
         }
 
+        const protoFoundCallback = (block) => {
+            // tw: make sure that populateProcedureCache is kept up to date with this method
+            const names = JSON.parse(block.mutation.argumentnames);
+            const ids = JSON.parse(block.mutation.argumentids);
+            const defaults = JSON.parse(block.mutation.argumentdefaults);
+
+            this._cache.procedureParamNames[name] = [names, ids, defaults];
+            return this._cache.procedureParamNames[name];
+        };
+
+        const globalTarget = this.runtime._globalProcedureSourceMap[name];
+        if (globalTarget && globalTarget !== this.parentId) {
+            // This is a global procedure.
+            const target = this.runtime.getTargetById(globalTarget);
+            if (target) {
+                const blocksToSearch = target.blocks._blocks;
+                for (const id in blocksToSearch) {
+                    if (!Object.prototype.hasOwnProperty.call(blocksToSearch, id)) continue;
+                    const block = blocksToSearch[id];
+                    if (
+                        block.opcode === 'procedures_prototype' &&
+                        block.mutation.proccode === name
+                    ) {
+                        return protoFoundCallback(block);
+                    }
+                }
+            }
+        }
+    
         for (const id in this._blocks) {
             if (!Object.prototype.hasOwnProperty.call(this._blocks, id)) continue;
             const block = this._blocks[id];
-            if (block.opcode === 'procedures_prototype' &&
-                block.mutation.proccode === name) {
-                // tw: make sure that populateProcedureCache is kept up to date with this method
-                const names = JSON.parse(block.mutation.argumentnames);
-                const ids = JSON.parse(block.mutation.argumentids);
-                const defaults = JSON.parse(block.mutation.argumentdefaults);
-
-                this._cache.procedureParamNames[name] = [names, ids, defaults];
-                return this._cache.procedureParamNames[name];
+            if (
+                block.opcode === 'procedures_prototype' &&
+                block.mutation.proccode === name
+            ) {
+                return protoFoundCallback(block);
             }
         }
 
@@ -426,6 +504,7 @@ class Blocks {
                 id: e.blockId,
                 element: e.element,
                 name: e.name,
+                oldValue: e.oldValue,
                 value: e.newValue
             });
             break;
@@ -542,7 +621,7 @@ class Blocks {
             if (this.runtime.getEditingTarget()) {
                 const currTarget = this.runtime.getEditingTarget();
                 currTarget.createComment(e.commentId, e.blockId, e.text,
-                    e.xy.x, e.xy.y, e.width, e.height, e.minimized);
+                    e.xy.x, e.xy.y, e.width, e.height, e.minimized, null);
 
                 if (currTarget.comments[e.commentId].x === null &&
                     currTarget.comments[e.commentId].y === null) {
@@ -578,6 +657,9 @@ class Blocks {
                 }
                 if (Object.prototype.hasOwnProperty.call(change, 'text')) {
                     comment.text = change.text;
+                }
+                if (Object.prototype.hasOwnProperty.call(change, 'data')) {
+                    comment.data = { ...change.data };
                 }
                 this.emitProjectChanged();
             }
@@ -639,6 +721,26 @@ class Blocks {
         this._cache.compiledScripts = {};
         this._cache.compiledProcedures = {};
         this._cache.proceduresPopulated = false;
+
+        const globalEntries = Object.entries(this.runtime._globalProcedureSourceMap);
+        const globalEntry = globalEntries.find((e) => e[1] === this.parentId);
+        if (globalEntry) {
+            // Since this blocks instance has a global block definition,
+            // we should reset the cache of other targets using it.
+            for (const target of this.runtime.targets) {
+                if (target.blocks.parentId === this.parentId) continue;
+
+                for (const blockId in target.blocks._blocks) {
+                    const block = target.blocks._blocks[blockId];
+                    if (
+                        block.opcode === 'procedures_call' &&
+                        block.mutation.proccode === globalEntry[0]
+                    ) {
+                        target.blocks.resetCache();
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -674,7 +776,7 @@ class Blocks {
             // Push global blocks to the source map.
             const globalMap = this.runtime._globalProcedureSourceMap;
             if (block.mutation.global === 'true') {
-                globalMap[block.mutation.proccode] = this.runtime._editingTarget.id;
+                globalMap[block.mutation.proccode] = this.parentId ?? this.runtime._editingTarget.id;
             } else {
                 delete globalMap[block.mutation.proccode];
             }
@@ -697,16 +799,6 @@ class Blocks {
         if (typeof block === 'undefined') return;
         switch (args.element) {
             case 'field':
-                // TODO when the field of a monitored block changes,
-                // update the checkbox in the flyout based on whether
-                // a monitor for that current combination of selected parameters exists
-                // e.g.
-                // 1. check (current [v year])
-                // 2. switch dropdown in flyout block to (current [v minute])
-                // 3. the checkbox should become unchecked if we're not already
-                //    monitoring current minute
-
-
                 if (!block.fields[args.name]) {
                     block.fields[args.name] = {
                         name: args.name,
@@ -740,6 +832,17 @@ class Blocks {
                         this.runtime.requestBlocksUpdate();
                     }
 
+                    if (block.opcode !== 'data_variable' && block.opcode !== 'data_listcontents') {
+                        // This block has an argument which needs to get separated out into
+                        // multiple monitor blocks with ids based on the selected argument
+                        const newId = getMonitorIdForBlockWithArgs(block.id, block.fields);
+
+                        // Check if a block with the new id already exists. If so, call to
+                        // check the checkbox, otherwise, uncheck it.
+                        const hasMonitor = this.runtime.monitorBlocks.getBlock(newId);
+                        this.runtime.updateFlyoutCheckbox(block.id, hasMonitor);
+                    }
+
                     const flyoutBlock = block.shadow && block.parent ? this._blocks[block.parent] : block;
                     if (flyoutBlock.isMonitored) {
                         this.runtime.requestUpdateMonitor({
@@ -759,7 +862,7 @@ class Blocks {
                     const mutation = block.mutation;
                     if (mutation.global === 'true') {
                         delete globalMap[oldMutation.proccode];
-                        globalMap[mutation.proccode] = this.runtime._editingTarget.id;
+                        globalMap[mutation.proccode] = this.parentId ?? this.runtime._editingTarget.id;
                         this.updateGlobalProcedureMutation(oldMutation, mutation);
                     } else {
                         delete globalMap[mutation.proccode];
@@ -819,7 +922,7 @@ class Blocks {
                 } else if (!wasMonitored && block.isMonitored) {
                     // Tries to show the monitor for specified block. If it doesn't exist, add the monitor.
                     if (!this.runtime.requestShowMonitor(block.id)) {
-                        this.runtime.requestAddMonitor(new MonitorRecord({
+                        this.runtime.requestAddMonitor({
                             id: block.id,
                             targetId: block.targetId,
                             spriteName: block.targetId ? this.runtime.getTargetById(block.targetId).getName() : null,
@@ -828,7 +931,7 @@ class Blocks {
                             // @todo(vm#565) for numerical values with decimals, some countries use comma
                             value: '',
                             mode: block.opcode === 'data_listcontents' ? 'list' : 'default'
-                        }));
+                        });
                     }
                 }
                 break;
@@ -878,8 +981,10 @@ class Blocks {
         // Remove from any old parent.
         if (typeof e.oldParent !== 'undefined') {
             const oldParent = this._blocks[e.oldParent];
-            if (typeof e.oldInput !== 'undefined' &&
-                oldParent.inputs[e.oldInput].block === e.id) {
+            if (
+                typeof e.oldInput !== 'undefined' &&
+                oldParent.inputs[e.oldInput]?.block === e.id
+            ) {
                 // This block was connected to the old parent's input.
                 oldParent.inputs[e.oldInput].block = null;
             } else if (oldParent.next === e.id) {
@@ -958,8 +1063,6 @@ class Blocks {
      * @param {!string} blockId Id of block to delete
      */
     deleteBlock (blockId) {
-        // @todo In runtime, stop threads running on this script.
-
         // Get block
         const block = this._blocks[blockId];
         if (!block) {
@@ -1166,10 +1269,10 @@ class Blocks {
         for (const target of this.runtime.targets) {
             if (target.id === editingTargetId) continue;
 
-            const blocks = Object.values(target.blocks._blocks)
-                .filter((b) => b.opcode === "procedures_call");
-            for (let i = 0; i < blocks.length; i++) {
-                const block = blocks[i];
+            const blocks = target.blocks._blocks;
+            const callers = Object.values(blocks).filter((b) => b.opcode === "procedures_call");
+            for (let i = 0; i < callers.length; i++) {
+                const block = callers[i];
                 if (!block.mutation || block.mutation.proccode !== proccode) continue;
 
                 // The 'structuredClone' route shouldnt run as 'children' is unused
@@ -1177,6 +1280,32 @@ class Blocks {
                     ? structuredClone(newMutation)
                     : { ...newMutation };
                 block.mutation.generateshadows = "true";
+
+                // Isolate the caller and/or surrounding blocks as new scripts if the new
+                // mutation is a terminal or switches between a stack or reporter.
+                const isChangedOutput = oldMutation.forceoutput !== newMutation.forceoutput &&
+                    (oldMutation.forceoutput == "0" || newMutation.forceoutput == "0") &&
+                    (oldMutation.forceoutput == "0" && JSON.parse(newMutation.return)[1] == 0);
+
+                if (newMutation.terminal === "true" || isChangedOutput) {
+                    if (isChangedOutput) {
+                        const prevBlock = blocks[block.parent];
+                        if (prevBlock) {
+                            prevBlock.next = null;
+                        }
+
+                        block.parent = null;
+                        target.blocks._addScript(block.id);
+                    }
+
+                    const nextBlock = blocks[block.next];
+                    if (nextBlock) {
+                        nextBlock.parent = null;
+                        target.blocks._addScript(nextBlock.id);
+                    }
+
+                    block.next = null;
+                }
             }
         }
     }

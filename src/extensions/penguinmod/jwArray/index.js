@@ -381,6 +381,11 @@ class ArrayType {
         return this;
     }
 
+    insert(value, index) {
+        this.array.splice(index - 1, 0, ArrayType.forArray(value));
+        return this;
+    }
+
     static concat(...arrays) {
         return new ArrayType(Array.prototype.concat(...arrays.map(v => v.array)), true);
     }
@@ -410,6 +415,15 @@ class ArrayType {
 
     [pmSymbol.equals](other) {
         return this === other || (this.array.length == other.array.length && this.array.every((v, i) => vm.runtime.equals(v, other.array[i])));
+    }
+    
+    shuffle() {
+        const arr = this.array;
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return this;
     }
 }
 
@@ -700,6 +714,23 @@ class Extension {
                     ...jwArray.Block
                 },
                 {
+                    opcode: 'insert',
+                    text: 'insert [VALUE] at [INDEX] in [ARRAY]',
+                    arguments: {
+                        ARRAY: jwArray.Argument,
+                        VALUE: {
+                            type: ArgumentType.STRING,
+                            defaultValue: "foo",
+                            exemptFromNormalization: true
+                        },
+                        INDEX: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 1
+                        }
+                    },
+                    ...jwArray.Block
+                },
+                {
                     opcode: 'concat',
                     text: 'merge [ONE] [TWO]',
                     arguments: {
@@ -784,6 +815,14 @@ class Extension {
                             type: ArgumentType.NUMBER,
                             defaultValue: 1
                         }
+                    },
+                    ...jwArray.Block
+                },
+                {
+                    opcode: 'shuffle',
+                    text: 'shuffle [ARRAY]',
+                    arguments: {
+                        ARRAY: jwArray.Argument,
                     },
                     ...jwArray.Block
                 },
@@ -980,6 +1019,7 @@ class Extension {
 
             SET: 'jwArray.set',
             APPEND: 'jwArray.append',
+            INSERT: 'jwArray.insert',
             CONCAT: 'jwArray.concat',
             FILL: 'jwArray.fill',
 
@@ -987,6 +1027,7 @@ class Extension {
             SPLICE: 'jwArray.splice',
             REPEAT: 'jwArray.repeat',
             FLAT: 'jwArray.flat',
+            SHUFFLE: 'jwArray.shuffle',
 
             TO_STRING: 'jwArray.toString',
             JOIN: 'jwArray.join',
@@ -1089,6 +1130,12 @@ class Extension {
                                 array: this.descendInputOfBlock(block, 'ARRAY'),
                                 value: this.descendInputOfBlock(block, 'VALUE')
                             });
+                        case 'jwArray_insert':
+                            return new IntermediateInput(opcodes.INSERT, InputType.CUSTOM_TYPE, {
+                                array: this.descendInputOfBlock(block, 'ARRAY'),
+                                index: this.descendInputOfBlock(block, 'INDEX').toType(InputType.NUMBER),
+                                value: this.descendInputOfBlock(block, 'VALUE')
+                            });
                         case 'jwArray_concat':
                             return new IntermediateInput(opcodes.CONCAT, InputType.CUSTOM_TYPE, {
                                 values: [this.descendInputOfBlock(block, 'ONE'), this.descendInputOfBlock(block, 'TWO')]
@@ -1122,6 +1169,10 @@ class Extension {
                             return new IntermediateInput(opcodes.FLAT, InputType.CUSTOM_TYPE, {
                                 array: this.descendInputOfBlock(block, 'ARRAY'),
                                 depth: this.descendInputOfBlock(block, 'DEPTH').toType(InputType.NUMBER)
+                            });
+                        case 'jwArray_shuffle':
+                            return new IntermediateInput(opcodes.SHUFFLE, InputType.CUSTOM_TYPE, {
+                                array: this.descendInputOfBlock(block, 'ARRAY'),
                             });
 
                         case 'jwArray_toString':
@@ -1239,6 +1290,8 @@ class Extension {
                             return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).set(${this.descendInput(node.index)}, ${this.descendInput(node.value)})`;
                         case opcodes.APPEND:
                             return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).append(${this.descendInput(node.value)})`;
+                        case opcodes.INSERT:
+                            return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).insert(${this.descendInput(node.value)}, ${this.descendInput(node.index)})`;
                         case opcodes.CONCAT:
                             return `vm.jwArray.Type.concat(${node.values.map(v => `vm.jwArray.Type.toArray(${this.descendInput(v)}, true)`).join(', ')})`;
                         case opcodes.FILL:
@@ -1252,6 +1305,8 @@ class Extension {
                             return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).repeat(${this.descendInput(node.times)})`;
                         case opcodes.FLAT:
                             return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).flat(${this.descendInput(node.depth)})`;
+                        case opcodes.SHUFFLE:
+                            return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).shuffle()`;
                         
                         case opcodes.TO_STRING:
                             return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).toString(${node.pretty ? 'true' : ''})`;

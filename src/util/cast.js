@@ -97,19 +97,19 @@ class Cast {
     }
 
     /**
-     * Cast any Scratch argument to an RGB color array to be used for the renderer.
-     * @param {*} value Value to convert to RGB color array.
-     * @return {Array.<number>} [r,g,b], values between 0-255.
+     * Cast any Scratch argument to an RGB(?A) color array to be used for the renderer.
+     * @param {*} value Value to convert to RGB(?A) color array.
+     * @return {Array.<number>} [r,g,b,?a], values between 0-255.
      */
     static toRgbColorList (value) {
         const color = Cast.toRgbColorObject(value);
-        return [color.r, color.g, color.b];
+        return [color.r, color.g, color.b, color.a];
     }
 
     /**
-     * Cast any Scratch argument to an RGB color object to be used for the renderer.
-     * @param {*} value Value to convert to RGB color object.
-     * @return {RGBOject} [r,g,b], values between 0-255.
+     * Cast any Scratch argument to an RGB(A?) color object to be used for the renderer.
+     * @param {*} value Value to convert to RGB(?A) color object.
+     * @return {RGBOject} [r,g,b,?a], values between 0-255.
      */
     static toRgbColorObject (value) {
         let color;
