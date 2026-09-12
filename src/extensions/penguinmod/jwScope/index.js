@@ -60,8 +60,9 @@ const jwScope = {
 
     current(scope) {
         let set = new Set()
-        for (let s = scope; s; s = s.parent)
-            Object.keys(s.vars).forEach(v => {set.delete(v); set.add(v)})
+        this.all(scope).array.forEach(scope => 
+            scope.array.forEach(v => {set.delete(v); set.add(v)})
+        )
         return new vm.jwArray.Type(Array.from(set))
     },
 
@@ -72,6 +73,7 @@ const jwScope = {
             scopes.map(v => Object.keys(v))
             .filter(v => v.length > 0)
             .map(v => new vm.jwArray.Type(v))
+            .reverse()
         )
     }
 }
