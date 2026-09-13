@@ -53,8 +53,17 @@ class Extension {
             menuIconURI: menuIconURI,
             blocks: [
                 {
+                    blockType: BlockType.LABEL,
+                    text: formatMessage({
+                        id: 'pm.SPspeechBubbles.stageSelected',
+                        default: 'Stage selected: no speech blocks',
+                        description: 'Label that appears in the extension category when the stage is selected'
+                    }),
+                    filter: [TargetType.STAGE]
+                },
+                {
                     opcode: 'setSpeechDirection',
-                    blockType: BlockType.REPORTER,
+                    blockType: BlockType.COMMAND,
                     text: formatMessage({
                         id: 'pm.SPspeechBubbles.setSpeechDirection',
                         default: 'show speech on [SIDE]',
@@ -66,6 +75,7 @@ class Extension {
                             menu: 'SPEECH_DIRECTION'
                         }
                     },
+                    filter: [TargetType.SPRITE]
                     extensions: ['colours_looks']
                 },
                 {
@@ -73,9 +83,10 @@ class Extension {
                     blockType: BlockType.REPORTER,
                     text: formatMessage({
                         id: 'pm.SPspeechBubbles.spokenValue',
-                        default: 'speech',
+                        default: 'my speech',
                         description: 'Returns the spoken text of the sprite'
                     }),
+                    filter: [TargetType.SPRITE]
                     extensions: ['colours_looks']
                 },
                 '---',
@@ -93,7 +104,7 @@ class Extension {
                         </shadow>
                       </value>
                     </block>`,
-                    filter: [TargetType.STAGE]
+                    filter: [TargetType.SPRITE]
                 },
                 {
                     blockType: BlockType.XML,
@@ -105,7 +116,7 @@ class Extension {
                       </value>
                       <field name="prop">BUBBLE_STROKE</field>
                     </block>`,
-                    filter: [TargetType.STAGE]
+                    filter: [TargetType.SPRITE]
                 },
                 {
                     blockType: BlockType.XML,
@@ -117,17 +128,17 @@ class Extension {
                       </value>
                       <field name="prop">STROKE_WIDTH</field>
                     </block>`,
-                    filter: [TargetType.STAGE]
+                    filter: [TargetType.SPRITE]
                 },
                 {
                     blockType: BlockType.XML,
                     xml: `<block id="${this._getBlockSpecificId('sayWidth')}" type="looks_sayWidth"></block>`,
-                    filter: [TargetType.STAGE]
+                    filter: [TargetType.SPRITE]
                 },
                 {
                     blockType: BlockType.XML,
                     xml: `<block id="${this._getBlockSpecificId('sayHeight')}" type="looks_sayHeight"></block>`,
-                    filter: [TargetType.STAGE]
+                    filter: [TargetType.SPRITE]
                 },
             ],
             menus: {
@@ -251,8 +262,8 @@ class Extension {
         const oldAutoState = state._forceSide;
 
         const side = Cast.toString(args.SIDE).toLowerCase();
-        state.onSpriteRight = side  === 'right';
         state._forceSide = side !== 'auto';
+        state.onSpriteRight = side === 'right' || !state._forceSide;
 
         if (
             oldDirectionState !== state.onSpriteRight ||
