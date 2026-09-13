@@ -111,7 +111,7 @@ class Extension {
                         description: 'Returns the spoken text of the sprite'
                     }),
                     // hideFromPalette: true,
-                    filter: [TargetType.SPRITE]
+                    filter: [TargetType.SPRITE],
                     extensions: ['colours_looks']
                 },
                 /*
