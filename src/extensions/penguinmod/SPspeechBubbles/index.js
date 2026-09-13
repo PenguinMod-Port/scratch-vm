@@ -135,6 +135,17 @@ class Extension {
                     filter: [TargetType.SPRITE]
                 },
                 {
+                    opcode: 'resetBubble',
+                    blockType: BlockType.COMMAND,
+                    text: formatMessage({
+                        id: 'pm.SPspeechBubbles.resetBubble',
+                        default: 'reset speech bubble',
+                        description: 'Resets visual effects applied to a speech bubble'
+                    }),
+                    filter: [TargetType.SPRITE],
+                    extensions: ['colours_looks']
+                },
+                {
                     blockType: BlockType.XML,
                     xml: `<block id="${this._getBlockSpecificId('sayWidth')}" type="looks_sayWidth"></block>`,
                     filter: [TargetType.SPRITE]
@@ -282,6 +293,15 @@ class Extension {
 
         if (state) return state.text;
         else return '';
+    }
+
+    resetBubble(_, util) {
+        const state = this.ext_looks._getBubbleState(util.target);
+
+        if (!state) return; // Shouldn't happen
+
+        state.style = this.ext_looks.constructor.DEFAULT_BUBBLE_STYLE;
+        this.ext_looks._renderBubble(util.target);
     }
 }
 
