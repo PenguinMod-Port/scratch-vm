@@ -51,7 +51,8 @@ class Scratch3LooksBlocks {
             text: '',
             type: 'say',
             usageId: null,
-            style: Scratch3LooksBlocks.DEFAULT_BUBBLE_STYLE
+            style: Scratch3LooksBlocks.DEFAULT_BUBBLE_STYLE,
+            _forceSide: false,
         };
     }
 
@@ -230,11 +231,17 @@ class Scratch3LooksBlocks {
         };
         if (bubbleState.onSpriteRight && bubbleWidth + targetBounds.right > stageBounds.right &&
             (targetBounds.left - bubbleWidth > stageBounds.left)) { // Only flip if it would fit
-            bubbleState.onSpriteRight = false;
+            if (!bubbleState._forceSide) {
+                bubbleState.onSpriteRight = false;
+            }
+
             this._renderBubble(target);
         } else if (!bubbleState.onSpriteRight && targetBounds.left - bubbleWidth < stageBounds.left &&
             (bubbleWidth + targetBounds.right < stageBounds.right)) { // Only flip if it would fit
-            bubbleState.onSpriteRight = true;
+            if (!bubbleState._forceSide) {
+                bubbleState.onSpriteRight = true;
+            }
+
             this._renderBubble(target);
         } else {
             this.runtime.renderer.updateDrawablePosition(bubbleState.drawableId, [
