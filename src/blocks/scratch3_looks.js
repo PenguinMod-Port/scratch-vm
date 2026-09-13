@@ -150,12 +150,23 @@ class Scratch3LooksBlocks {
      */
     _setBubbleProperty (target, style, value) {
         const object = this._getBubbleState(target);
-        if (!object.style) object.style = Scratch3LooksBlocks.DEFAULT_BUBBLE_STYLE;
+        let shouldRerender = false;
+        if (!object.style) {
+            object.style = Scratch3LooksBlocks.DEFAULT_BUBBLE_STYLE;
+        }
+
         style.forEach((prop, index) => {
+            if (object.style[prop] !== value[index]) {
+                shouldRerender = true;
+            }
+
             object.style[prop] = value[index];
         });
 
         target.setCustomState(Scratch3LooksBlocks.STATE_KEY, object);
+        if (shouldRerender) {
+            this._renderBubble(target);
+        }
     }
 
     /**
@@ -360,7 +371,7 @@ class Scratch3LooksBlocks {
             looks_cleargraphiceffects: this.clearEffects,
             looks_changesizeby: this.changeSize,
             looks_setsizeto: this.setSize,
-            looks_changestretchby: () => {}, // legacy no-op blocks
+            looks_changestretchby: () => {},
             looks_setstretchto: () => {},
             looks_gotofrontback: this.goToFrontBack,
             looks_goforwardbackwardlayers: this.goForwardBackwardLayers,
@@ -368,7 +379,7 @@ class Scratch3LooksBlocks {
             looks_costumenumbername: this.getCostumeNumberName,
             looks_backdropnumbername: this.getBackdropNumberName,
 
-            //pm monitors
+            // pm monitors
             looks_getEffectValue: ({EFFECT}, {target}) => target.getEffect(Cast.toString(EFFECT).toLowerCase()),
             looks_getSpriteVisible: ({}, {target}) => target.visible,
             looks_layersGetLayer: ({}, {target}) => target.getLayerOrder(),
@@ -378,7 +389,7 @@ class Scratch3LooksBlocks {
             looks_stretchGetY: ({}, {target}) => target.stretch[1], 
             looks_tintColor: ({}, {target}) => this._getTintColor(target),
 
-            //stupid bubble blocks that i hate
+            // customizable bubble blocks
             looks_setFont: this.setFont,
             looks_setColor: this.setColor,
             looks_setShape: this.setShape,
