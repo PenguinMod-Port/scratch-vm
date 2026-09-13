@@ -910,6 +910,7 @@ class Scratch3LooksBlocks {
             case "CORNER_RADIUS": prop = "cornerRadius"; break;
             case "TAIL_HEIGHT": prop = "tailHeight"; break;
             case "FONT_HEIGHT_RATIO": prop = "fontHeightRatio"; break;
+            case "LINE_HEIGHT": prop = "lineHeight"; break;
         }
         if (!prop) return;
 
