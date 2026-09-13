@@ -121,12 +121,12 @@ class Extension {
                 },
                 {
                     blockType: BlockType.XML,
-                    xml: `<block id="${_getBlockSpecificId('sayWidth')}" type="looks_sayWidth"></block>`,
+                    xml: `<block id="${this._getBlockSpecificId('sayWidth')}" type="looks_sayWidth"></block>`,
                     filter: [TargetType.STAGE]
                 },
                 {
                     blockType: BlockType.XML,
-                    xml: `<block id="${_getBlockSpecificId('sayHeight')}" type="looks_sayHeight"></block>`,
+                    xml: `<block id="${this._getBlockSpecificId('sayHeight')}" type="looks_sayHeight"></block>`,
                     filter: [TargetType.STAGE]
                 },
             ],
