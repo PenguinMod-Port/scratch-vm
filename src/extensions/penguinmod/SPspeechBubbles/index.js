@@ -176,7 +176,7 @@ class Extension {
                 },
                 FONT: {
                     acceptReporters: true,
-                    items: '_getFonts'
+                    items: '_getFonts',
                     isTypeable: true
                 },
             },
