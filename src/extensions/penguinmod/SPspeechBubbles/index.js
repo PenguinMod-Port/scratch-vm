@@ -75,7 +75,7 @@ class Extension {
                             menu: 'SPEECH_DIRECTION'
                         }
                     },
-                    filter: [TargetType.SPRITE]
+                    filter: [TargetType.SPRITE],
                     extensions: ['colours_looks']
                 },
                 {
@@ -86,7 +86,7 @@ class Extension {
                         default: 'my speech',
                         description: 'Returns the spoken text of the sprite'
                     }),
-                    filter: [TargetType.SPRITE]
+                    filter: [TargetType.SPRITE],
                     extensions: ['colours_looks']
                 },
                 '---',
