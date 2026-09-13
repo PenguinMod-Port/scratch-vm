@@ -32,8 +32,28 @@ const Font = {
     ARCADE_ID: 'Arcade',
     ARCHIVO_ID: 'Archivo',
     ARCHIVOBLACK_ID: 'Archivo Black',
-    SCRATCH_ID: 'Scratch',
-    RANDOM_ID: 'Random'
+    SCRATCH_ID: 'Scratch'
+};
+
+/**
+ * Enum for bubble properties.
+ * @readonly
+ * @enum {string}
+ */
+const BubbleProps = {
+    FONT: 'font',
+    FONT_SIZE: 'font size',
+    BORDER: 'border',
+    BACKGROUND: 'background',
+    TEXT: 'text',
+    MIN_WIDTH: 'minimum width',
+    MAX_WIDTH: 'maximum width',
+    BORDER_WIDTH: 'border width',
+    PADDING: 'padding size',
+    CORNER: 'corner radius',
+    TAIL: 'tail height',
+    FONT_HEIGHT: 'font height ratio',
+    LINE_HEIGHT: 'line height'
 };
 
 class Extension {
@@ -51,6 +71,7 @@ class Extension {
                 description: 'Label for the speech bubble extension category'
             }),
             menuIconURI: menuIconURI,
+            color1: '#9966ff',
             blocks: [
                 {
                     blockType: BlockType.LABEL,
@@ -78,23 +99,27 @@ class Extension {
                     filter: [TargetType.SPRITE],
                     extensions: ['colours_looks']
                 },
+                // TODO: whenever we implement a way to make 'sprite-specific' monitors in extension blocks,
+                // The commented lines should be implemented.
                 {
                     opcode: 'spokenValue',
+                    labelFn: 'spokenValueMonitor',
                     blockType: BlockType.REPORTER,
                     text: formatMessage({
                         id: 'pm.SPspeechBubbles.spokenValue',
                         default: 'my speech',
                         description: 'Returns the spoken text of the sprite'
                     }),
-                    hideFromPalette: true,
+                    // hideFromPalette: true,
                     extensions: ['colours_looks']
                 },
-                // Hide the above block and render it with XML to make it sprite-based.
+                /*
+                // Hide the above block and render it with XML:
                 {
                     blockType: BlockType.XML,
                     xml: `<block id="${this._getBlockSpecificId('spokenValue')}" type="SPspeechBubbles_spokenValue"></block>`,
                     filter: [TargetType.SPRITE]
-                },
+                },*/
                 '---',
                 {
                     blockType: BlockType.XML,
@@ -145,6 +170,25 @@ class Extension {
                     filter: [TargetType.SPRITE],
                     extensions: ['colours_looks']
                 },
+                '---',
+                {
+                    opcode: 'getBubbleProperty',
+                    blockType: BlockType.COMMAND,
+                    text: formatMessage({
+                        id: 'pm.SPspeechBubbles.getBubbleProperty',
+                        default: 'bubble [PROP]',
+                        description: 'Gets a visual property of a speech bubble'
+                    }),
+                    arguments: {
+                        PROP: {
+                            type: ArgumentType.STRING,
+                            menu: 'BUBBLE_PROPERTIES'
+                        }
+                    },
+                    filter: [TargetType.SPRITE],
+                    extensions: ['colours_looks']
+                },
+                '---',
                 {
                     blockType: BlockType.XML,
                     xml: `<block id="${this._getBlockSpecificId('sayWidth')}" type="looks_sayWidth"></block>`,
@@ -174,6 +218,10 @@ class Extension {
                         },
                     ]
                 },
+                BUBBLE_PROPERTIES: {
+                    acceptReporters: false,
+                    items: '_getBubbleProps',
+                },
                 FONT: {
                     acceptReporters: true,
                     items: '_getFonts',
@@ -181,6 +229,68 @@ class Extension {
                 },
             },
         };
+    }
+
+    /**
+     * Initialize bubble properties selection menu.
+     * @returns {array} of text and values for each menu element.
+     * @private
+     */
+    _getBubbleProps () {
+        return [
+            {
+                text: 'font',
+                value: BubbleProps.FONT
+            },
+            {
+                text: 'font size',
+                value: BubbleProps.FONT_SIZE
+            },
+            {
+                text: 'border color',
+                value: BubbleProps.BORDER
+            },
+            {
+                text: 'background color',
+                value: BubbleProps.BACKGROUND
+            },
+            {
+                text: 'text color',
+                value: BubbleProps.TEXT
+            },
+            {
+                text: 'minimum width',
+                value: BubbleProps.MIN_WIDTH
+            },
+            {
+                text: 'maximum width',
+                value: BubbleProps.MAX_WIDTH
+            },
+            {
+                text: 'border width',
+                value: BubbleProps.BORDER_WIDTH
+            },
+            {
+                text: 'padding size',
+                value: BubbleProps.PADDING
+            },
+            {
+                text: 'corner radius',
+                value: BubbleProps.CORNER
+            },
+            {
+                text: 'tail height',
+                value: BubbleProps.TAIL
+            },
+            {
+                text: 'font height ratio',
+                value: BubbleProps.FONT_HEIGHT
+            },
+            {
+                text: 'line height',
+                value: BubbleProps.LINE_HEIGHT
+            },
+        ];
     }
 
     /**
@@ -249,11 +359,7 @@ class Extension {
             ...this.runtime.fontManager.getFonts().map(i => ({
                 text: i.name,
                 value: i.family
-            })),
-            {
-                text: 'random font',
-                value: Font.RANDOM_ID
-            }
+            }))
         ];
     }
 
@@ -297,13 +403,42 @@ class Extension {
         else return '';
     }
 
+    spokenValueMonitor () {
+        if (this.runtime._editingTarget) {
+            return this.runtime._editingTarget.getName() + ': speech';
+        }
+
+        return 'my speech';
+    }
+
     resetBubble(_, util) {
         const state = this.ext_looks._getBubbleState(util.target);
-
         if (!state) return; // Shouldn't happen
 
         state.style = this.ext_looks.constructor.DEFAULT_BUBBLE_STYLE;
         this.ext_looks._renderBubble(util.target);
+    }
+
+    getBubbleProperty(args, util) {
+        const state = this.ext_looks._getBubbleState(util.target);
+        if (!state) return ''; // Shouldn't happen
+
+        switch (Cast.toString(args.PROP)) {
+            case BubbleProps.FONT: return state.font;
+            case BubbleProps.FONT_SIZE: return state.fontSize;
+            case BubbleProps.BORDER: return state.bubbleStroke;
+            case BubbleProps.BACKGROUND: return state.bubbleFill;
+            case BubbleProps.TEXT: return state.textFill;
+            case BubbleProps.MIN_WIDTH: return state.minWidth;
+            case BubbleProps.MAX_WIDTH: return state.maxLineWidth;
+            case BubbleProps.BORDER_WIDTH: return state.strokeWidth;
+            case BubbleProps.PADDING: return state.padding;
+            case BubbleProps.CORNER: return state.cornerRadius
+            case BubbleProps.TAIL: return state.tailHeight;
+            case BubbleProps.FONT_HEIGHT: return state.fontHeightRatio;
+            case BubbleProps.LINE_HEIGHT: return state.lineHeight;
+            default: return '';
+        }
     }
 }
 
