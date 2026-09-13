@@ -1,7 +1,7 @@
 const BlockType = require('../../../extension-support/block-type');
 const ArgumentType = require('../../../extension-support/argument-type');
 const Cast = require('../../../util/cast');
-const TargetType = require('../../extension-support/target-type');
+const TargetType = require('../../../extension-support/target-type');
 const formatMessage = require('format-message');
 
 /**
