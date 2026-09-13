@@ -111,6 +111,7 @@ class Extension {
                         description: 'Returns the spoken text of the sprite'
                     }),
                     // hideFromPalette: true,
+                    filter: [TargetType.SPRITE]
                     extensions: ['colours_looks']
                 },
                 /*
@@ -173,7 +174,7 @@ class Extension {
                 '---',
                 {
                     opcode: 'getBubbleProperty',
-                    blockType: BlockType.COMMAND,
+                    blockType: BlockType.REPORTER,
                     text: formatMessage({
                         id: 'pm.SPspeechBubbles.getBubbleProperty',
                         default: 'bubble [PROP]',
@@ -404,8 +405,8 @@ class Extension {
     }
 
     spokenValueMonitor () {
-        if (this.runtime._editingTarget) {
-            return this.runtime._editingTarget.getName() + ': speech';
+        if (window.vm && window.vm.runtime._editingTarget) {
+            return window.vm.runtime._editingTarget.getName() + ': speech';
         }
 
         return 'my speech';
