@@ -174,6 +174,7 @@ class Extension {
                 '---',
                 {
                     opcode: 'getBubbleProperty',
+                    labelFn: 'bubblePropertyMonitor',
                     blockType: BlockType.REPORTER,
                     text: formatMessage({
                         id: 'pm.SPspeechBubbles.getBubbleProperty',
@@ -440,6 +441,14 @@ class Extension {
             case BubbleProps.LINE_HEIGHT: return state.style.lineHeight;
             default: return '';
         }
+    }
+
+    bubblePropertyMonitor(params) {
+        if (window.vm && window.vm.runtime._editingTarget) {
+            return window.vm.runtime._editingTarget.getName() + ': bubble ' + params.PROP;
+        }
+
+        return 'my bubble ' + params.PROP;
     }
 }
 
