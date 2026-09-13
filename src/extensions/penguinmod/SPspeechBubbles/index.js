@@ -406,11 +406,7 @@ class Extension {
     }
 
     spokenValueMonitor () {
-        if (window.vm && window.vm.runtime._editingTarget) {
-            return window.vm.runtime._editingTarget.getName() + ': speech';
-        }
-
-        return 'my speech';
+        return vm.runtime._editingTarget.getName() + ': speech';
     }
 
     resetBubble(_, util) {
@@ -444,11 +440,7 @@ class Extension {
     }
 
     bubblePropertyMonitor(params) {
-        if (window.vm && window.vm.runtime._editingTarget) {
-            return window.vm.runtime._editingTarget.getName() + ': bubble ' + params.PROP;
-        }
-
-        return 'my bubble ' + params.PROP;
+        return vm.runtime._editingTarget.getName() + ': bubble ' + params.PROP;
     }
 }
 
