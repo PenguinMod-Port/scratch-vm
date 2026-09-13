@@ -425,19 +425,19 @@ class Extension {
         if (!state) return ''; // Shouldn't happen
 
         switch (Cast.toString(args.PROP)) {
-            case BubbleProps.FONT: return state.font;
-            case BubbleProps.FONT_SIZE: return state.fontSize;
-            case BubbleProps.BORDER: return state.bubbleStroke;
-            case BubbleProps.BACKGROUND: return state.bubbleFill;
-            case BubbleProps.TEXT: return state.textFill;
+            case BubbleProps.FONT: return state.style.font;
+            case BubbleProps.FONT_SIZE: return state.style.fontSize;
+            case BubbleProps.BORDER: return state.style.bubbleStroke;
+            case BubbleProps.BACKGROUND: return state.style.bubbleFill;
+            case BubbleProps.TEXT: return state.style.textFill;
             case BubbleProps.MIN_WIDTH: return state.minWidth;
-            case BubbleProps.MAX_WIDTH: return state.maxLineWidth;
-            case BubbleProps.BORDER_WIDTH: return state.strokeWidth;
-            case BubbleProps.PADDING: return state.padding;
-            case BubbleProps.CORNER: return state.cornerRadius
-            case BubbleProps.TAIL: return state.tailHeight;
-            case BubbleProps.FONT_HEIGHT: return state.fontHeightRatio;
-            case BubbleProps.LINE_HEIGHT: return state.lineHeight;
+            case BubbleProps.MAX_WIDTH: return state.style.maxLineWidth;
+            case BubbleProps.BORDER_WIDTH: return state.style.strokeWidth;
+            case BubbleProps.PADDING: return state.style.padding;
+            case BubbleProps.CORNER: return state.style.cornerRadius
+            case BubbleProps.TAIL: return state.style.tailHeight;
+            case BubbleProps.FONT_HEIGHT: return state.style.fontHeightRatio;
+            case BubbleProps.LINE_HEIGHT: return state.style.lineHeight;
             default: return '';
         }
     }
