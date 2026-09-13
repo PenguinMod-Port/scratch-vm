@@ -229,19 +229,21 @@ class Scratch3LooksBlocks {
             top: stageSize[1] / 2,
             bottom: -stageSize[1] / 2
         };
-        if (bubbleState.onSpriteRight && bubbleWidth + targetBounds.right > stageBounds.right &&
-            (targetBounds.left - bubbleWidth > stageBounds.left)) { // Only flip if it would fit
-            if (!bubbleState._forceSide) {
-                bubbleState.onSpriteRight = false;
-            }
-
+        if (
+            !bubbleState._forceSide && bubbleState.onSpriteRight &&
+            bubbleWidth + targetBounds.right > stageBounds.right &&
+            (targetBounds.left - bubbleWidth > stageBounds.left)
+        ) {
+            // Only flip if it would fit
+            bubbleState.onSpriteRight = false;
             this._renderBubble(target);
-        } else if (!bubbleState.onSpriteRight && targetBounds.left - bubbleWidth < stageBounds.left &&
-            (bubbleWidth + targetBounds.right < stageBounds.right)) { // Only flip if it would fit
-            if (!bubbleState._forceSide) {
-                bubbleState.onSpriteRight = true;
-            }
-
+        } else if (
+            !bubbleState._forceSide && !bubbleState.onSpriteRight &&
+            targetBounds.left - bubbleWidth < stageBounds.left &&
+            (bubbleWidth + targetBounds.right < stageBounds.right)
+        ) {
+            // Only flip if it would fit
+            bubbleState.onSpriteRight = true;
             this._renderBubble(target);
         } else {
             this.runtime.renderer.updateDrawablePosition(bubbleState.drawableId, [

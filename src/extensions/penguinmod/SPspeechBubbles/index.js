@@ -86,8 +86,14 @@ class Extension {
                         default: 'my speech',
                         description: 'Returns the spoken text of the sprite'
                     }),
-                    filter: [TargetType.SPRITE],
+                    hideFromPalette: true,
                     extensions: ['colours_looks']
+                },
+                // Hide the above block and render it with XML to make it sprite-based.
+                {
+                    blockType: BlockType.XML,
+                    xml: `<block id="${this._getBlockSpecificId('spokenValue')}" type="SPspeechBubbles_spokenValue"></block>`,
+                    filter: [TargetType.SPRITE]
                 },
                 '---',
                 {
@@ -110,9 +116,7 @@ class Extension {
                     blockType: BlockType.XML,
                     xml: `<block type="looks_setColor">
                       <value name="color">
-                        <shadow type="colour_picker">
-                          <field name="COLOUR"></field>
-                        </shadow>
+                        <shadow type="colour_picker"></shadow>
                       </value>
                       <field name="prop">BUBBLE_STROKE</field>
                     </block>`,
