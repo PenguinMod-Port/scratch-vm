@@ -639,6 +639,32 @@ class ScriptTreeGenerator {
                 min: this.descendInputOfBlock(block, 'min').toType(InputType.NUMBER),
                 max: this.descendInputOfBlock(block, 'max').toType(InputType.NUMBER)
             });
+        case 'operator_decode': {
+            let encoding = null;
+            switch (block.fields.ENCODING.value) {
+                case 'base16': encoding = InputOpcode.PM_OP_DECODE_B16; break;
+                case 'base64': encoding = InputOpcode.PM_OP_DECODE_B64; break;
+                case 'uri': encoding = InputOpcode.PM_OP_DECODE_URI; break;
+                default: return this.createConstantInput("");
+            }
+
+            return new IntermediateInput(encoding, InputType.STRING, {
+                text: this.descendInputOfBlock(block, "TEXT").toType(InputType.STRING)
+            });
+        }
+        case 'operator_encode': {
+            let encoding = null;
+            switch (block.fields.ENCODING.value) {
+                case 'base16': encoding = InputOpcode.PM_OP_ENCODE_B16; break;
+                case 'base64': encoding = InputOpcode.PM_OP_ENCODE_B64; break;
+                case 'uri': encoding = InputOpcode.PM_OP_ENCODE_URI; break;
+                default: return this.createConstantInput("");
+            }
+
+            return new IntermediateInput(encoding, InputType.STRING, {
+                text: this.descendInputOfBlock(block, "TEXT").toType(InputType.STRING)
+            });
+        }
         case 'operator_expandableBool': {
             let amount = Number(block.fields.EXPANDABLE.value);
             let inputs = [];
