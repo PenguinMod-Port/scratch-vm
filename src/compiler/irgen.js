@@ -1005,7 +1005,7 @@ class ScriptTreeGenerator {
                 button: ["left", "middle", "right"].indexOf(block.fields.BUTTON_OPTION.value)
             });
         case 'sensing_mouseclicked':
-            return new IntermediateInput(InputOpcode.PM_SENSING_MOUSE_CLICKED, InputType.BOOLEAN, {
+            return new IntermediateInput(InputOpcode.PM_SENSING_MOUSEBTN_CLICKED, InputType.BOOLEAN, {
                 button: -1 //any
             });
         case 'sensing_mousescrolling':
