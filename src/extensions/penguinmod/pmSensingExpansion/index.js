@@ -44,6 +44,87 @@ class pmSensingExpansion {
             color: '#5CB1D6',
             blocks: [
                 {
+                    opcode: 'pickColor',
+                    text: 'grab color at x: [X] y: [Y]',
+                    blockType: BlockType.REPORTER,
+                    arguments: {
+                        X: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 0
+                        },
+                        Y: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 0
+                        }
+                    },
+                    ...template
+                },
+                {
+                    blockType: BlockType.XML,
+                    xml: `
+                    <block type="sensing_getspritewithattrib">
+                        <value name="var">
+                            <shadow type="text">
+                                <field name="TEXT">my variable</field>
+                            </shadow>
+                        </value>
+                        <value name="val">
+                            <shadow type="text">
+                                <field name="TEXT">0</field>
+                            </shadow>
+                        </value>
+                    </block>
+                    `
+                },
+                {
+                    opcode: 'spriteName',
+                    text: 'sprite name',
+                    blockType: BlockType.REPORTER,
+                    disableMonitor: true,
+                    ...template
+                },
+                "---",
+                {
+                    opcode: 'setUsername',
+                    text: 'set username to [NAME]',
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        NAME: {
+                            type: ArgumentType.STRING,
+                            defaultValue: "Penguin"
+                        }
+                    },
+                    ...template
+                },
+                {
+                    opcode: 'packaged',
+                    text: 'project packaged?',
+                    blockType: BlockType.BOOLEAN,
+                    disableMonitor: true,
+                    ...template
+                },
+                {
+                    opcode: 'framed',
+                    text: 'project in iframe?',
+                    blockType: BlockType.BOOLEAN,
+                    disableMonitor: true,
+                    ...template
+                },
+                "---",
+                {
+                    opcode: 'currentMillisecond',
+                    text: 'current millisecond',
+                    blockType: BlockType.REPORTER,
+                    ...template
+                },
+                {
+                    opcode: 'deltaTime',
+                    text: 'delta time',
+                    blockType: BlockType.REPORTER,
+                    ...template
+                },
+                "---",
+                {
                     blockType: BlockType.XML,
                     xml: `
                     <block type="sensing_getoperatingsystem" />
@@ -141,6 +222,15 @@ class pmSensingExpansion {
                     blockType: BlockType.COMMAND,
                     ...template
                 },
+
+                // blocks that probably deserve to be somewhere else
+                {
+                    opcode: 'maxSpriteLayers',
+                    text: 'max sprite layers',
+                    blockType: BlockType.REPORTER,
+                    hideFromPalette: true,
+                    ...template
+                },
             ],
             menus: {
                 urlSections: {
@@ -213,6 +303,48 @@ class pmSensingExpansion {
         } catch {
             return null;
         }
+    }
+
+    pickColor(args) {
+        const renderer = this.runtime.renderer;
+        const scratchX = Cast.toNumber(args.X);
+        const scratchY = Cast.toNumber(args.Y);
+        const clientX = Math.round((((this.runtime.stageWidth / 2) + scratchX) / this.runtime.stageWidth) * renderer._gl.canvas.clientWidth);
+        const clientY = Math.round((((this.runtime.stageHeight / 2) - scratchY) / this.runtime.stageHeight) * renderer._gl.canvas.clientHeight);
+        const colorInfo = renderer.extractColor(clientX, clientY, 20);
+        return Color.rgbToHex(colorInfo.color);
+    }
+
+    spriteName(_, util) {
+        return util.target.getName();
+    }
+
+    setUsername(args) {
+        const username = Cast.toString(args.NAME);
+        vm.postIOData('userData', {
+            username: username,
+            loggedIn: false,
+        });
+    }
+
+    packaged() {
+        return this.runtime.isPackaged;
+    }
+
+    framed() {
+        if (!window.parent) return false;
+        return window.parent !== window;
+    }
+
+    currentMillisecond() {
+        return Date.now() % 1000;
+    }
+
+    deltaTime() {
+        let now = Date.now();
+        let dt = now - this.lastUpdate;
+        this.lastUpdate = now;
+        return dt;
     }
 
     setUrlEnd(args) {
@@ -342,6 +474,10 @@ class pmSensingExpansion {
         if ('vibrate' in navigator) {
             navigator.vibrate(250);
         }
+    }
+
+    maxSpriteLayers() {
+        return this.runtime.renderer._drawList.length - 1;
     }
 }
 
