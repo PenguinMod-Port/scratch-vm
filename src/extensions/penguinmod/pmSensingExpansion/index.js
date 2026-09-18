@@ -41,7 +41,7 @@ class pmSensingExpansion {
         return {
             id: 'pmSensingExpansion',
             name: 'Sensing Expansion',
-            color: '#4CBFE6',
+            color: '#5CB1D6',
             blocks: [
                 {
                     blockType: BlockType.XML,
@@ -141,8 +141,78 @@ class pmSensingExpansion {
                     blockType: BlockType.COMMAND,
                     ...template
                 },
-            ]
+            ],
+            menus: {
+                urlSections: {
+                    acceptReporters: true,
+                    items: [
+                        "protocol",
+                        "host",
+                        "hostname",
+                        "port",
+                        "pathname",
+                        "search",
+                        "hash",
+                        "origin",
+                        "subdomain",
+                        "path"
+                    ]
+                }
+            }
         };
+    }
+    
+    /**
+     * @param {string} option 
+     * @param {URL} urlObject 
+     * @returns {string}
+     */
+    _urlOptionFromObject(option, urlObject) {
+        const validOptions = [
+            "protocol",
+            "host",
+            "hostname",
+            "port",
+            "pathname",
+            "search",
+            "hash",
+            "origin",
+            "subdomain",
+            "path"
+        ];
+        if (!validOptions.includes(option)) return '';
+
+        switch (option) {
+            case 'subdomain': {
+                const origin = urlObject.origin;
+                if (origin.split('.').length <= 2) return '';
+                const splitSubdomain = origin.split('.')[0];
+                const subdomain = splitSubdomain.split('//')[1];
+                if (!subdomain) return '';
+                return subdomain.replace(/\./gmi, '');
+            }
+            case 'path': {
+                const origin = urlObject.origin;
+                if (origin.endsWith('/')) {
+                    return urlObject.href.replace(origin, '');
+                }
+                return urlObject.href.replace(origin + '/', '');
+            }
+        }
+
+        return Cast.toString(urlObject[option]);
+    }
+
+    /**
+     * @param {string} url
+     * @returns {URL?}
+     */
+    _validateUrl(url) {
+        try {
+            new URL(url);
+        } catch {
+            return null;
+        }
     }
 
     setUrlEnd(args) {
@@ -153,26 +223,24 @@ class pmSensingExpansion {
     }
 
     urlOptionsOf(args) {
-        if (!('location' in window)) return ''; // idk how this would fail but funny
         const option = Cast.toString(args.OPTIONS).toLowerCase();
-        const url = Cast.toString(args.URL);
-        if (!this.validateUrl(url)) return '';
-        return this.urlOptionFromObject(option, new URL(url));
+        const url = this._validateUrl(Cast.toString(args.URL));
+        if (!url) return '';
+        return this._urlOptionFromObject(option, url);
     }
 
     queryParamOfUrl(args) {
         if (!('URLSearchParams' in window)) return '';
-        const url = Cast.toString(args.URL);
-        if (!this.validateUrl(url)) return '';
-        const urlObject = new URL(url);
-        const queryParams = new URLSearchParams(urlObject.search);
+        const url = this._validateUrl(Cast.toString(args.URL));
+        if (!url) return '';
+        const queryParams = new URLSearchParams(url.search);
         return queryParams.get(Cast.toString(args.PARAM));
     }
     
     urlOptions(args) {
         if (!('location' in window)) return ''; // idk how this would fail but funny
         const option = Cast.toString(args.OPTIONS).toLowerCase();
-        return this.urlOptionFromObject(option, location);
+        return this._urlOptionFromObject(option, location);
     }
 
     browserLanguage() {
