@@ -986,6 +986,12 @@ class ScriptTreeGenerator {
                 x2: this.descendInputOfBlock(block, 'x2'),
                 y2: this.descendInputOfBlock(block, 'y2')
             });
+        case 'sensing_getbrowser':
+            return new IntermediateInput(InputOpcode.PM_SENSING_BROWSER, InputType.STRING);
+        case 'sensing_getoperatingsystem':
+            return new IntermediateInput(InputOpcode.PM_SENSING_OS, InputType.STRING);
+        case 'sensing_geturl':
+            return new IntermediateInput(InputOpcode.PM_SENSING_URL, InputType.STRING);
         case 'sensing_keyhit':
             return new IntermediateInput(InputOpcode.PM_SENSING_KEY_HIT, InputType.BOOLEAN, {
                 key: this.descendInputOfBlock(block, 'KEY_OPTION', true)

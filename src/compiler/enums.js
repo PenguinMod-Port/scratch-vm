@@ -415,6 +415,7 @@ const InputOpcode = {
     SENSING_TOUCHING_OBJECT: 'sensing.touching',
     SENSING_USERNAME: 'sensing.username',
 
+    PM_SENSING_BROWSER: 'sensing.browser',
     PM_SENSING_DISTANCE_COORDINATES: 'sensing.distance.coordinates',
     PM_SENSING_HAS_NUMBER: 'sensing.hasNumber',
     PM_SENSING_IS_TEXT: 'sensing.isText',
@@ -424,7 +425,9 @@ const InputOpcode = {
     PM_SENSING_MOUSEBTN_DOWN: 'sensing.mousebtnDown',
     PM_SENSING_MOUSEBTN_RELEASED: 'sensing.mousebtnReleased',
     PM_SENSING_MOUSE_SCROLLING: 'sensing.mouseScrolling',
+    PM_SENSING_OS: 'sensing.operatingSystem',
     PM_SENSING_TIME_TIMESTAMP: 'sensing.timestamp',
+    PM_SENSING_URL: 'sensing.url',
 
     PROCEDURE_CALL: 'procedures.call',
     PROCEDURE_ARGUMENT: 'procedures.argument',

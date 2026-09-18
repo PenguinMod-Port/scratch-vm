@@ -401,6 +401,61 @@ class Scratch3SensingBlocks {
     async setClipboard (args, util) {
         await util.ioQuery('clipboard', 'writeText', [Cast.toString(args.ITEM)]);
     }
+
+    _getOS () {
+        if (!('userAgent' in navigator)) return 'Unknown';
+        const agent = navigator.userAgent;
+        if (agent.includes('Windows')) {
+            return 'Windows';
+        }
+        if (agent.includes('Android')) {
+            return 'Android';
+        }
+        if (agent.includes('iPad') || agent.includes('iPod') || agent.includes('iPhone')) {
+            return 'iOS';
+        }
+        if (agent.includes('Linux')) {
+            return 'Linux';
+        }
+        if (agent.includes('CrOS')) {
+            return 'ChromeOS';
+        }
+        if (agent.includes('Mac OS')) {
+            return 'MacOS';
+        }
+        return 'Unknown';
+    }
+
+    _getBrowser () {
+        if (!('userAgent' in navigator)) return 'Unknown';
+        const agent = navigator.userAgent;
+        if ('userAgentData' in navigator) {
+            const agentData = JSON.stringify(navigator.userAgentData.brands);
+            if (agentData.includes('Google Chrome')) {
+                return 'Chrome';
+            }
+            if (agentData.includes('Opera')) {
+                return 'Opera';
+            }
+            if (agentData.includes('Microsoft Edge')) {
+                return 'Edge';
+            }
+        }
+        if (agent.includes('Chrome')) {
+            return 'Chrome';
+        }
+        if (agent.includes('Firefox')) {
+            return 'Firefox';
+        }
+        // PenguinMod cannot be loaded in IE 11 (the last supported version)
+        // if (agent.includes('MSIE') || agent.includes('rv:')) {
+        //     return 'Internet Explorer';
+        // }
+        if (agent.includes('Safari')) {
+            return 'Safari';
+        }
+        return 'Unknown';
+    }
 }
 
 module.exports = Scratch3SensingBlocks;

@@ -710,6 +710,8 @@ class JSGenerator {
             return `runtime.ioDevices.keyboard.getKeyIsDown(${this.descendInput(node.key)})`;
 
         //pm sensing
+        case InputOpcode.PM_SENSING_BROWSER:
+            return `runtime.ext_scratch3_sensing._getBrowser()`;
         case InputOpcode.PM_SENSING_DISTANCE_COORDINATES:
             return `Math.hypot(${this.descendInput(node.x2)} - ${this.descendInput(node.x1)}, ${this.descendInput(node.y2)} - ${this.descendInput(node.y1)})`;
         case InputOpcode.PM_SENSING_HAS_NUMBER:
@@ -728,8 +730,12 @@ class JSGenerator {
             return `runtime.ioDevices.mouse.getButtonIsReleased(${node.button})`;
         case InputOpcode.PM_SENSING_MOUSE_SCROLLING:
             return `runtime.ext_scratch3_sensing._mouseScrolling(${this.descendInput(node.option)}, runtime.ioDevices.mouseWheel.scrollDelta)`
+        case InputOpcode.PM_SENSING_OS:
+            return `runtime.ext_scratch3_sensing._getOS()`;
         case InputOpcode.PM_SENSING_TIME_TIMESTAMP:
             return `Date.now()`;
+        case InputOpcode.PM_SENSING_URL:
+            return `location.href`;
 
         case InputOpcode.VAR_GET:
             return `${this.referenceVariable(node.variable)}.value`;
