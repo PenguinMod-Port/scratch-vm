@@ -146,6 +146,7 @@ class Extension {
 
     deserialize(data) {
         this.visibleLogs = data;
+        this._updateState();
     }
 
     getInfo() {
