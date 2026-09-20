@@ -7,6 +7,7 @@ const MenuType = require('../extension-support/menu-type');
 const Blocks = require('./blocks');
 const BlocksRuntimeCache = require('./blocks-runtime-cache');
 const BlockType = require('../extension-support/block-type');
+const TabManager = require('../extension-support/pm-tab-manager');
 const Profiler = require('./profiler');
 const Sequencer = require('./sequencer');
 const execute = require('./execute.js');
@@ -576,6 +577,11 @@ class Runtime extends EventEmitter {
          * @type {Object.<string, object>}
          */
         this.extensionStorage = {};
+
+        /**
+         * Manages extension tabs.
+         */
+        this.tabManager = new TabManager(this);
 
         /**
          * Total number of scratch-storage load() requests since the runtime was created or cleared.
