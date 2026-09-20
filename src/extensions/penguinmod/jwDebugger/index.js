@@ -94,6 +94,12 @@ class Extension {
                     opcode: "clear",
                     text: "clear logs",
                     blockType: BlockType.COMMAND
+                },
+                "---",
+                {
+                    opcode: "breakpoint",
+                    text: "breakpoint",
+                    blockType: BlockType.COMMAND
                 }
             ],
             menus: {
@@ -142,6 +148,10 @@ class Extension {
 
     clear() {
         this.listElement.innerHTML = '';
+    }
+
+    breakpoint() {
+        vm.runtime.pause();
     }
 }
 

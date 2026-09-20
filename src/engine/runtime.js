@@ -607,6 +607,9 @@ class Runtime extends EventEmitter {
 
         // deprecated camera states
         this.cameraStates = {};
+
+        // stepping thread for pausing while in a thread
+        this.steppingThread = null;
     }
 
     /**
@@ -2938,6 +2941,10 @@ class Runtime extends EventEmitter {
             thread.pause();
         }
         this.emit(Runtime.RUNTIME_PAUSED);
+
+        if (vm.runtime.sequencer.activeThread) {
+            this.steppingThread = this.vm.runtime.sequencer.activeThread;
+        }
     }
 
     /**
@@ -2960,6 +2967,38 @@ class Runtime extends EventEmitter {
             thread.play();
         }
         this.emit(Runtime.RUNTIME_UNPAUSED);
+
+        if (this.steppingThread) {
+            const getThreadIndex = (thread) => {
+                // We can't use vm.runtime.threads.indexOf(thread) because threads can be restarted.
+                // This can happens when, for example, a "when I receive message1" script broadcasts message1.
+                // The object in runtime.threads is replaced when this happens.
+                if (!thread) return -1;
+                return vm.runtime.threads.findIndex(
+                    (otherThread) =>
+                    otherThread.target === thread.target &&
+                    otherThread.topBlock === thread.topBlock &&
+                    otherThread.stackClick === thread.stackClick &&
+                    otherThread.updateMonitor === thread.updateMonitor
+                );
+            };
+
+            // If we paused in the middle of a tick, we need to make sure to step the scripts that didn't get
+            // stepped in that tick to avoid affecting project behavior.
+            const threads = vm.runtime.threads;
+            const startingIndex = getThreadIndex(this.steppingThread);
+            if (startingIndex !== -1) {
+                for (let i = startingIndex; i < threads.length; i++) {
+                    const thread = threads[i];
+                    const status = thread.status;
+                    if (status === STATUS_RUNNING || status === STATUS_YIELD || status === STATUS_YIELD_TICK) {
+                        vm.runtime.sequencer.activeThread = thread;
+                        vm.runtime.sequencer.stepThread(thread);
+                    }
+                }
+            }
+            this.steppingThread = null;
+        }
     }
 
     /**
