@@ -16,7 +16,31 @@ const style = `
     flex-direction: column;
     padding: 1em;
     height: 100%;
+    gap: 1em;
 }
+
+.jwDebugger-bar {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5em;
+}
+
+.jwDebugger-bar button {
+    border: none;
+    background-color: var(--looks-secondary);
+    color: #fff;
+    padding: 0.25em 0.5em;
+    border-radius: 0.25em;
+    margin-right: auto;
+}
+
+.jwDebugger-bar input[type="checkbox"] {
+    width: 1em;
+}
+.jwDebugger-bar input[type="checkbox"].jwDebugger-debug { accent-color: #19f; }
+.jwDebugger-bar input[type="checkbox"].jwDebugger-log { accent-color: #888; }
+.jwDebugger-bar input[type="checkbox"].jwDebugger-warn { accent-color: #fa1; }
+.jwDebugger-bar input[type="checkbox"].jwDebugger-error { accent-color: #f13; }
 
 .jwDebugger-list {
     display: flex;
@@ -36,9 +60,14 @@ const style = `
 }
 
 .jwDebugger-list > .jwDebugger-debug { background-color: #19f5; }
-.jwDebugger-list > * { background-color: #8882; }
+.jwDebugger-list > .jwDebugger-log { background-color: #8882; }
 .jwDebugger-list > .jwDebugger-warn { background-color: #fa15; }
 .jwDebugger-list > .jwDebugger-error { background-color: #f135; }
+
+.jwDebugger-list:not(.jwDebugger-debugShow) > .jwDebugger-debug { display: none; }
+.jwDebugger-list:not(.jwDebugger-logShow) > .jwDebugger-log { display: none; }
+.jwDebugger-list:not(.jwDebugger-warnShow) > .jwDebugger-warn { display: none; }
+.jwDebugger-list:not(.jwDebugger-errorShow) > .jwDebugger-error { display: none; }
 
 .jwDebugger-timestamp {
     font-size: 0.75em;
@@ -66,7 +95,57 @@ class Extension {
         this.tab.setDOM(this.rootElement);
         createElement('style', {innerHTML: style}, document.head);
 
+        this.visibleLogs = {
+            debug: false,
+            log: true,
+            warn: true,
+            error: true
+        }
+
+        this.barElement = createElement('div', {className: "jwDebugger-bar"}, this.rootElement);
+        createElement('button', {
+            innerText: "Clear"
+        }, this.barElement).addEventListener("click", e => {
+            this.listElement.innerHTML = "";
+        });
+
+        this.checkboxes = {
+            debug: createElement('input', {type: "checkbox", className: "jwDebugger-debug"}, this.barElement),
+            log: createElement('input', {type: "checkbox", className: "jwDebugger-log"}, this.barElement),
+            warn: createElement('input', {type: "checkbox", className: "jwDebugger-warn"}, this.barElement),
+            error: createElement('input', {type: "checkbox", className: "jwDebugger-error"}, this.barElement)
+        }
+        for (let [k, v] of Object.entries(this.checkboxes)) {
+            v.addEventListener('change', e => {
+                if (this.visibleLogs[k] !== v.checked) {
+                    this.visibleLogs[k] = v.checked;
+                    this._updateState();
+                }
+            })
+        }
+
         this.listElement = createElement('div', {className: "jwDebugger-list"}, this.rootElement);
+        this._updateState();
+    }
+
+    _updateState() {
+        this.listElement.className = "jwDebugger-list"
+            + (this.visibleLogs.debug ? " jwDebugger-debugShow" : "")
+            + (this.visibleLogs.log ? " jwDebugger-logShow" : "")
+            + (this.visibleLogs.warn ? " jwDebugger-warnShow" : "")
+            + (this.visibleLogs.error ? " jwDebugger-errorShow" : "");
+
+        for (let [k, v] of Object.entries(this.checkboxes)) {
+            v.checked = this.visibleLogs[k];
+        }
+    }
+
+    serialize() {
+        return this.visibleLogs;
+    }
+
+    deserialize(data) {
+        this.visibleLogs = data;
     }
 
     getInfo() {
