@@ -25,6 +25,7 @@ const style = `
     border: 1px solid var(--ui-black-transparent);
     border-radius: 8px;
     overflow-y: scroll;
+    height: 0px; /* this fixes it scaling weirdly dont ask me how lmao */
 }
 
 .jwDebugger-list > * {
