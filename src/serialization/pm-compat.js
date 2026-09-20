@@ -59,6 +59,66 @@ export function compatBlock(block, pmVersion) {
 
         //procedures_call
         if (block.opcode === "procedures_call") {
+            // debugger!!!
+            switch (block.mutation.proccode) {
+                case "​​breakpoint​​":
+                    return {
+                        id: block.id,
+                        opcode: "jwDebugger_breakpoint",
+                        next: block.next,
+                        parent: block.parent,
+                        inputs: {},
+                        fields: {},
+                        x: block.x,
+                        y: block.y
+                    };
+                case "​​log​​ %s":
+                    return {
+                        id: block.id,
+                        opcode: "jwDebugger_log",
+                        next: block.next,
+                        parent: block.parent,
+                        inputs: {
+                            DATA: {...block.inputs.arg0, name: "DATA"}
+                        },
+                        fields: {
+                            LOG: {name: "LOG", value: "log"}
+                        },
+                        x: block.x,
+                        y: block.y
+                    };
+                case "​​warn​​ %s":
+                    return {
+                        id: block.id,
+                        opcode: "jwDebugger_log",
+                        next: block.next,
+                        parent: block.parent,
+                        inputs: {
+                            DATA: {...block.inputs.arg0, name: "DATA"}
+                        },
+                        fields: {
+                            LOG: {name: "LOG", value: "warn"}
+                        },
+                        x: block.x,
+                        y: block.y
+                    };
+                case "​​error​​ %s":
+                    return {
+                        id: block.id,
+                        opcode: "jwDebugger_log",
+                        next: block.next,
+                        parent: block.parent,
+                        inputs: {
+                            DATA: {...block.inputs.arg0, name: "DATA"}
+                        },
+                        fields: {
+                            LOG: {name: "LOG", value: "error"}
+                        },
+                        x: block.x,
+                        y: block.y
+                    };
+            }
+
             if (block.mutation.returns === "true") block.mutation.return = `[null, ${block.mutation.optype === "\"boolean\"" ? "1" : "2"}]`;
             if (block.mutation.optype === "\"end\"") block.mutation.terminal = "true";
             if (block.mutation.color) block.mutation.colour = JSON.parse(block.mutation.color)[0];
