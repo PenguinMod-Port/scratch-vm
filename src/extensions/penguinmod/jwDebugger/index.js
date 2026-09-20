@@ -57,6 +57,7 @@ const style = `
     padding: 0.5em;
     display: flex;
     overflow-x: auto;
+    flex-shrink: 0;
 }
 
 .jwDebugger-list > .jwDebugger-debug { background-color: #19f5; }
