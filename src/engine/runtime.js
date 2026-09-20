@@ -582,6 +582,12 @@ class Runtime extends EventEmitter {
          * Manages extension tabs.
          */
         this.tabManager = new TabManager(this);
+      
+        /**
+         * Total number of blocks in project.
+         * @type {Number}
+         */
+        this._projectBlockCount = 0;
 
         /**
          * Total number of scratch-storage load() requests since the runtime was created or cleared.
@@ -1632,12 +1638,14 @@ class Runtime extends EventEmitter {
             ];
         }
 
+        let notchAccepts = blockInfo.notchAccepts ?? 'normal';
+
         switch (blockInfo.blockType) {
         case BlockType.COMMAND:
             blockJSON.outputShape = ScratchBlocksConstants.OUTPUT_SHAPE_SQUARE;
-            blockJSON.previousStatement = 'normal'; // null = available connection; undefined = hat
+            blockJSON.previousStatement = notchAccepts; // null = available connection; undefined = hat
             if (!blockInfo.isTerminal) {
-                blockJSON.nextStatement = 'normal'; // null = available connection; undefined = terminal
+                blockJSON.nextStatement = notchAccepts; // null = available connection; undefined = terminal
             }
             break;
         case BlockType.REPORTER:
@@ -1655,15 +1663,15 @@ class Runtime extends EventEmitter {
                 blockInfo.isEdgeActivated = true;
             }
             blockJSON.outputShape = ScratchBlocksConstants.OUTPUT_SHAPE_SQUARE;
-            blockJSON.nextStatement = 'normal'; // null = available connection; undefined = terminal
+            blockJSON.nextStatement = notchAccepts; // null = available connection; undefined = terminal
             break;
         case BlockType.CONDITIONAL:
         case BlockType.LOOP:
             blockInfo.branchCount = blockInfo.branchCount || 1;
             blockJSON.outputShape = ScratchBlocksConstants.OUTPUT_SHAPE_SQUARE;
-            blockJSON.previousStatement = 'normal'; // null = available connection; undefined = hat
+            blockJSON.previousStatement = notchAccepts; // null = available connection; undefined = hat
             if (!blockInfo.isTerminal) {
-                blockJSON.nextStatement = 'normal'; // null = available connection; undefined = terminal
+                blockJSON.nextStatement = notchAccepts; // null = available connection; undefined = terminal
             }
             break;
         }
@@ -1674,9 +1682,9 @@ class Runtime extends EventEmitter {
         if (blockInfo.tooltip) blockJSON.tooltip = blockInfo.tooltip; // Allow extensions to add a tooltip
         if (blockInfo.canDragDuplicate) blockJSON.canDragDuplicate = true;
         if (blockInfo.dualBlock) {
-            blockJSON.previousStatement = 'normal';
+            blockJSON.previousStatement = notchAccepts;
             if (!blockInfo.isTerminal) {
-                blockJSON.nextStatement = 'normal';
+                blockJSON.nextStatement = notchAccepts;
             }
         }
 
@@ -1732,7 +1740,8 @@ class Runtime extends EventEmitter {
                 blockJSON[`message${outLineNum}`] = '%1';
                 blockJSON[`args${outLineNum}`] = [{
                     type: 'input_statement',
-                    name: `SUBSTACK${branch.name}`
+                    name: `SUBSTACK${branch.name}`,
+                    check: blockJSON.branches[inBranchNum].accepts ?? 'normal'
                 }];
                 ++inBranchNum;
                 ++outLineNum;
@@ -2163,7 +2172,7 @@ class Runtime extends EventEmitter {
      */
     getBlocksXML (target) {
         return this._blockInfo.map(categoryInfo => {
-            const {name, color} = categoryInfo;
+            const {name, color, blockText} = categoryInfo;
             // Filter out blocks that aren't supposed to be shown on this target, as determined by the block info's
             // `hideFromPalette` and `filter` properties.
             const paletteBlocks = categoryInfo.blocks.filter(block => {
@@ -2179,7 +2188,8 @@ class Runtime extends EventEmitter {
                 return blockFilterIncludesTarget && !block.info.hideFromPalette;
             });
 
-            const colorXML = `colour="${xmlEscape(color)}" secondaryColour="#00000044"`;
+            const colorXML = `colour="${xmlEscape(color)}"`;
+            const textColorXML = `textColour="${xmlEscape(blockText ?? "#fff")}"`;
 
             // Use a menu icon if there is one. Otherwise, use the block icon. If there's no icon,
             // the category menu will show its default colored circle.
@@ -2201,6 +2211,7 @@ class Runtime extends EventEmitter {
             xml += ` id="${xmlEscape(categoryInfo.id)}"`;
             xml += ` ${statusButtonXML}`;
             xml += ` ${colorXML}`;
+            xml += ` ${textColorXML}`;
             xml += ` ${menuIconXML}>`;
             xml += paletteBlocks.map(block => block.xml).join('');
             xml += '</category>';
@@ -3670,6 +3681,15 @@ class Runtime extends EventEmitter {
     }
 
     /**
+     * Updates a checkbox in the flyout for a monitored block.
+     * @param {VM.Blocks.Block.id} blockId ID of the monitored block.
+     * @param {boolean} checked True checkbox should be checked.
+     */
+    updateFlyoutCheckbox (blockId, checked) {
+        console.warn('Warning: \'runtime.updateFlyoutCheckbox\' has not been connected to Blockly!');
+    }
+
+    /**
      * Get a target by its id.
      * @param {string} targetId Id of target to find.
      * @return {?Target} The target, if found.
@@ -4029,7 +4049,7 @@ class Runtime extends EventEmitter {
      * @param {string} screen the screen to get
      * @returns {object} the screen state object
      */
-    getCamera(screen) {
+    getCamera (screen) {
         if (typeof this.cameraStates[screen] !== 'object') {
             this.cameraStates[screen] = {
                 pos: [0, 0],
@@ -4046,7 +4066,7 @@ class Runtime extends EventEmitter {
      * @param {object} state the state to apply to the screen
      * @param {boolean} silent if we should emit an event because of this change
      */
-    updateCamera(screen, state, silent) {
+    updateCamera (screen, state, silent) {
         if (state.dir) state.dir = MathUtil.wrapClamp(state.dir, -179, 180);
         if (typeof this.cameraStates[screen] !== 'object') {
             this.cameraStates[screen] = {
@@ -4059,7 +4079,7 @@ class Runtime extends EventEmitter {
             Object.assign(this.cameraStates[screen], state);
         if (!silent ?? state.silent) this.emitCameraChanged(screen);
     }
-    emitCameraChanged(screen) {
+    emitCameraChanged (screen) {
         let state = this.cameraStates[screen];
         switch (screen) {
             case "default": screen = this.renderer.camera.defaultName; break;
@@ -4072,7 +4092,7 @@ class Runtime extends EventEmitter {
         this.requestRedraw();
     }
 
-    equals(a, b) {
+    equals (a, b) {
         const isCustomType = v => {
             let prototype = Object.getPrototypeOf(v)
             return prototype !== Object.prototype && prototype !== null && v.customId
@@ -4120,6 +4140,18 @@ class Runtime extends EventEmitter {
             if (Number.isNaN(n2) || (n2 === 0 && isNotActuallyZero(b))) return ('' + a).toLowerCase() === ('' + b).toLowerCase();
             return n1 === n2;
         }
+    }
+
+    updateProjectBlockCounter () {
+        let total = 0;
+        for (let i = 0; i < this.targets.length; i++) {
+            const target = this.targets[i];
+            if (target.isOriginal) {
+                total += Object.values(target.blocks._blocks).reduce((a, b) => a + (b.shadow ? 0 : 1), 0);
+            }
+        }
+
+        this._projectBlockCount = total;
     }
 }
 

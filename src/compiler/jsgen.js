@@ -310,6 +310,10 @@ class JSGenerator {
             return '(target.currentCostume + 1)';
 
         //pm looks
+        case InputOpcode.PM_LOOKS_BUBBLE_HEIGHT:
+            return `runtime.ext_scratch3_looks._getBubbleSize(target, 1)`;
+        case InputOpcode.PM_LOOKS_BUBBLE_WIDTH:
+            return `runtime.ext_scratch3_looks._getBubbleSize(target, 0)`;
         case InputOpcode.PM_LOOKS_GET_COSTUME_VALUE:
             return `runtime.ext_scratch3_looks._getCostumeValue(target, ${this.descendInput(node.costume)}, ${this.descendInput(node.value)}${node.old ? `, true` : ''})`;
         case InputOpcode.PM_LOOKS_GET_EFFECT:
@@ -543,6 +547,18 @@ class JSGenerator {
             return `((${this.descendInput(node.text2)}).split(${this.descendInput(node.text1)}).length - 1)`
         case InputOpcode.PM_OP_CONSTRAIN:
             return `Math.min(Math.max(${this.descendInput(node.min)}, ${this.descendInput(node.input)}), ${this.descendInput(node.max)})`;
+        case InputOpcode.PM_OP_DECODE_B16:
+            return `(t => { try { return new TextDecoder().decode(Uint8Array.fromHex(t)); } catch (e) { return ""; } })(${this.descendInput(node.text)})`;
+        case InputOpcode.PM_OP_DECODE_B64:
+            return `(t => { try { return atob(t) } catch (e) { return ""; } })(${this.descendInput(node.text)})`;
+        case InputOpcode.PM_OP_DECODE_URI:
+            return `decodeURIComponent(${this.descendInput(node.text)})`;
+        case InputOpcode.PM_OP_ENCODE_B16:
+            return `(new TextEncoder().encode(${this.descendInput(node.text)})).toHex()`;
+        case InputOpcode.PM_OP_ENCODE_B64:
+            return `btoa(${this.descendInput(node.text)})`;
+        case InputOpcode.PM_OP_ENCODE_URI:
+            return `encodeURIComponent(${this.descendInput(node.text)})`;
         case InputOpcode.PM_OP_ENDS_WITH:
             return `String.prototype.endsWith.call(${this.descendInput(node.text)}, ${this.descendInput(node.term)})`;
         case InputOpcode.PM_OP_INDEX_OF_TEXT_IN_TEXT:
@@ -694,6 +710,8 @@ class JSGenerator {
             return `runtime.ioDevices.keyboard.getKeyIsDown(${this.descendInput(node.key)})`;
 
         //pm sensing
+        case InputOpcode.PM_SENSING_BROWSER:
+            return `runtime.ext_scratch3_sensing._getBrowser()`;
         case InputOpcode.PM_SENSING_DISTANCE_COORDINATES:
             return `Math.hypot(${this.descendInput(node.x2)} - ${this.descendInput(node.x1)}, ${this.descendInput(node.y2)} - ${this.descendInput(node.y1)})`;
         case InputOpcode.PM_SENSING_HAS_NUMBER:
@@ -712,8 +730,12 @@ class JSGenerator {
             return `runtime.ioDevices.mouse.getButtonIsReleased(${node.button})`;
         case InputOpcode.PM_SENSING_MOUSE_SCROLLING:
             return `runtime.ext_scratch3_sensing._mouseScrolling(${this.descendInput(node.option)}, runtime.ioDevices.mouseWheel.scrollDelta)`
+        case InputOpcode.PM_SENSING_OS:
+            return `runtime.ext_scratch3_sensing._getOS()`;
         case InputOpcode.PM_SENSING_TIME_TIMESTAMP:
             return `Date.now()`;
+        case InputOpcode.PM_SENSING_URL:
+            return `location.href`;
 
         case InputOpcode.VAR_GET:
             return `${this.referenceVariable(node.variable)}.value`;

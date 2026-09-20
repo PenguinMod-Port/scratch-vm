@@ -504,6 +504,7 @@ class Blocks {
                 id: e.blockId,
                 element: e.element,
                 name: e.name,
+                oldValue: e.oldValue,
                 value: e.newValue
             });
             break;
@@ -620,7 +621,7 @@ class Blocks {
             if (this.runtime.getEditingTarget()) {
                 const currTarget = this.runtime.getEditingTarget();
                 currTarget.createComment(e.commentId, e.blockId, e.text,
-                    e.xy.x, e.xy.y, e.width, e.height, e.minimized);
+                    e.xy.x, e.xy.y, e.width, e.height, e.minimized, null);
 
                 if (currTarget.comments[e.commentId].x === null &&
                     currTarget.comments[e.commentId].y === null) {
@@ -656,6 +657,9 @@ class Blocks {
                 }
                 if (Object.prototype.hasOwnProperty.call(change, 'text')) {
                     comment.text = change.text;
+                }
+                if (Object.prototype.hasOwnProperty.call(change, 'data')) {
+                    comment.data = { ...change.data };
                 }
                 this.emitProjectChanged();
             }
@@ -795,16 +799,6 @@ class Blocks {
         if (typeof block === 'undefined') return;
         switch (args.element) {
             case 'field':
-                // TODO when the field of a monitored block changes,
-                // update the checkbox in the flyout based on whether
-                // a monitor for that current combination of selected parameters exists
-                // e.g.
-                // 1. check (current [v year])
-                // 2. switch dropdown in flyout block to (current [v minute])
-                // 3. the checkbox should become unchecked if we're not already
-                //    monitoring current minute
-
-
                 if (!block.fields[args.name]) {
                     block.fields[args.name] = {
                         name: args.name,
@@ -836,6 +830,17 @@ class Blocks {
                             this._blocks[block.parent].fields.PROPERTY.value = 'x position';
                         }
                         this.runtime.requestBlocksUpdate();
+                    }
+
+                    if (block.opcode !== 'data_variable' && block.opcode !== 'data_listcontents') {
+                        // This block has an argument which needs to get separated out into
+                        // multiple monitor blocks with ids based on the selected argument
+                        const newId = getMonitorIdForBlockWithArgs(block.id, block.fields);
+
+                        // Check if a block with the new id already exists. If so, call to
+                        // check the checkbox, otherwise, uncheck it.
+                        const hasMonitor = this.runtime.monitorBlocks.getBlock(newId);
+                        this.runtime.updateFlyoutCheckbox(block.id, hasMonitor);
                     }
 
                     const flyoutBlock = block.shadow && block.parent ? this._blocks[block.parent] : block;
@@ -917,7 +922,7 @@ class Blocks {
                 } else if (!wasMonitored && block.isMonitored) {
                     // Tries to show the monitor for specified block. If it doesn't exist, add the monitor.
                     if (!this.runtime.requestShowMonitor(block.id)) {
-                        this.runtime.requestAddMonitor(new MonitorRecord({
+                        this.runtime.requestAddMonitor({
                             id: block.id,
                             targetId: block.targetId,
                             spriteName: block.targetId ? this.runtime.getTargetById(block.targetId).getName() : null,
@@ -926,7 +931,7 @@ class Blocks {
                             // @todo(vm#565) for numerical values with decimals, some countries use comma
                             value: '',
                             mode: block.opcode === 'data_listcontents' ? 'list' : 'default'
-                        }));
+                        });
                     }
                 }
                 break;

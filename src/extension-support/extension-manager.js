@@ -31,10 +31,11 @@ const defaultBuiltinExtensions = {
     // -- penguinmod --
 
     // expansions
+    pmMotionExpansion: () => require('../extensions/penguinmod/pmMotionExpansion'),
     pmEventsExpansion: () => require('../extensions/penguinmod/pmEventsExpansion'),
     pmControlsExpansion: () => require('../extensions/penguinmod/pmControlsExpansion'),
     pmOperatorsExpansion: () => require('../extensions/penguinmod/pmOperatorsExpansion'),
-    pmMotionExpansion: () => require('../extensions/penguinmod/pmMotionExpansion'),
+    pmSensingExpansion: () => require('../extensions/penguinmod/pmSensingExpansion'),
 
     // jwklong
     jwArray: () => require('../extensions/penguinmod/jwArray'),
@@ -71,6 +72,7 @@ const defaultBuiltinExtensions = {
 
     // sharkpool
     SPjavascriptV2: () => require('../extensions/penguinmod/SPjavascriptV2'),
+    SPspeechBubbles: () => require('../extensions/penguinmod/SPspeechBubbles'),
 
     // old ass deprecated extensions
     jwUnite: () => require('../extensions/penguinmod/jwUnite'),

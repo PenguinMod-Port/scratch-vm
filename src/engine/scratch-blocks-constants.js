@@ -74,7 +74,97 @@ const ScratchBlocksConstants = {
      * ENUM for output shape: slanted (regex).
      * @const
      */
-    OUTPUT_SHAPE_SLANTED: 12
+    OUTPUT_SHAPE_SLANTED: 12,
+
+    /**
+     * ENUM for notch shape: switch case (switch case)
+     * @const
+     */
+    NOTCH_SHAPE_SWITCH_CASE: 'switchCase',
+
+    /**
+     * ENUM for notch shape: hexagon (booleans/predicates)
+     * @const
+     */
+    NOTCH_SHAPE_HEXAGON: 'hexagon',
+
+    /**
+     * ENUM for notch shape: rounded (numbers/strings).
+     * @const
+     */
+    NOTCH_SHAPE_ROUND: 'round',
+
+    /**
+     * ENUM for notch shape: square (arrays/array buffers/uint arrays).
+     * @const
+     */
+    NOTCH_SHAPE_SQUARE: 'square',
+
+    /**
+     * ENUM for notch shape: leaf (vectors).
+     * @const
+     */
+    NOTCH_SHAPE_LEAF: 'leaf',
+
+    /**
+     * ENUM for notch shape: plus (objects/classes or class instances).
+     * @const
+     */
+    NOTCH_SHAPE_PLUS: 'plus',
+
+    /**
+     * ENUM for notch shape: octagonal (Scratch targets).
+     * @const
+     */
+    NOTCH_SHAPE_OCTAGONAL: 'octagonal',
+
+    /**
+     * ENUM for notch shape: bumped (BigInt).
+     * @const
+     */
+    NOTCH_SHAPE_BUMPED: 'bumped',
+
+    /**
+     * ENUM for notch shape: indented (Symbols).
+     * @const
+     */
+    NOTCH_SHAPE_INDENTED: 'indented',
+
+    /**
+     * ENUM for notch shape: scrapped (Maps).
+     * @const
+     */
+    NOTCH_SHAPE_SCRAPPED: 'scrapped',
+
+    /**
+     * ENUM for notch shape: arrow (Sets).
+     * @const
+     */
+    NOTCH_SHAPE_ARROW: 'arrow',
+
+    /**
+     * ENUM for notch shape: ticket (Dates).
+     * @const
+     */
+    NOTCH_SHAPE_TICKET: 'ticket',
+
+    /**
+     * ENUM for notch shape: pincer.
+     * @const
+     */
+    NOTCH_SHAPE_PINCER: 'pincer',
+
+    /**
+     * ENUM for notch shape: inverted.
+     * @const
+     */
+    NOTCH_SHAPE_INVERTED: 'inverted',
+
+    /**
+     * ENUM for notch shape: jigsaw.
+     * @const
+     */
+    NOTCH_SHAPE_JIGSAW: 'jigsaw',
 };
 
 module.exports = ScratchBlocksConstants;

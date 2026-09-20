@@ -414,6 +414,10 @@ class ScriptTreeGenerator {
             return new IntermediateInput(InputOpcode.PM_LOOKS_VISIBLE_GET, InputType.BOOLEAN);
         case 'looks_layersGetLayer':
             return new IntermediateInput(InputOpcode.PM_LOOKS_LAYER_GET, InputType.NUMBER_WHOLE);
+        case 'looks_sayHeight':
+            return new IntermediateInput(InputOpcode.PM_LOOKS_BUBBLE_HEIGHT, InputType.NUMBER);
+        case 'looks_sayWidth':
+            return new IntermediateInput(InputOpcode.PM_LOOKS_BUBBLE_WIDTH, InputType.NUMBER);
         case 'looks_stretchGetX':
             return new IntermediateInput(InputOpcode.PM_LOOKS_STRETCH_X, InputType.NUMBER);
         case 'looks_stretchGetY':
@@ -635,6 +639,32 @@ class ScriptTreeGenerator {
                 min: this.descendInputOfBlock(block, 'min').toType(InputType.NUMBER),
                 max: this.descendInputOfBlock(block, 'max').toType(InputType.NUMBER)
             });
+        case 'operator_decode': {
+            let encoding = null;
+            switch (block.fields.ENCODING.value) {
+                case 'base16': encoding = InputOpcode.PM_OP_DECODE_B16; break;
+                case 'base64': encoding = InputOpcode.PM_OP_DECODE_B64; break;
+                case 'uri': encoding = InputOpcode.PM_OP_DECODE_URI; break;
+                default: return this.createConstantInput("");
+            }
+
+            return new IntermediateInput(encoding, InputType.STRING, {
+                text: this.descendInputOfBlock(block, "TEXT").toType(InputType.STRING)
+            });
+        }
+        case 'operator_encode': {
+            let encoding = null;
+            switch (block.fields.ENCODING.value) {
+                case 'base16': encoding = InputOpcode.PM_OP_ENCODE_B16; break;
+                case 'base64': encoding = InputOpcode.PM_OP_ENCODE_B64; break;
+                case 'uri': encoding = InputOpcode.PM_OP_ENCODE_URI; break;
+                default: return this.createConstantInput("");
+            }
+
+            return new IntermediateInput(encoding, InputType.STRING, {
+                text: this.descendInputOfBlock(block, "TEXT").toType(InputType.STRING)
+            });
+        }
         case 'operator_expandableBool': {
             let amount = Number(block.fields.EXPANDABLE.value);
             let inputs = [];
@@ -956,6 +986,12 @@ class ScriptTreeGenerator {
                 x2: this.descendInputOfBlock(block, 'x2'),
                 y2: this.descendInputOfBlock(block, 'y2')
             });
+        case 'sensing_getbrowser':
+            return new IntermediateInput(InputOpcode.PM_SENSING_BROWSER, InputType.STRING);
+        case 'sensing_getoperatingsystem':
+            return new IntermediateInput(InputOpcode.PM_SENSING_OS, InputType.STRING);
+        case 'sensing_geturl':
+            return new IntermediateInput(InputOpcode.PM_SENSING_URL, InputType.STRING);
         case 'sensing_keyhit':
             return new IntermediateInput(InputOpcode.PM_SENSING_KEY_HIT, InputType.BOOLEAN, {
                 key: this.descendInputOfBlock(block, 'KEY_OPTION', true)
@@ -975,7 +1011,7 @@ class ScriptTreeGenerator {
                 button: ["left", "middle", "right"].indexOf(block.fields.BUTTON_OPTION.value)
             });
         case 'sensing_mouseclicked':
-            return new IntermediateInput(InputOpcode.PM_SENSING_MOUSE_CLICKED, InputType.BOOLEAN, {
+            return new IntermediateInput(InputOpcode.PM_SENSING_MOUSEBTN_CLICKED, InputType.BOOLEAN, {
                 button: -1 //any
             });
         case 'sensing_mousescrolling':

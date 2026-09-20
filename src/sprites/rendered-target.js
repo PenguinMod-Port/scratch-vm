@@ -63,6 +63,8 @@ class RenderedTarget extends Target {
             saturation: 0,
             horizontal_shear: 0,
             vertical_shear: 0,
+            repeat_x: 0,
+            repeat_y: 0,
 
             //special
             tintColor: 0xffffff + 1
@@ -658,8 +660,13 @@ class RenderedTarget extends Target {
         if (index < 0 || index >= this.sprite.sounds.length) {
             return null;
         }
+
         // Delete the sound at the given index
         const deletedSound = this.sprite.sounds.splice(index, 1)[0];
+        this.sprite.soundBank.soundPlayers[deletedSound.soundId].dispose();
+        delete this.sprite.soundBank.soundPlayers[deletedSound.soundId];
+    
+
         this.runtime.requestTargetsUpdate(this);
         return deletedSound;
     }

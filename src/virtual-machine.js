@@ -85,6 +85,11 @@ class VirtualMachine extends EventEmitter {
          */
         this._dragTarget = null;
 
+        /**
+         * Ordering of toolbox categories by their respective IDs.
+         */
+        this._categoryOrdering = [];
+
         // Runtime emits are passed along as VM emits.
         this.runtime.on(Runtime.SCRIPT_GLOW_ON, glowData => {
             this.emit(Runtime.SCRIPT_GLOW_ON, glowData);
@@ -213,6 +218,11 @@ class VirtualMachine extends EventEmitter {
         this.extensionManager = new ExtensionManager(this);
         this.securityManager = this.extensionManager.securityManager;
         this.runtime.extensionManager = this.extensionManager;
+
+        this.customPrompt = function () {
+            // Defined by GUI.
+            console.warn("Custom Prompt is not implemented!");
+        }
 
         // Load core extensions
         for (const id of CORE_EXTENSIONS) {
@@ -1229,10 +1239,11 @@ class VirtualMachine extends EventEmitter {
     /**
      * TW: Get the raw binary data to use when exporting a costume to the user's local file system.
      * @param {Costume} costumeObject scratch-vm costume object
+     * @param {Boolean} [optIncludeExtras] if true and costume is an SVG, will add things like custom fonts to the export
      * @returns {Uint8Array}
      */
-    getExportedCostume (costumeObject) {
-        return exportCostume(costumeObject);
+    getExportedCostume (costumeObject, optIncludeExtras) {
+        return exportCostume(costumeObject, optIncludeExtras, this);
     }
 
     /**

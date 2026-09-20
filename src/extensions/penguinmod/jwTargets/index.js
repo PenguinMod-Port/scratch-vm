@@ -188,6 +188,21 @@ class Extension {
                     }
                 },
                 {
+                    opcode: 'getVector',
+                    text: '[TARGET] [MENU]',
+                    blockType: BlockType.REPORTER,
+                    blockShape: BlockShape.LEAF,
+                    arguments: {
+                        TARGET: Target.Argument,
+                        MENU: {
+                            menu: "targetPropertyVector",
+                            defaultValue: "position"
+                        }
+                    },
+                    hideFromPalette: !vm.runtime.ext_jwVector,
+                    ...(vm.jwVector ? vm.jwVector.Block : {})
+                },
+                {
                     opcode: 'set',
                     text: 'set [TARGET] [MENU] to [VALUE]',
                     blockType: BlockType.COMMAND,
@@ -198,10 +213,23 @@ class Extension {
                             defaultValue: "x"
                         },
                         VALUE: {
-                            type: ArgumentType.STRING,
-                            exemptFromNormalization: true
+                            type: ArgumentType.STRING
                         }
                     }
+                },
+                {
+                    opcode: 'setVector',
+                    text: 'set [TARGET] [MENU] to [VALUE]',
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        TARGET: Target.Argument,
+                        MENU: {
+                            menu: "targetPropertyVector",
+                            defaultValue: "position"
+                        },
+                        VALUE: (vm.jwVector ? vm.jwVector.Argument : {})
+                    },
+                    hideFromPalette: !vm.runtime.ext_jwVector
                 },
                 '---',
                 {
@@ -363,6 +391,13 @@ class Extension {
                         "volume"
                     ]
                 },
+                targetPropertyVector: {
+                    acceptReporters: true,
+                    items: [
+                        "position",
+                        "stretch"
+                    ]
+                },
                 touchingObject: [
                     { text: "mouse-pointer", value: "_mouse_" },
                     { text: "edge", value: "_edge_" }
@@ -406,7 +441,7 @@ class Extension {
         TARGET = Target.Type.toTarget(TARGET)
         MENU = Cast.toString(MENU)
 
-        if (!TARGET.target) return ""
+        if (!TARGET.target) return null;
 
         switch(MENU) {
             case "name": return TARGET.target.sprite.name
@@ -424,7 +459,23 @@ class Extension {
             case "volume": return TARGET.target.volume
         }
 
-        return ""
+        return null;
+    }
+
+    getVector({TARGET, MENU}) {
+        if (!vm.jwVector) return;
+
+        TARGET = Target.Type.toTarget(TARGET);
+        MENU = Cast.toString(MENU);
+
+        if (!TARGET.target) return new vm.jwVector.Type();
+
+        switch (MENU) {
+            case "position": return new vm.jwVector.Type(TARGET.target.x, TARGET.target.y);
+            case "stretch": return new vm.jwVector.Type(...TARGET.target.stretch);
+        }
+
+        return new vm.jwVector.Type();
     }
 
     set({TARGET, MENU, VALUE}) {
@@ -468,6 +519,21 @@ class Extension {
             case "volume":
                 vm.runtime.ext_scratch3_sound._updateVolume(Cast.toNumber(VALUE), TARGET.target)
                 break
+        }
+    }
+
+    setVector({TARGET, MENU, VALUE}) {
+        if (!vm.jwVector) return;
+
+        TARGET = Target.Type.toTarget(TARGET);
+        MENU = Cast.toString(MENU);
+        VALUE = vm.jwVector.Type.toVector(VALUE);
+
+        if (!TARGET.target) return;
+
+        switch (MENU) {
+            case "position": TARGET.target.setXY(VALUE.x, VALUE.y); break;
+            case "stretch": TARGET.target.setStretch(VALUE.x, VALUE.y); break;
         }
     }
 
