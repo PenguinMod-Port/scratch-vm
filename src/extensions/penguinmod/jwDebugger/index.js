@@ -30,11 +30,12 @@ const style = `
 
 .jwDebugger-list > * {
     padding: 0.5em;
-    background-color: var(--ui-primary);
 }
-.jwDebugger-list > *:nth-child(even) {
-    background-color: var(--ui-secondary);
-}
+
+.jwDebugger-list > .jwDebugger-debug { background-color: #19f5; }
+.jwDebugger-list > * { background-color: #8882; }
+.jwDebugger-list > .jwDebugger-warn { background-color: #fa15; }
+.jwDebugger-list > .jwDebugger-error { background-color: #f135; }
 
 .jwDebugger-timestamp {
     font-size: 0.75em;
@@ -42,6 +43,8 @@ const style = `
     padding-right: 0.5em;
 }
 `
+
+const LOG_LIMIT = 1000;
 
 class Extension {
     constructor() {
@@ -107,6 +110,10 @@ class Extension {
         createElement('span', {
             innerText: String(DATA)
         }, log);
+
+        if (this.listElement.children.length > LOG_LIMIT) {
+            this.listElement.removeChild(this.listElement.children[0]);
+        }
     }
 
     clear() {
