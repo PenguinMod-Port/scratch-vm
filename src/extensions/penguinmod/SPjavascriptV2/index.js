@@ -403,7 +403,7 @@ class SPjavascriptV2 {
 
       return {
         success: successful,
-        result: result ?? null;
+        result: result ?? null
       };
     } else {
       // Run sandboxed code
@@ -428,7 +428,7 @@ class SPjavascriptV2 {
       this.forceSandboxNextExecute = false;
       return {
         success: executionResult.success,
-        result: executionResult.value ?? null;
+        result: executionResult.value ?? null
       };
     }
   }
