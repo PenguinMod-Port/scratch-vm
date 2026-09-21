@@ -300,7 +300,7 @@ class SPjavascriptV2 {
     // Check if we have a cached function so we can run code faster
     let cacheKey = null;
     let newFunc = null;
-    if (this.isEditorUnsandboxed) {
+    if (!this.forceSandboxNextExecute && this.isEditorUnsandboxed) {
       cacheKey = this._getThisBlockID(util);
 
       const cached = util.thread._JSV2cache?.get(cacheKey);
@@ -348,8 +348,10 @@ class SPjavascriptV2 {
       }
 
       /* Append the running target */
-      binders += `const target = vm.runtime.getTargetById("${util.target.id}");\n`;
-      binders += `const sprite = target;\n`;
+      if (!this.forceSandboxNextExecute && this.isEditorUnsandboxed) {
+        binders += `const target = vm.runtime.getTargetById("${util.target.id}");\n`;
+        binders += `const sprite = target;\n`;
+      }
 
       /* Generate arguments */
       let argNames = [];
@@ -377,9 +379,6 @@ class SPjavascriptV2 {
       func,
     } = this._compileCode(code, codeArgs, util);
 
-    const shouldRunUnsandboxed = this.forceSandboxNextExecute
-      ? false
-      : this.isEditorUnsandboxed;
     if (!this.forceSandboxNextExecute && this.isEditorUnsandboxed) {
       // Cache the function.
       if (!util.thread._JSV2cache) {
@@ -389,6 +388,7 @@ class SPjavascriptV2 {
       util.thread._JSV2cache.set(cacheKey, func);
 
       // Run unsandboxed code
+      let successful = true;
       let result;
       try {
         if (isArgArray) {
@@ -397,10 +397,14 @@ class SPjavascriptV2 {
           result = await func(...argEntries.map((a) => a[1]));
         }
       } catch (err) {
-        throw err;
+        successful = false;
+        result = err.message || err;
       }
 
-      return result ?? null;
+      return {
+        success: successful,
+        result: result ?? null;
+      };
     } else {
       // Run sandboxed code
       let caller = "(";
@@ -421,11 +425,11 @@ class SPjavascriptV2 {
         });
       });
 
-      if (executionResult.success) {
-        return executionResult.value ?? null;
-      } else {
-        throw executionResult.value;
-      }
+      this.forceSandboxNextExecute = false;
+      return {
+        success: executionResult.success,
+        result: executionResult.value ?? null;
+      };
     }
   }
 
@@ -455,34 +459,48 @@ class SPjavascriptV2 {
   }
 
   async jsCommand(args, util) {
-    await this._executeCode(Cast.toString(args.CODE), [], util);
+    const output = await this._executeCode(Cast.toString(args.CODE), [], util);
+    if (output.success) return output.result;
+    else throw output.result;
   }
   async jsCommandBinded(args, util) {
-    await this._executeCode(
+    const output = await this._executeCode(
       Cast.toString(args.CODE),
       this._parseArguments(args.ARGS),
       util
     );
+
+    if (output.success) return output.result;
+    else throw output.result;
   }
 
   async jsReporter(args, util) {
-    return await this._executeCode(Cast.toString(args.CODE), [], util);
+    const output = await this._executeCode(Cast.toString(args.CODE), [], util);
+
+    if (output.success) return output.result;
+    else throw output.result;
   }
   async jsReporterBinded(args, util) {
-    return await this._executeCode(
+    const output = await this._executeCode(
       Cast.toString(args.CODE),
       this._parseArguments(args.ARGS),
       util
     );
+
+    if (output.success) return output.result;
+    else throw output.result;
   }
 
   async jsBoolean(args, util) {
-    const possiblePromise = await this._executeCode(
+    const output = await this._executeCode(
       Cast.toString(args.CODE),
       [],
       util
     );
+    if (!output.success) throw output.result;
+
     /* force output a boolean */
+    const possiblePromise = output.result;
     if (possiblePromise && typeof possiblePromise.then === "function") {
       return (async () => {
         const value = await possiblePromise;
@@ -493,13 +511,15 @@ class SPjavascriptV2 {
     return Cast.toBoolean(possiblePromise);
   }
   async jsBooleanBinded(args, util) {
-    const possiblePromise = await this._executeCode(
+    const output = await this._executeCode(
       Cast.toString(args.CODE),
       this._parseArguments(args.ARGS),
       util
     );
+    if (!output.success) throw output.result;
 
     /* force output a boolean */
+    const possiblePromise = output.result;
     if (possiblePromise && typeof possiblePromise.then === "function") {
       return (async () => {
         const value = await possiblePromise;
