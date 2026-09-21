@@ -346,7 +346,7 @@ class SPjavascriptV2 {
       }
 
       /* Append the running target */
-      binders += `const target = runtime.getTargetById("${util.target.id}");\n`;
+      binders += `const target = vm.runtime.getTargetById("${util.target.id}");\n`;
       binders += `const sprite = target;\n`;
 
       /* Generate arguments */
@@ -419,7 +419,7 @@ class SPjavascriptV2 {
       if (executionResult.success) {
         return executionResult.value;
       } else {
-        throw new Error(result.value);
+        throw new Error(executionResult.value);
       }
     }
   }

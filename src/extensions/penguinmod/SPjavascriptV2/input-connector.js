@@ -19,28 +19,25 @@ let aceInstalled = false;
 let installQueue = [];
 
 const importAcePackages = async function () {
-    return new Promise((resolve) => {
-        let installedPackages = 0;
+    let installedPackages = 0;
 
-        const packageLoadCallback = () => {
-            installedPackages++;
+    const packageLoadCallback = () => {
+        installedPackages++;
 
-            // Wait for all packages to be installed.
-            if (installedPackages === ACE_PACKAGES.length) {
-                aceInstalled = true;
-                installQueue.forEach(resolve => resolve);
-                resolve();
-            }
-        };
-
-        for (const packageName of ACE_PACKAGES) {
-            const script = document.createElement("script");
-            script.src = ACE_URL + packageName;
-            script.async = false;
-            script.onload = packageLoadCallback;
-            document.body.appendChild(script);
+        // Wait for all packages to be installed.
+        if (installedPackages === ACE_PACKAGES.length) {
+            aceInstalled = true;
+            installQueue.forEach(resolve => resolve);
         }
-    });
+    };
+
+    for (const packageName of ACE_PACKAGES) {
+        const script = document.createElement("script");
+        script.src = ACE_URL + packageName;
+        script.async = false;
+        script.onload = packageLoadCallback;
+        document.body.appendChild(script);
+    }
 };
 
 /**
@@ -159,7 +156,7 @@ const importAceAutoComplete = () => {
  * Initializes the code editor input.
  */
 const initCodeInput = async function () {
-    await importAcePackages();
+    importAcePackages();
 
     // Element reused by the custom input api
     const recyclableDiv = document.createElement("div");
