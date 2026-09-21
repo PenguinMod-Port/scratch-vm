@@ -36,6 +36,60 @@ const isStuck = () => {
     return false;
 };`;
 
+
+/**
+ * Decodes any Base64 string. Will not throw errors for invalid text.
+ * @param {string} input The Base64 to decode
+ * @returns {string} The decoded text
+ */
+runtimeFunctions.decodeBase64ToString = `const decodeBase64ToString = input => {
+    const keyStr = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+    input = input.replace(/[^a-z0-9+/]/gi, '');
+
+    const bytes = Math.floor((input.length / 4) * 3);
+    const out = new Uint8Array(bytes);
+
+    let c = 0;
+    for (let i = 0; i < bytes; i += 3) {
+        // get the 3 octects in 4 ascii chars
+        const enc1 = keyStr.indexOf(input.charAt(c++));
+        const enc2 = keyStr.indexOf(input.charAt(c++));
+        const enc3 = keyStr.indexOf(input.charAt(c++));
+        const enc4 = keyStr.indexOf(input.charAt(c++));
+
+        const chr1 = (enc1 << 2) | (enc2 >> 4);
+        const chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
+        const chr3 = ((enc3 & 3) << 6) | enc4;
+
+        out[i] = chr1;
+        out[i +1] = chr2;
+        out[i +2] = chr3;
+    }
+
+    return new TextDecoder().decode(out);
+};`;
+
+/**
+ * !! copied from ../util/b64-binary !!
+ * Encodes any string.
+ * @param {string} string The text to encode
+ * @returns {string} The Base64 encoded string
+ */
+runtimeFunctions.encodeStringToBase64 = `const encodeStringToBase64 = string => {
+    const keyStr = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+    const bytes = new TextEncoder().encode(string);
+    let out = '';
+    for (let i = 0; i < bytes.length; i += 3) {
+        const num = ((bytes[i] << 16) & 0xFF0000) + ((bytes[i +1] << 8) & 0x00FF00) + (bytes[i +2] & 0x0000FF);
+        out += keyStr[(num >> 18) & 0x3F];
+        out += keyStr[(num >> 12) & 0x3F];
+        out += keyStr[(num >> 6) & 0x3F];
+        out += keyStr[num & 0x3F];
+    }
+
+    return out.replace(/A(?=A*$)/g, '=');
+};`;
+
 /**
  * Start hats by opcode.
  * @param {string} requestedHat The opcode of the hat to start.

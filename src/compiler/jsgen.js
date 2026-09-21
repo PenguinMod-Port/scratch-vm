@@ -550,13 +550,13 @@ class JSGenerator {
         case InputOpcode.PM_OP_DECODE_B16:
             return `(t => { try { return new TextDecoder().decode(Uint8Array.fromHex(t)); } catch (e) { return ""; } })(${this.descendInput(node.text)})`;
         case InputOpcode.PM_OP_DECODE_B64:
-            return `(t => { try { return atob(t) } catch (e) { return ""; } })(${this.descendInput(node.text)})`;
+            return `decodeBase64ToString(${this.descendInput(node.text)})`;
         case InputOpcode.PM_OP_DECODE_URI:
             return `decodeURIComponent(${this.descendInput(node.text)})`;
         case InputOpcode.PM_OP_ENCODE_B16:
             return `(new TextEncoder().encode(${this.descendInput(node.text)})).toHex()`;
         case InputOpcode.PM_OP_ENCODE_B64:
-            return `btoa(${this.descendInput(node.text)})`;
+            return `encodeStringToBase64(${this.descendInput(node.text)})`;
         case InputOpcode.PM_OP_ENCODE_URI:
             return `encodeURIComponent(${this.descendInput(node.text)})`;
         case InputOpcode.PM_OP_ENDS_WITH:
