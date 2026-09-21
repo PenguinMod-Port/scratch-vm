@@ -413,7 +413,7 @@ class SPjavascriptV2 {
       if (executionResult.success) {
         return executionResult.value;
       } else {
-        throw new Error(executionResult.value);
+        throw executionResult.value;
       }
     }
   }
