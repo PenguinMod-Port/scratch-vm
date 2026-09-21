@@ -219,7 +219,7 @@ class SPjavascriptV2 {
           opcode: "runNextInSandbox",
           text: "run next code in sandbox",
           blockType: BlockType.COMMAND,
-          hideFromPalette: !isScratchBlocksReady && !this.isEditorUnsandboxed,
+          hideFromPalette: !this.isEditorUnsandboxed,
         },
         {
           opcode: "packagerInfo",
