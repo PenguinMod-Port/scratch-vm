@@ -1061,6 +1061,13 @@ class Runtime extends EventEmitter {
     }
 
     /**
+     * Event name when the editor tab list is updated.
+     */
+    static get EDITOR_TABS_UPDATE () {
+        return 'EDITOR_TABS_UPDATE';
+    }
+
+    /**
      * How rapidly we try to step threads by default, in ms.
      */
     static get THREAD_STEP_INTERVAL () {
