@@ -91,7 +91,7 @@ const LOG_LIMIT = 1000;
 
 class Extension {
     constructor() {
-        this.tab = vm.runtime.tabManager.register("jwDebugger", "Debugger", "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCI+CiAgPHBhdGggZD0iTSAxNS41IDExLjUgQyAxNS41IDE0LjUzOCAxMy4wMzggMTcgMTAgMTcgQyA2Ljk2MiAxNyA0LjUgMTQuNTM4IDQuNSAxMS41IEMgNC41IDkuOTA4IDUuMTc2IDguNDc1IDYuMjU3IDcuNDcgQyA2LjMzNSA3LjQ4OSA2LjQxNiA3LjUgNi41IDcuNSBMIDEzLjUgNy41IEMgMTMuNTg0IDcuNSAxMy42NjUgNy40OSAxMy43NDMgNy40NyBDIDE0LjgyNCA4LjQ3NCAxNS41IDkuOTA4IDE1LjUgMTEuNSBaIiBzdHlsZT0ic3Ryb2tlLXdpZHRoOiAxOyI+PC9wYXRoPgogIDxwYXRoIGQ9Ik0gMTAgMyBDIDExLjkzMyAzIDEzLjUgNC41NjcgMTMuNSA2LjUgTCA2LjUgNi41IEMgNi41IDQuNTY3IDguMDY3IDMgMTAgMyBaIiBzdHlsZT0ic3Ryb2tlLWxpbmVqb2luOiByb3VuZDsgc3Ryb2tlLXdpZHRoOiAycHg7Ij48L3BhdGg+CiAgPHBhdGggc3R5bGU9InN0cm9rZS1saW5lY2FwOiByb3VuZDsgc3Ryb2tlLWxpbmVqb2luOiByb3VuZDsgZmlsbDogbm9uZTsgc3Ryb2tlOiByZ2IoMCwgMCwgMCk7IiBkPSJNIDMuNSAxMS41IEwgNC41IDExLjUiPjwvcGF0aD4KICA8cGF0aCBzdHlsZT0ic3Ryb2tlLWxpbmVjYXA6IHJvdW5kOyBzdHJva2UtbGluZWpvaW46IHJvdW5kOyBmaWxsOiBub25lOyBzdHJva2U6IHJnYigwLCAwLCAwKTsiIGQ9Ik0gMTUuNSAxMS41IEwgMTYuNSAxMS41Ij48L3BhdGg+CiAgPHBhdGggc3R5bGU9InN0cm9rZS1saW5lY2FwOiByb3VuZDsgc3Ryb2tlLWxpbmVqb2luOiByb3VuZDsgdHJhbnNmb3JtLW9yaWdpbjogMTBweCAxMS41cHg7IGZpbGw6IG5vbmU7IHN0cm9rZTogcmdiKDAsIDAsIDApOyIgZD0iTSAzLjUgMTEuNSBMIDQuNSAxMS41IiB0cmFuc2Zvcm09Im1hdHJpeCgwLjg2NjAyNSwgLTAuNSwgMC41LCAwLjg2NjAyNSwgMCwgMCkiPjwvcGF0aD4KICA8cGF0aCBzdHlsZT0ic3Ryb2tlLWxpbmVjYXA6IHJvdW5kOyBzdHJva2UtbGluZWpvaW46IHJvdW5kOyBzdHJva2Utd2lkdGg6IDE7IHRyYW5zZm9ybS1vcmlnaW46IDEwcHggMTEuNXB4OyBmaWxsOiBub25lOyBzdHJva2U6IHJnYigwLCAwLCAwKTsiIGQ9Ik0gMTUuNSAxMS41IEwgMTYuNSAxMS41IiB0cmFuc2Zvcm09Im1hdHJpeCgwLjg2NjAyNSwgLTAuNSwgMC41LCAwLjg2NjAyNSwgMCwgMCkiPjwvcGF0aD4KICA8cGF0aCBzdHlsZT0ic3Ryb2tlLWxpbmVjYXA6IHJvdW5kOyBzdHJva2UtbGluZWpvaW46IHJvdW5kOyBzdHJva2Utd2lkdGg6IDE7IHRyYW5zZm9ybS1vcmlnaW46IDEwcHggMTEuNXB4OyBmaWxsOiBub25lOyBzdHJva2U6IHJnYigwLCAwLCAwKTsiIGQ9Ik0gMy41IDExLjUgTCA0LjUgMTEuNSIgdHJhbnNmb3JtPSJtYXRyaXgoMC44NjYwMjUsIDAuNSwgLTAuNSwgMC44NjYwMjUsIDAsIDApIj48L3BhdGg+CiAgPHBhdGggc3R5bGU9InN0cm9rZS1saW5lY2FwOiByb3VuZDsgc3Ryb2tlLWxpbmVqb2luOiByb3VuZDsgc3Ryb2tlLXdpZHRoOiAxOyB0cmFuc2Zvcm0tb3JpZ2luOiAxMHB4IDExLjVweDsgZmlsbDogbm9uZTsgc3Ryb2tlOiByZ2IoMCwgMCwgMCk7IiBkPSJNIDE1LjUgMTEuNSBMIDE2LjUgMTEuNSIgdHJhbnNmb3JtPSJtYXRyaXgoMC44NjYwMjYsIDAuNSwgLTAuNSwgMC44NjYwMjYsIDAsIDApIj48L3BhdGg+Cjwvc3ZnPg==");
+        this.tab = vm.runtime.tabManager.register("jwDebugger", "debugger", "Debugger", "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCI+CiAgPHBhdGggZD0iTSAxNS41IDExLjUgQyAxNS41IDE0LjUzOCAxMy4wMzggMTcgMTAgMTcgQyA2Ljk2MiAxNyA0LjUgMTQuNTM4IDQuNSAxMS41IEMgNC41IDkuOTA4IDUuMTc2IDguNDc1IDYuMjU3IDcuNDcgQyA2LjMzNSA3LjQ4OSA2LjQxNiA3LjUgNi41IDcuNSBMIDEzLjUgNy41IEMgMTMuNTg0IDcuNSAxMy42NjUgNy40OSAxMy43NDMgNy40NyBDIDE0LjgyNCA4LjQ3NCAxNS41IDkuOTA4IDE1LjUgMTEuNSBaIiBzdHlsZT0ic3Ryb2tlLXdpZHRoOiAxOyI+PC9wYXRoPgogIDxwYXRoIGQ9Ik0gMTAgMyBDIDExLjkzMyAzIDEzLjUgNC41NjcgMTMuNSA2LjUgTCA2LjUgNi41IEMgNi41IDQuNTY3IDguMDY3IDMgMTAgMyBaIiBzdHlsZT0ic3Ryb2tlLWxpbmVqb2luOiByb3VuZDsgc3Ryb2tlLXdpZHRoOiAycHg7Ij48L3BhdGg+CiAgPHBhdGggc3R5bGU9InN0cm9rZS1saW5lY2FwOiByb3VuZDsgc3Ryb2tlLWxpbmVqb2luOiByb3VuZDsgZmlsbDogbm9uZTsgc3Ryb2tlOiByZ2IoMCwgMCwgMCk7IiBkPSJNIDMuNSAxMS41IEwgNC41IDExLjUiPjwvcGF0aD4KICA8cGF0aCBzdHlsZT0ic3Ryb2tlLWxpbmVjYXA6IHJvdW5kOyBzdHJva2UtbGluZWpvaW46IHJvdW5kOyBmaWxsOiBub25lOyBzdHJva2U6IHJnYigwLCAwLCAwKTsiIGQ9Ik0gMTUuNSAxMS41IEwgMTYuNSAxMS41Ij48L3BhdGg+CiAgPHBhdGggc3R5bGU9InN0cm9rZS1saW5lY2FwOiByb3VuZDsgc3Ryb2tlLWxpbmVqb2luOiByb3VuZDsgdHJhbnNmb3JtLW9yaWdpbjogMTBweCAxMS41cHg7IGZpbGw6IG5vbmU7IHN0cm9rZTogcmdiKDAsIDAsIDApOyIgZD0iTSAzLjUgMTEuNSBMIDQuNSAxMS41IiB0cmFuc2Zvcm09Im1hdHJpeCgwLjg2NjAyNSwgLTAuNSwgMC41LCAwLjg2NjAyNSwgMCwgMCkiPjwvcGF0aD4KICA8cGF0aCBzdHlsZT0ic3Ryb2tlLWxpbmVjYXA6IHJvdW5kOyBzdHJva2UtbGluZWpvaW46IHJvdW5kOyBzdHJva2Utd2lkdGg6IDE7IHRyYW5zZm9ybS1vcmlnaW46IDEwcHggMTEuNXB4OyBmaWxsOiBub25lOyBzdHJva2U6IHJnYigwLCAwLCAwKTsiIGQ9Ik0gMTUuNSAxMS41IEwgMTYuNSAxMS41IiB0cmFuc2Zvcm09Im1hdHJpeCgwLjg2NjAyNSwgLTAuNSwgMC41LCAwLjg2NjAyNSwgMCwgMCkiPjwvcGF0aD4KICA8cGF0aCBzdHlsZT0ic3Ryb2tlLWxpbmVjYXA6IHJvdW5kOyBzdHJva2UtbGluZWpvaW46IHJvdW5kOyBzdHJva2Utd2lkdGg6IDE7IHRyYW5zZm9ybS1vcmlnaW46IDEwcHggMTEuNXB4OyBmaWxsOiBub25lOyBzdHJva2U6IHJnYigwLCAwLCAwKTsiIGQ9Ik0gMy41IDExLjUgTCA0LjUgMTEuNSIgdHJhbnNmb3JtPSJtYXRyaXgoMC44NjYwMjUsIDAuNSwgLTAuNSwgMC44NjYwMjUsIDAsIDApIj48L3BhdGg+CiAgPHBhdGggc3R5bGU9InN0cm9rZS1saW5lY2FwOiByb3VuZDsgc3Ryb2tlLWxpbmVqb2luOiByb3VuZDsgc3Ryb2tlLXdpZHRoOiAxOyB0cmFuc2Zvcm0tb3JpZ2luOiAxMHB4IDExLjVweDsgZmlsbDogbm9uZTsgc3Ryb2tlOiByZ2IoMCwgMCwgMCk7IiBkPSJNIDE1LjUgMTEuNSBMIDE2LjUgMTEuNSIgdHJhbnNmb3JtPSJtYXRyaXgoMC44NjYwMjYsIDAuNSwgLTAuNSwgMC44NjYwMjYsIDAsIDApIj48L3BhdGg+Cjwvc3ZnPg==");
         this.rootElement = createElement('div', {className: "jwDebugger-root"});
         this.tab.setDOM(this.rootElement);
         createElement('style', {innerHTML: style}, document.head);
@@ -127,6 +127,8 @@ class Extension {
 
         this.listElement = createElement('div', {className: "jwDebugger-list"}, this.rootElement);
         this._updateState();
+
+        vm.extensionManager.extendCompiler("jwDebugger", this.extendCompiler.bind(this));
     }
 
     _updateState() {
@@ -197,6 +199,33 @@ class Extension {
         };
     }
 
+    extendCompiler({IntermediateStackBlock, InputOpcode}) {
+        const opcodes = {
+            BREAKPOINT: 'jwDebugger.breakpoint'
+        }
+
+        return {
+            ir: {
+                command(block) {
+                    switch (block.opcode) {
+                        case 'jwDebugger_breakpoint':
+                            return new IntermediateStackBlock(opcodes.BREAKPOINT, {}, true);
+                    }
+                }
+            },
+            js: {
+                command(block) {
+                    switch (block.opcode) {
+                        case opcodes.BREAKPOINT:
+                            this.source += 'runtime.pause();\n';
+                            this.source += 'yield;\n';
+                            return true;
+                    }
+                }
+            }
+        }
+    }
+
     log({LOG, DATA}) {
         const now = new Date(Date.now())
         const timestamp = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}.${String(now.getMilliseconds()).padStart(3, "0")}`
@@ -229,10 +258,6 @@ class Extension {
 
     clear() {
         this.listElement.innerHTML = '';
-    }
-
-    breakpoint() {
-        vm.runtime.pause();
     }
 }
 

@@ -1,5 +1,6 @@
 class Tab {
-    constructor(tabID, name, uri, runtime) {
+    constructor(extID, tabID, name, uri, runtime) {
+        this.extID = extID;
         this.id = tabID;
         this.name = name;
         this.uri = uri;
@@ -53,11 +54,16 @@ class TabManager {
         this.tabs = {};
     }
 
-    register(id, name, uri) {
+    register(extID, id, name, uri) {
+        if (!extID || !extID.length) {
+            console.warn("No Extension ID provided!");
+            return;
+        }
         if (!id || !id.length) {
             console.warn("No Tab ID provided!");
             return;
         }
+        id = extID + '-' + id;
         if (!name) {
             name = id;
         }
@@ -70,7 +76,7 @@ class TabManager {
             return this.tabs[id];
         }
 
-        const tab = new Tab(id, name, uri, this.runtime);
+        const tab = new Tab(extID, id, name, uri, this.runtime);
         this.tabs[id] = tab;
 
         this.runtime.emit('EDITOR_TABS_UPDATE');
