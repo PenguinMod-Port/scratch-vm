@@ -267,6 +267,7 @@ const initCodeInput = async function () {
                 }
 
                 function onMouseUp() {
+                    input.style.pointerEvents = "all";
                     isResizing = false;
                     ScratchBlocks.mainWorkspace.allowDragging = true;
                     parent.setMovable(true);

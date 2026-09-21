@@ -35,7 +35,7 @@ class SPjavascriptV2 {
 
     this.runtime.vm.on("workspaceUpdate", checkScratchBlocksReady);
 
-    setAutocompleteExtrasCallback(this.updateEditorSchema);
+    setAutocompleteExtrasCallback(this.updateEditorSchema.bind(this));
     checkScratchBlocksReady();
   }
   getInfo() {
@@ -353,11 +353,19 @@ class SPjavascriptV2 {
       newFunc = ASYNC_FUNC_PROTO.constructor(...argNames, binders + code);
     }
 
-    return newFunc;
+    return {
+      isArgArray,
+      argEntries,
+      func: newFunc,
+    };
   }
 
   async _executeCode(code, codeArgs = [], util) {
-    const func = this._compileCode(code, codeArgs, util);
+    const {
+      isArgArray,
+      argEntries,
+      func,
+    } = this._compileCode(code, codeArgs, util);
 
     if (this.isEditorUnsandboxed) {
       // Cache the function.
