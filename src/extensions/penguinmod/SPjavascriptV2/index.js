@@ -31,6 +31,7 @@ class SPjavascriptV2 {
   constructor(runtime) {
     this.runtime = runtime;
     this.isEditorUnsandboxed = false;
+    this.forceSandboxNextExecute = false;
 
     this.globalFuncs = new Map();
 
@@ -213,6 +214,13 @@ class SPjavascriptV2 {
             }
           }
         },
+        "---",
+        {
+          opcode: "runNextInSandbox",
+          text: "run next code in sandbox",
+          blockType: BlockType.COMMAND,
+          hideFromPalette: !isScratchBlocksReady && !this.isEditorUnsandboxed,
+        },
         {
           opcode: "packagerInfo",
           text: "Sandbox in Packager Notice",
@@ -369,7 +377,10 @@ class SPjavascriptV2 {
       func,
     } = this._compileCode(code, codeArgs, util);
 
-    if (this.isEditorUnsandboxed) {
+    const shouldRunUnsandboxed = this.forceSandboxNextExecute
+      ? false
+      : this.isEditorUnsandboxed;
+    if (!this.forceSandboxNextExecute && this.isEditorUnsandboxed) {
       // Cache the function.
       if (!util.thread._JSV2cache) {
         util.thread._JSV2cache = new Map();
@@ -389,7 +400,7 @@ class SPjavascriptV2 {
         throw err;
       }
 
-      return result;
+      return result ?? null;
     } else {
       // Run sandboxed code
       let caller = "(";
@@ -411,7 +422,7 @@ class SPjavascriptV2 {
       });
 
       if (executionResult.success) {
-        return executionResult.value;
+        return executionResult.value ?? null;
       } else {
         throw executionResult.value;
       }
@@ -550,6 +561,10 @@ class SPjavascriptV2 {
     }
 
     util.thread.stopThisScript();
+  }
+
+  runNextInSandbox() {
+    this.forceSandboxNextExecute = true;
   }
 }
 
