@@ -988,6 +988,11 @@ class ScriptTreeGenerator {
             });
         case 'sensing_getbrowser':
             return new IntermediateInput(InputOpcode.PM_SENSING_BROWSER, InputType.STRING);
+        case 'sensing_getspritewithattrib':
+            return new IntermediateInput(InputOpcode.PM_SENSING_SPRITE_WITH_ATTRIB, InputType.STRING, {
+                varName: this.descendInputOfBlock(block, 'var').toType(InputType.STRING),
+                varValue: this.descendInputOfBlock(block, 'val')
+            });
         case 'sensing_getoperatingsystem':
             return new IntermediateInput(InputOpcode.PM_SENSING_OS, InputType.STRING);
         case 'sensing_geturl':

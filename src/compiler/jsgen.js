@@ -732,6 +732,8 @@ class JSGenerator {
             return `runtime.ext_scratch3_sensing._mouseScrolling(${this.descendInput(node.option)}, runtime.ioDevices.mouseWheel.scrollDelta)`
         case InputOpcode.PM_SENSING_OS:
             return `runtime.ext_scratch3_sensing._getOS()`;
+        case InputOpcode.PM_SENSING_SPRITE_WITH_ATTRIB:
+            return `runtime.ext_scratch3_sensing._spriteWithAttrib(${this.descendInput(node.varName)}, ${this.descendInput(node.varValue)})`;
         case InputOpcode.PM_SENSING_TIME_TIMESTAMP:
             return `Date.now()`;
         case InputOpcode.PM_SENSING_URL:

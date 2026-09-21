@@ -456,6 +456,12 @@ class Scratch3SensingBlocks {
         }
         return 'Unknown';
     }
+
+    _spriteWithAttrib(name, value) {
+        let target = this.runtime.targets.find(v => Object.values(v.variables).some(w => w.name === name && w.value === value));
+        if (!target) return "No sprites found";
+        return `{"id": "${target.id}", "name": "${target.sprite.name}"}`
+    }
 }
 
 module.exports = Scratch3SensingBlocks;

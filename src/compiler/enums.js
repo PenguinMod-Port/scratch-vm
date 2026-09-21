@@ -426,6 +426,7 @@ const InputOpcode = {
     PM_SENSING_MOUSEBTN_RELEASED: 'sensing.mousebtnReleased',
     PM_SENSING_MOUSE_SCROLLING: 'sensing.mouseScrolling',
     PM_SENSING_OS: 'sensing.operatingSystem',
+    PM_SENSING_SPRITE_WITH_ATTRIB: 'sensing.spriteWithAttrib',
     PM_SENSING_TIME_TIMESTAMP: 'sensing.timestamp',
     PM_SENSING_URL: 'sensing.url',
 
