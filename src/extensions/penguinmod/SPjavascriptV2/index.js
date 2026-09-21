@@ -16,15 +16,17 @@ const SECRET_BLOCK_KEY = "needsInit-1@#4%^7*(0";
 
 let isScratchBlocksReady = false;
 
-const checkScratchBlocksReady = () => {
+const checkScratchBlocksReady = async () => {
   if (!isScratchBlocksReady) {
     isScratchBlocksReady = typeof ScratchBlocks === "object";
 
     if (isScratchBlocksReady) {
-      initCodeInput();
+      await initCodeInput();
     }
   }
 }
+
+await checkScratchBlocksReady();
 
 class SPjavascriptV2 {
   constructor(runtime) {
@@ -36,7 +38,6 @@ class SPjavascriptV2 {
     this.runtime.vm.on("workspaceUpdate", checkScratchBlocksReady);
 
     setAutocompleteExtrasCallback(this.updateEditorSchema.bind(this));
-    checkScratchBlocksReady();
   }
   getInfo() {
     return {
@@ -301,7 +302,7 @@ class SPjavascriptV2 {
 
     const isArgArray = Array.isArray(codeArgs);
     const argEntries = Object.entries(codeArgs);
-    if (newFunc) {
+    if (newFunc === null) {
       let binders = "";
 
       /* Inject global functions */
@@ -354,6 +355,7 @@ class SPjavascriptV2 {
     }
 
     return {
+      cacheKey,
       isArgArray,
       argEntries,
       func: newFunc,
@@ -362,6 +364,7 @@ class SPjavascriptV2 {
 
   async _executeCode(code, codeArgs = [], util) {
     const {
+      cacheKey,
       isArgArray,
       argEntries,
       func,
