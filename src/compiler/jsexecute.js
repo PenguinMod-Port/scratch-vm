@@ -120,12 +120,17 @@ const waitPromise = function*(promise) {
         .then(value => {
             returnValue = value;
             thread.status = 0; // STATUS_RUNNING
-        }, error => {
+        }, err => {
+            error = err;
+            isError = true;
             thread.status = 0; // STATUS_RUNNING
-            throw error;
         });
 
     yield;
+
+    if (isError) {
+        throw error;
+    }
 
     return returnValue;
 };
