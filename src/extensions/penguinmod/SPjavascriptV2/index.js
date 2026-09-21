@@ -14,8 +14,9 @@ const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 const ASYNC_FUNC_PROTO = Object.getPrototypeOf(async function() {});
 const SECRET_BLOCK_KEY = "needsInit-1@#4%^7*(0";
 
-let isScratchBlocksReady = false;
+let refreshToolbox = () => {};
 
+let isScratchBlocksReady = false;
 const checkScratchBlocksReady = async () => {
   if (!isScratchBlocksReady) {
     isScratchBlocksReady = typeof ScratchBlocks === "object";
@@ -26,7 +27,7 @@ const checkScratchBlocksReady = async () => {
   }
 }
 
-await checkScratchBlocksReady();
+checkScratchBlocksReady().then(refreshToolbox);
 
 class SPjavascriptV2 {
   constructor(runtime) {
@@ -38,6 +39,10 @@ class SPjavascriptV2 {
     this.runtime.vm.on("workspaceUpdate", checkScratchBlocksReady);
 
     setAutocompleteExtrasCallback(this.updateEditorSchema.bind(this));
+
+    refreshToolbox = () => {
+      this.runtime.extensionManager.refreshBlocks("SPjavascriptV2");
+    }
   }
   getInfo() {
     return {
