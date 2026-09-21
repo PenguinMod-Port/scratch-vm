@@ -110,6 +110,8 @@ runtimeFunctions.executeInCompatibilityLayer = `let hasResumedFromPromise = fals
 const waitPromise = function*(promise) {
     const thread = globalState.thread;
     let returnValue;
+    let error;
+    let isError = false;
 
     // enter STATUS_PROMISE_WAIT and yield
     // this will stop script execution until the promise handlers reset the thread status
