@@ -26,7 +26,7 @@ const importAcePackages = async function () {
             installedPackages++;
 
             // Wait for all packages to be installed.
-            if (loadedPackages === ACE_PACKAGES.length) {
+            if (installedPackages === ACE_PACKAGES.length) {
                 aceInstalled = true;
                 installQueue.forEach(resolve => resolve);
                 resolve();
@@ -37,7 +37,7 @@ const importAcePackages = async function () {
             const script = document.createElement("script");
             script.src = ACE_URL + packageName;
             script.async = false;
-            script.onload = () => packageLoadCallback;
+            script.onload = packageLoadCallback;
             document.body.appendChild(script);
         }
     });

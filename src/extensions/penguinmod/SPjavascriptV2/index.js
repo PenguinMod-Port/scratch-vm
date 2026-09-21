@@ -22,43 +22,21 @@ const checkScratchBlocksReady = () => {
 
     if (isScratchBlocksReady) {
       initCodeInput();
-      updateEditorSchema();
     }
   }
 }
-
-const updateEditorSchema = (globalFuncs) => {
-  // Append various autocompletions to the code editor.
-  const autocompletions = [
-    "data", // variable used when passing an array into a js data input
-  ];
-
-  // Add global functions into autocomplete
-  const globalFuncNames = {};
-  if (globalFuncs && globalFuncs.size > 0) {
-    const iterator = globalFuncs.keys();
-    let iteratorValue = iterator.next();
-    while (!iteratorValue.done) {
-      autocompletions.push(iteratorValue.value);
-      iteratorValue = iterator.next();
-    }
-  }
-
-  return autocompletions;
-};
-
-setAutocompleteExtrasCallback(updateEditorSchema);
-checkScratchBlocksReady();
 
 class SPjavascriptV2 {
   constructor(runtime) {
     this.runtime = runtime;
     this.isEditorUnsandboxed = false;
 
-    this.runtime.vm.on("workspaceUpdate", checkScratchBlocksReady);
-    this.runtime.vm.on("EXTENSION_ADDED", () => updateEditorSchema(this.globalFuncs));
-
     this.globalFuncs = new Map();
+
+    this.runtime.vm.on("workspaceUpdate", checkScratchBlocksReady);
+
+    setAutocompleteExtrasCallback(this.updateEditorSchema);
+    checkScratchBlocksReady();
   }
   getInfo() {
     return {
@@ -430,6 +408,26 @@ class SPjavascriptV2 {
     }
   }
 
+  updateEditorSchema() {
+    // Append various autocompletions to the code editor.
+    const autocompletions = [
+      "data", // variable used when passing an array into a js data input
+    ];
+
+    // Add global functions into autocomplete
+    const globalFuncNames = {};
+    if (this.globalFuncs.size > 0) {
+      const iterator = this.globalFuncs.keys();
+      let iteratorValue = iterator.next();
+      while (!iteratorValue.done) {
+        autocompletions.push(iteratorValue.value);
+        iteratorValue = iterator.next();
+      }
+    }
+
+    return autocompletions;
+  };
+
   // Block Funcs
   codeInput(args) {
     return args.CODE;
@@ -499,7 +497,6 @@ class SPjavascriptV2 {
       const code = Cast.toString(args.CODE).trim();
       if (funcRegex.test(code) || lambRegex.test(code)) {
         this.globalFuncs.set(funcName, { code, isBlockCode: false });
-        updateEditorSchema(this.globalFuncs);
       } else {
         throw new Error("Global Code must be 'function' or 'lambda'!");
       }
@@ -517,7 +514,6 @@ class SPjavascriptV2 {
         origin: util.target.id,
         isBlockCode: true
       });
-      updateEditorSchema(this.globalFuncs);
     } else {
       throw new Error("Illegal Function Name!");
     }
@@ -525,7 +521,6 @@ class SPjavascriptV2 {
 
   deleteGlobalFunc(args) {
     this.globalFuncs.delete(Cast.toString(args.NAME));
-    updateEditorSchema(this.globalFuncs);
   }
 
   argumentReport(_, util) {
