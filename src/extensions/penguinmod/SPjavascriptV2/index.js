@@ -14,20 +14,18 @@ const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 const ASYNC_FUNC_PROTO = Object.getPrototypeOf(async function() {});
 const SECRET_BLOCK_KEY = "needsInit-1@#4%^7*(0";
 
-let refreshToolbox = () => {};
-
 let isScratchBlocksReady = false;
-const checkScratchBlocksReady = async () => {
+const checkScratchBlocksReady = () => {
   if (!isScratchBlocksReady) {
     isScratchBlocksReady = typeof ScratchBlocks === "object";
 
     if (isScratchBlocksReady) {
-      await initCodeInput();
+      initCodeInput();
     }
   }
 }
 
-checkScratchBlocksReady().then(refreshToolbox);
+checkScratchBlocksReady()
 
 class SPjavascriptV2 {
   constructor(runtime) {
@@ -39,10 +37,6 @@ class SPjavascriptV2 {
     this.runtime.vm.on("workspaceUpdate", checkScratchBlocksReady);
 
     setAutocompleteExtrasCallback(this.updateEditorSchema.bind(this));
-
-    refreshToolbox = () => {
-      this.runtime.extensionManager.refreshBlocks("SPjavascriptV2");
-    }
   }
   getInfo() {
     return {
