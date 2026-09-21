@@ -15,6 +15,9 @@ const ACE_PACKAGES = [
 /**
  * Import all required ace packages.
  */
+let aceInstalled = false;
+let installQueue = [];
+
 const importAcePackages = async function () {
     return new Promise((resolve) => {
         let installedPackages = 0;
@@ -23,7 +26,11 @@ const importAcePackages = async function () {
             installedPackages++;
 
             // Wait for all packages to be installed.
-            if (loadedPackages === ACE_PACKAGES.length) resolve();
+            if (loadedPackages === ACE_PACKAGES.length) {
+                aceInstalled = true;
+                installQueue.forEach(resolve => resolve);
+                resolve();
+            }
         };
 
         for (const packageName of ACE_PACKAGES) {
@@ -33,6 +40,15 @@ const importAcePackages = async function () {
             script.onload = () => packageLoadCallback;
             document.body.appendChild(script);
         }
+    });
+};
+
+/**
+ * Waits for Ace to be fully installed.
+ */
+const waitForAce = async function () {
+    if (!aceInstalled) await new Promise((resolve) => {
+        installQueue.push(resolve);
     });
 };
 
@@ -174,8 +190,7 @@ const initCodeInput = async function () {
             input.style.height = "110px";
             input.firstChild.id = editorId;
 
-            await waitForAce(); // TODO
-
+            await waitForAce();
             importAceAutoComplete();
 
             const editor = ace.edit(editorId);
