@@ -318,6 +318,23 @@ class pmSensingExpansion {
                 },
             ],
             menus: {
+                mouseButton: {
+                    items: [
+                        {
+                            text: '(0) primary',
+                            value: '0'
+                        },
+                        {
+                            text: '(1) middle',
+                            value: '1'
+                        },
+                        {
+                            text: '(2) secondary',
+                            value: '2'
+                        }
+                    ],
+                    acceptReporters: true
+                },
                 urlSections: {
                     acceptReporters: true,
                     items: [
