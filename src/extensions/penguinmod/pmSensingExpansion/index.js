@@ -44,6 +44,92 @@ class pmSensingExpansion {
             color: '#5CB1D6',
             blocks: [
                 {
+                    opcode: 'currentKeyPressed',
+                    text: 'current key pressed',
+                    blockType: BlockType.REPORTER,
+                    ...template
+                },
+                {
+                    opcode: 'getLastKeyPressed',
+                    text: formatMessage({
+                        id: 'tw.blocks.lastKeyPressed',
+                        default: 'last key pressed',
+                        description: 'Block that returns the last key that was pressed'
+                    }),
+                    blockType: BlockType.REPORTER,
+                    ...template
+                },
+                {
+                    opcode: 'amountOfTimeKeyHasBeenHeld',
+                    text: 'seconds since holding [KEY]',
+                    blockType: BlockType.REPORTER,
+                    arguments: {
+                        KEY: {
+                            fillInGlobal: 'sensing_keyoptions'
+                        }
+                    },
+                    ...template
+                },
+                {
+                    opcode: 'getButtonIsDown',
+                    text: formatMessage({
+                        id: 'tw.blocks.buttonIsDown',
+                        default: '[MOUSE_BUTTON] mouse button down?',
+                        description: 'Block that returns whether a specific mouse button is down'
+                    }),
+                    blockType: BlockType.BOOLEAN,
+                    arguments: {
+                        MOUSE_BUTTON: {
+                            type: ArgumentType.NUMBER,
+                            menu: 'mouseButton',
+                            defaultValue: '0'
+                        }
+                    },
+                    hideFromPalette: true,
+                    ...template
+                },
+                {
+                    opcode: 'changed',
+                    blockType: BlockType.BOOLEAN,
+                    text: '[ONE] changed?',
+                    arguments: {
+                        ONE: {}
+                    },
+                    ...template
+                },
+                "---",
+                {
+                    opcode: 'scrollingDistance',
+                    text: 'scrolling distance',
+                    blockType: BlockType.REPORTER,
+                    ...template
+                },
+                {
+                    opcode: 'setScrollingDistance',
+                    text: 'set scrolling distance to [AMOUNT]',
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        AMOUNT: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 0
+                        }
+                    },
+                    ...template
+                },
+                {
+                    opcode: 'changeScrollingDistanceBy',
+                    text: 'change scrolling distance by [AMOUNT]',
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        AMOUNT: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 100
+                        }
+                    },
+                    ...template
+                },
+                "---"
+                {
                     opcode: 'pickColor',
                     text: 'grab color at x: [X] y: [Y]',
                     blockType: BlockType.REPORTER,
@@ -231,6 +317,13 @@ class pmSensingExpansion {
                     hideFromPalette: true,
                     ...template
                 },
+                {
+                    opcode: 'averageLoudness',
+                    text: 'average loudness',
+                    blockType: BlockType.REPORTER,
+                    hideFromPalette: true,
+                    ...template
+                },
             ],
             menus: {
                 urlSections: {
@@ -303,6 +396,54 @@ class pmSensingExpansion {
         } catch {
             return null;
         }
+    }
+
+    currentKeyPressed(_, util) {
+        const keys = util.ioQuery('keyboard', 'getAllKeysPressed');
+        const key = keys[keys.length - 1];
+        if (!key) return '';
+        return Cast.toString(key).toLowerCase();
+    }
+
+    getLastKeyPressed (_, util) {
+        return util.ioQuery('keyboard', 'getLastKeyPressed');
+    }
+
+    amountOfTimeKeyHasBeenHeld(args, util) {
+        const key = Cast.toString(args.KEY);
+        const keyTimestamp = util.ioQuery('keyboard', 'getKeyTimestamp', [key]);
+        if (keyTimestamp === 0) return 0;
+        const currentTime = Date.now();
+        const timestamp = currentTime - keyTimestamp;
+        return timestamp / 1000;
+    }
+
+    getButtonIsDown (args, util) {
+        const button = Cast.toNumber(args.MOUSE_BUTTON);
+        return util.ioQuery('mouse', 'getButtonIsDown', [button]);
+    }
+
+    changed(args, util) {
+        const id = util.thread.peekStack()
+        if (!this.lastValues[id])
+            this.lastValues[id] = args.ONE;
+        if (!vm.runtime.equals(args.ONE, this.lastValues[id])) {
+            this.lastValues[id] = args.ONE;
+            return true;
+        }
+        return false;
+    }
+
+    scrollingDistance() {
+        return this.scrollDistance;
+    }
+    setScrollingDistance(args) {
+        const amount = Cast.toNumber(args.AMOUNT);
+        this.scrollDistance = amount;
+    }
+    changeScrollingDistanceBy(args) {
+        const amount = Cast.toNumber(args.AMOUNT);
+        this.scrollDistance += amount;
     }
 
     pickColor(args) {
