@@ -51,11 +51,7 @@ class pmSensingExpansion {
                 },
                 {
                     opcode: 'getLastKeyPressed',
-                    text: formatMessage({
-                        id: 'tw.blocks.lastKeyPressed',
-                        default: 'last key pressed',
-                        description: 'Block that returns the last key that was pressed'
-                    }),
+                    text: 'last key pressed',
                     blockType: BlockType.REPORTER,
                     ...template
                 },
@@ -72,11 +68,7 @@ class pmSensingExpansion {
                 },
                 {
                     opcode: 'getButtonIsDown',
-                    text: formatMessage({
-                        id: 'tw.blocks.buttonIsDown',
-                        default: '[MOUSE_BUTTON] mouse button down?',
-                        description: 'Block that returns whether a specific mouse button is down'
-                    }),
+                    text: '[MOUSE_BUTTON] mouse button down?',
                     blockType: BlockType.BOOLEAN,
                     arguments: {
                         MOUSE_BUTTON: {
