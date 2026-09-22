@@ -128,7 +128,7 @@ class pmSensingExpansion {
                     },
                     ...template
                 },
-                "---"
+                "---",
                 {
                     opcode: 'pickColor',
                     text: 'grab color at x: [X] y: [Y]',
