@@ -620,6 +620,34 @@ class pmSensingExpansion {
     maxSpriteLayers() {
         return this.runtime.renderer._drawList.length - 1;
     }
+
+    averageLoudness() {
+        if (!this.canGetLoudness) {
+            // set interval here because why create an interval
+            // on extension register if we never use the block
+            setInterval(() => {
+                if (!this.canGetLoudness) return;
+                const loudness = this.runtime.audioEngine.getLoudness();
+                if (typeof loudness !== 'number') return;
+                if (this.loudnessArray.length > 20) {
+                    this.loudnessArray.shift();
+                }
+                if (loudness < 0) {
+                    this.loudnessArray.push(0);
+                    return;
+                }
+                this.loudnessArray.push(loudness);
+            }, 50);
+        }
+        // get average
+        this.canGetLoudness = true;
+        let addedTogether = 0;
+        let max = this.loudnessArray.length;
+        for (const loudness of this.loudnessArray) {
+            addedTogether += loudness;
+        }
+        return addedTogether / max;
+    }
 }
 
 module.exports = pmSensingExpansion;
