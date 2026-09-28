@@ -986,6 +986,22 @@ class ScriptTreeGenerator {
                 x2: this.descendInputOfBlock(block, 'x2'),
                 y2: this.descendInputOfBlock(block, 'y2')
             });
+        case 'sensing_fingerdown':
+            return new IntermediateInput(InputOpcode.PM_SENSING_FINGER_DOWN, InputType.BOOLEAN, {
+                finger: this.descendInputOfBlock(block, 'FINGER_OPTION').toType(InputType.NUMBER)
+            });
+        case 'sensing_fingertapped':
+            return new IntermediateInput(InputOpcode.PM_SENSING_FINGER_TAPPED, InputType.BOOLEAN, {
+                finger: this.descendInputOfBlock(block, 'FINGER_OPTION').toType(InputType.NUMBER)
+            });
+        case 'sensing_fingerx':
+            return new IntermediateInput(InputOpcode.PM_SENSING_FINGER_X, InputType.NUMBER, {
+                finger: this.descendInputOfBlock(block, 'FINGER_OPTION').toType(InputType.NUMBER)
+            });
+        case 'sensing_fingery':
+            return new IntermediateInput(InputOpcode.PM_SENSING_FINGER_Y, InputType.NUMBER, {
+                finger: this.descendInputOfBlock(block, 'FINGER_OPTION').toType(InputType.NUMBER)
+            });
         case 'sensing_getbrowser':
             return new IntermediateInput(InputOpcode.PM_SENSING_BROWSER, InputType.STRING);
         case 'sensing_getspritewithattrib':

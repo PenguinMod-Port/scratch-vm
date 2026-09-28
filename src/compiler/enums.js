@@ -417,6 +417,10 @@ const InputOpcode = {
 
     PM_SENSING_BROWSER: 'sensing.browser',
     PM_SENSING_DISTANCE_COORDINATES: 'sensing.distance.coordinates',
+    PM_SENSING_FINGER_DOWN: 'sensing.fingerDown',
+    PM_SENSING_FINGER_TAPPED: 'sensing.fingerTapped',
+    PM_SENSING_FINGER_X: 'sensing.fingerX',
+    PM_SENSING_FINGER_Y: 'sensing.fingerY',
     PM_SENSING_HAS_NUMBER: 'sensing.hasNumber',
     PM_SENSING_IS_TEXT: 'sensing.isText',
     PM_SENSING_KEY_HIT: 'sensing.keyHit',

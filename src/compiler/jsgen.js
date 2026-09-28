@@ -714,6 +714,14 @@ class JSGenerator {
             return `runtime.ext_scratch3_sensing._getBrowser()`;
         case InputOpcode.PM_SENSING_DISTANCE_COORDINATES:
             return `Math.hypot(${this.descendInput(node.x2)} - ${this.descendInput(node.x1)}, ${this.descendInput(node.y2)} - ${this.descendInput(node.y1)})`;
+        case InputOpcode.PM_SENSING_FINGER_DOWN:
+            return `runtime.ioDevices.touch.getIsDown(${this.descendInput(node.finger)} - 1)`;
+        case InputOpcode.PM_SENSING_FINGER_TAPPED:
+            return `runtime.ioDevices.touch.getIsTapped(${this.descendInput(node.finger)} - 1)`;
+        case InputOpcode.PM_SENSING_FINGER_X:
+            return `runtime.ioDevices.touch.getScratchX(${this.descendInput(node.finger)} - 1)`;
+        case InputOpcode.PM_SENSING_FINGER_Y:
+            return `runtime.ioDevices.touch.getScratchY(${this.descendInput(node.finger)} - 1)`;
         case InputOpcode.PM_SENSING_HAS_NUMBER:
             return `/\d/.test(Cast.toString(${this.descendInput(node.text)}))`;
         case InputOpcode.PM_SENSING_KEY_HIT:
