@@ -1,5 +1,6 @@
 const Cast = require('../util/cast');
 const Timer = require('../util/timer');
+const MathUtil = require('../util/math-util.js');
 const getMonitorIdForBlockWithArgs = require('../util/get-monitor-id');
 
 class Scratch3SensingBlocks {
@@ -461,6 +462,12 @@ class Scratch3SensingBlocks {
         let target = this.runtime.targets.find(v => Object.values(v.variables).some(w => w.name === name && w.value === value));
         if (!target) return "No sprites found";
         return `{"id": "${target.id}", "name": "${target.sprite.name}"}`
+    }
+
+    _getDirectionToFrom (x1, y1, x2, y2) {
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        return MathUtil.wrapClamp(90 - MathUtil.radToDeg(Math.atan2(dy, dx)), -179, 180);
     }
 }
 

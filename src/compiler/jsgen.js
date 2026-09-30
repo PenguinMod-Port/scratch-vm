@@ -712,6 +712,8 @@ class JSGenerator {
         //pm sensing
         case InputOpcode.PM_SENSING_BROWSER:
             return `runtime.ext_scratch3_sensing._getBrowser()`;
+        case InputOpcode.PM_SENSING_DIRECTION_COORDINATES:
+            return `runtime.ext_scratch3_sensing._getDirectionToFrom(${this.descendInput(node.x1)}, ${this.descendInput(node.x2)}, ${this.descendInput(node.y1)}, ${this.descendInput(node.y2)})`;
         case InputOpcode.PM_SENSING_DISTANCE_COORDINATES:
             return `Math.hypot(${this.descendInput(node.x2)} - ${this.descendInput(node.x1)}, ${this.descendInput(node.y2)} - ${this.descendInput(node.y1)})`;
         case InputOpcode.PM_SENSING_FINGER_DOWN:

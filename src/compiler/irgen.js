@@ -979,6 +979,14 @@ class ScriptTreeGenerator {
             return new IntermediateInput(InputOpcode.SENSING_USERNAME, InputType.STRING);
 
         //pm sensing
+        
+        case 'sensing_directionTo':
+            return new IntermediateInput(InputOpcode.PM_SENSING_DIRECTION_COORDINATES, InputType.NUMBER, {
+                x1: this.descendInputOfBlock(block, 'x1'),
+                y1: this.descendInputOfBlock(block, 'y1'),
+                x2: this.descendInputOfBlock(block, 'x2'),
+                y2: this.descendInputOfBlock(block, 'y2')
+            });
         case 'sensing_distanceTo':
             return new IntermediateInput(InputOpcode.PM_SENSING_DISTANCE_COORDINATES, InputType.NUMBER_POS | InputType.NUMBER_ZERO, {
                 x1: this.descendInputOfBlock(block, 'x1'),

@@ -416,6 +416,7 @@ const InputOpcode = {
     SENSING_USERNAME: 'sensing.username',
 
     PM_SENSING_BROWSER: 'sensing.browser',
+    PM_SENSING_DIRECTION_COORDINATES: 'sensing.direction.coordinates',
     PM_SENSING_DISTANCE_COORDINATES: 'sensing.distance.coordinates',
     PM_SENSING_FINGER_DOWN: 'sensing.fingerDown',
     PM_SENSING_FINGER_TAPPED: 'sensing.fingerTapped',
