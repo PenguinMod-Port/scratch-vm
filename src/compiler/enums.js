@@ -426,6 +426,7 @@ const InputOpcode = {
     PM_SENSING_HAS_NUMBER: 'sensing.hasNumber',
     PM_SENSING_IS_TEXT: 'sensing.isText',
     PM_SENSING_KEY_HIT: 'sensing.keyHit',
+    PM_SENSING_LOGGED_IN: 'sensing.loggedIn',
     PM_SENSING_MOBILE: 'sensing.mobile',
     PM_SENSING_MOUSEBTN_CLICKED: 'sensing.mousebtnClicked',
     PM_SENSING_MOUSEBTN_DOWN: 'sensing.mousebtnDown',
