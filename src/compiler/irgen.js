@@ -979,7 +979,6 @@ class ScriptTreeGenerator {
             return new IntermediateInput(InputOpcode.SENSING_USERNAME, InputType.STRING);
 
         //pm sensing
-        
         case 'sensing_directionTo':
             return new IntermediateInput(InputOpcode.PM_SENSING_DIRECTION_COORDINATES, InputType.NUMBER, {
                 x1: this.descendInputOfBlock(block, 'x1'),
@@ -1012,6 +1011,8 @@ class ScriptTreeGenerator {
             });
         case 'sensing_getbrowser':
             return new IntermediateInput(InputOpcode.PM_SENSING_BROWSER, InputType.STRING);
+        case 'sensing_getdragmode':
+            return new IntermediateInput(InputOpcode.PM_SENSING_DRAGGABLE, InputType.BOOLEAN);
         case 'sensing_getspritewithattrib':
             return new IntermediateInput(InputOpcode.PM_SENSING_SPRITE_WITH_ATTRIB, InputType.STRING, {
                 varName: this.descendInputOfBlock(block, 'var').toType(InputType.STRING),

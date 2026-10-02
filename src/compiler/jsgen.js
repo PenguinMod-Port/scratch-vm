@@ -716,6 +716,8 @@ class JSGenerator {
             return `runtime.ext_scratch3_sensing._getDirectionToFrom(${this.descendInput(node.x1)}, ${this.descendInput(node.x2)}, ${this.descendInput(node.y1)}, ${this.descendInput(node.y2)})`;
         case InputOpcode.PM_SENSING_DISTANCE_COORDINATES:
             return `Math.hypot(${this.descendInput(node.x2)} - ${this.descendInput(node.x1)}, ${this.descendInput(node.y2)} - ${this.descendInput(node.y1)})`;
+        case InputOpcode.PM_SENSING_DRAGGABLE:
+            return `target.draggable`;
         case InputOpcode.PM_SENSING_FINGER_DOWN:
             return `runtime.ioDevices.touch.getIsDown(${this.descendInput(node.finger)} - 1)`;
         case InputOpcode.PM_SENSING_FINGER_TAPPED:

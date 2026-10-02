@@ -78,6 +78,7 @@ class Scratch3SensingBlocks {
 
             // pm
             sensing_getclipboard: this.getClipboard,
+            sensing_getdragmode: (_, util) => util.target.draggable,
             sensing_mouse_button_clicked: (args, util) => util.ioQuery('mouse', 'getButtonIsClicked', [(['left', 'middle', 'right'].indexOf(args.BUTTON_OPTION))]),
             sensing_mouse_button_down: (args, util) => util.ioQuery('mouse', 'getButtonIsDown', [(['left', 'middle', 'right'].indexOf(args.BUTTON_OPTION))]),
             sensing_mouse_button_released: (args, util) => util.ioQuery('mouse', 'getButtonIsReleased', [(['left', 'middle', 'right'].indexOf(args.BUTTON_OPTION))]),
@@ -122,6 +123,10 @@ class Scratch3SensingBlocks {
             //pm
             sensing_getclipboard: {
                 getId: () => 'clipboard'
+            },
+            sensing_getdragmode: {
+                isSpriteSpecific: true,
+                getId: targetId => `${targetId}_getdragmode`
             },
             sensing_mouse_button_clicked: {
                 getId: (_, fields) => getMonitorIdForBlockWithArgs('mouse_button_clicked', fields)
