@@ -733,7 +733,7 @@ class JSGenerator {
         case InputOpcode.PM_SENSING_IS_TEXT:
             return `isNaN(Number(${this.descendInput(node.text)}))`;
         case InputOpcode.PM_SENSING_LOGGED_IN:
-            return `runtime.ioDevices.userdata._loggedIn`;
+            return `runtime.ioDevices.userData._loggedIn`;
         case InputOpcode.PM_SENSING_MOBILE:
             return `(typeof window !== 'undefined' && 'ontouchstart' in window)`
         case InputOpcode.PM_SENSING_MOUSEBTN_CLICKED:
