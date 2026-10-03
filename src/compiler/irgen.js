@@ -881,6 +881,20 @@ class ScriptTreeGenerator {
                     return new IntermediateInput(InputOpcode.PM_OP_IS_STRING, InputType.BOOLEAN, {value});
                 default: return this.createConstantInput(false);
             }
+        case 'operator_directionTo':
+            return new IntermediateInput(InputOpcode.PM_OP_DIRECTION_COORDINATES, InputType.NUMBER, {
+                x1: this.descendInputOfBlock(block, 'x1'),
+                y1: this.descendInputOfBlock(block, 'y1'),
+                x2: this.descendInputOfBlock(block, 'x2'),
+                y2: this.descendInputOfBlock(block, 'y2')
+            });
+        case 'operator_distanceTo':
+            return new IntermediateInput(InputOpcode.PM_OP_DISTANCE_COORDINATES, InputType.NUMBER_POS | InputType.NUMBER_ZERO, {
+                x1: this.descendInputOfBlock(block, 'x1'),
+                y1: this.descendInputOfBlock(block, 'y1'),
+                x2: this.descendInputOfBlock(block, 'x2'),
+                y2: this.descendInputOfBlock(block, 'y2')
+            });
 
         case 'procedures_call': {
             const procedureInfo = this.getProcedureInfo(block);
@@ -979,20 +993,6 @@ class ScriptTreeGenerator {
             return new IntermediateInput(InputOpcode.SENSING_USERNAME, InputType.STRING);
 
         //pm sensing
-        case 'sensing_directionTo':
-            return new IntermediateInput(InputOpcode.PM_SENSING_DIRECTION_COORDINATES, InputType.NUMBER, {
-                x1: this.descendInputOfBlock(block, 'x1'),
-                y1: this.descendInputOfBlock(block, 'y1'),
-                x2: this.descendInputOfBlock(block, 'x2'),
-                y2: this.descendInputOfBlock(block, 'y2')
-            });
-        case 'sensing_distanceTo':
-            return new IntermediateInput(InputOpcode.PM_SENSING_DISTANCE_COORDINATES, InputType.NUMBER_POS | InputType.NUMBER_ZERO, {
-                x1: this.descendInputOfBlock(block, 'x1'),
-                y1: this.descendInputOfBlock(block, 'y1'),
-                x2: this.descendInputOfBlock(block, 'x2'),
-                y2: this.descendInputOfBlock(block, 'y2')
-            });
         case 'sensing_fingerdown':
             return new IntermediateInput(InputOpcode.PM_SENSING_FINGER_DOWN, InputType.BOOLEAN, {
                 finger: this.descendInputOfBlock(block, 'FINGER_OPTION').toType(InputType.NUMBER)

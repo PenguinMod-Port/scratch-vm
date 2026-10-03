@@ -101,6 +101,12 @@ const primitiveOpcodeInfoMap = {
 // We don't enforce this limit, but Scratch does, so we need to handle it for compatibility.
 const UPSTREAM_MAX_COMMENT_LENGTH = 8000;
 
+// Map of opcodes that are be deprecated. The value is what opcode they should transform to.
+const DEPRECATED_OPCODES = new Map([
+    ['sensing_distanceTo', 'operator_distanceTo'],
+    ['sensing_directionTo', 'operator_directionTo']
+]);
+
 /**
  * Serializes primitives described above into a more compact format
  * @param {object} block the block to serialize
@@ -1071,7 +1077,7 @@ const deserializeFields = function (fields) {
 };
 
 /**
- * Covnert serialized INPUT and FIELD primitives back to hydrated block templates.
+ * Convert serialized INPUT and FIELD primitives back to hydrated block templates.
  * Should be able to deserialize a format that has already been deserialized.  The only
  * "east" path to adding new targets/code requires going through deserialize, so it should
  * work with pre-parsed deserialized blocks.
@@ -1237,6 +1243,21 @@ const fixSporkCompatibility = function (blocks) {
 };
 
 /**
+ * Fix various backwards-incompatible changes to blocks that Penguinmod made.
+ * @param {object} blockJSON Block json, mutated in-place.
+ */
+const pmFixOpcodeCompatibility = function (blockJSON) {
+    const op = blockJSON.opcode;
+
+    if (DEPRECATED_OPCODES.has(op)) {
+        blockJSON.opcode = DEPRECATED_OPCODES.get(op);
+    }
+
+    // We might want to extend this function in the future if we need to
+    // mutate or map block inputs.
+};
+
+/**
  * Parse a single "Scratch object" and create all its in-memory VM objects.
  * @param {!object} object From-JSON "Scratch object:" sprite, stage, watcher.
  * @param {!Runtime} runtime Runtime object to load all structures into.
@@ -1272,6 +1293,7 @@ const parseScratchObject = function (object, runtime, pmVersion, extensions, zip
         for (const blockId in object.blocks) {
             if (!Object.prototype.hasOwnProperty.call(object.blocks, blockId)) continue;
             const blockJSON = object.blocks[blockId];
+            pmFixOpcodeCompatibility(blockJSON);
             blocks.createBlock(blockJSON);
     
             if (

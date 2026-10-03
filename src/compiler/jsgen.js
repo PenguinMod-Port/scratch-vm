@@ -637,7 +637,11 @@ class JSGenerator {
             return `String.prototype.toUpperCase.call(${this.descendInput(node.text)})`;
         case InputOpcode.PM_OP_XOR:
             return `(${this.descendInput(node.left)} !== ${this.descendInput(node.right)})`;
-        
+        case InputOpcode.PM_OP_DIRECTION_COORDINATES:
+            return `runtime.ext_scratch3_sensing._getDirectionToFrom(${this.descendInput(node.x1)}, ${this.descendInput(node.x2)}, ${this.descendInput(node.y1)}, ${this.descendInput(node.y2)})`;
+        case InputOpcode.PM_OP_DISTANCE_COORDINATES:
+            return `Math.hypot(${this.descendInput(node.x2)} - ${this.descendInput(node.x1)}, ${this.descendInput(node.y2)} - ${this.descendInput(node.y1)})`;
+
         case InputOpcode.SENSING_ANSWER:
             return `runtime.ext_scratch3_sensing._answer`;
         case InputOpcode.SENSING_COLOR_TOUCHING_COLOR:
@@ -712,10 +716,6 @@ class JSGenerator {
         //pm sensing
         case InputOpcode.PM_SENSING_BROWSER:
             return `runtime.ext_scratch3_sensing._getBrowser()`;
-        case InputOpcode.PM_SENSING_DIRECTION_COORDINATES:
-            return `runtime.ext_scratch3_sensing._getDirectionToFrom(${this.descendInput(node.x1)}, ${this.descendInput(node.x2)}, ${this.descendInput(node.y1)}, ${this.descendInput(node.y2)})`;
-        case InputOpcode.PM_SENSING_DISTANCE_COORDINATES:
-            return `Math.hypot(${this.descendInput(node.x2)} - ${this.descendInput(node.x1)}, ${this.descendInput(node.y2)} - ${this.descendInput(node.y1)})`;
         case InputOpcode.PM_SENSING_DRAGGABLE:
             return `target.draggable`;
         case InputOpcode.PM_SENSING_FINGER_DOWN:

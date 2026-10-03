@@ -383,6 +383,8 @@ const InputOpcode = {
     PM_OP_TEXT_INCLUDES_LETTER_FROM: 'op.textIncludesLetterFrom',
     PM_OP_UPPER_CASE: 'op.upperCase',
     PM_OP_XOR: 'op.xor',
+    PM_OP_DIRECTION_COORDINATES: 'operator.direction.coordinates',
+    PM_OP_DISTANCE_COORDINATES: 'operator.distance.coordinates',
 
     SENSING_ANSWER: 'sensing.answer',
     SENSING_COLOR_TOUCHING_COLOR: 'sensing.colorTouchingColor',
@@ -416,8 +418,6 @@ const InputOpcode = {
     SENSING_USERNAME: 'sensing.username',
 
     PM_SENSING_BROWSER: 'sensing.browser',
-    PM_SENSING_DIRECTION_COORDINATES: 'sensing.direction.coordinates',
-    PM_SENSING_DISTANCE_COORDINATES: 'sensing.distance.coordinates',
     PM_SENSING_DRAGGABLE: 'sensing.draggable',
     PM_SENSING_FINGER_DOWN: 'sensing.fingerDown',
     PM_SENSING_FINGER_TAPPED: 'sensing.fingerTapped',
