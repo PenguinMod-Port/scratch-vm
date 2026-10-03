@@ -7,7 +7,7 @@ const SemVer = require('../util/semver');
  */
 export function compatBlock(block, pmVersion) {
     /* --- PRE-PORT COMPATABILITY --- */
-    if (pmVersion.equal('0.0.0')) {
+    if (pmVersion.lessThan('0.1.0')) {
         //control_expandableIf
         if (block.opcode === "control_expandableIf" && block.mutation) {
             let value = Number(block.mutation.branches) * 2 - 2;
@@ -73,7 +73,7 @@ export function compatBlock(block, pmVersion) {
                         y: block.y
                     };
                 case "​​log​​ %s":
-                    return {
+                    block = {
                         id: block.id,
                         opcode: "jwDebugger_log",
                         next: block.next,
@@ -88,7 +88,7 @@ export function compatBlock(block, pmVersion) {
                         y: block.y
                     };
                 case "​​warn​​ %s":
-                    return {
+                    block = {
                         id: block.id,
                         opcode: "jwDebugger_log",
                         next: block.next,
@@ -103,7 +103,7 @@ export function compatBlock(block, pmVersion) {
                         y: block.y
                     };
                 case "​​error​​ %s":
-                    return {
+                    block = {
                         id: block.id,
                         opcode: "jwDebugger_log",
                         next: block.next,
@@ -149,6 +149,16 @@ export function compatBlock(block, pmVersion) {
         if (block.opcode === "procedures_return" && block.inputs.return) {
             block.inputs.VALUE = {name: "VALUE", block: block.inputs.return.block, shadow: block.inputs.return.shadow};
             delete block.inputs.return;
+        }
+
+        //sensing_distanceTo
+        if (block.opcode === "sensing_distanceTo") {
+            block.opcode = "operator_distanceTo"
+        }
+
+        //sensing_directionTo
+        if (block.opcode === "sensing_directionTo") {
+            block.opcode = "operator_directionTo"
         }
     }
 
