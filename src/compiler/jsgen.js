@@ -753,7 +753,7 @@ class JSGenerator {
         case InputOpcode.PM_SENSING_TIME_TIMESTAMP:
             return `Date.now()`;
         case InputOpcode.PM_SENSING_UPPERCASE_TEXT:
-            return `runtime.ext_scratch3_sensing._isTextUppercase(${this.descendInput(node.text)})`
+            return `runtime.ext_scratch3_sensing._isTextUppercase(${this.descendInput(node.text)})`;
         case InputOpcode.PM_SENSING_URL:
             return `location.href`;
 
