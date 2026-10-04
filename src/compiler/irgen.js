@@ -816,7 +816,7 @@ class ScriptTreeGenerator {
                 text: this.descendInputOfBlock(block, 'TEXT').toType(InputType.STRING)
             });
         case 'operator_regexmatch':
-            return new IntermediateInput(InputOpcode.PM_OP_REGEX_MATCH, InputType.BOOLEAN, {
+            return new IntermediateInput(InputOpcode.PM_OP_REGEX_MATCH, InputType.STRING, {
                 text: this.descendInputOfBlock(block, 'text').toType(InputType.STRING),
                 regex: this.descendInputOfBlock(block, 'reg').toType(InputType.STRING),
                 flags: this.descendInputOfBlock(block, 'regrule').toType(InputType.STRING)
@@ -1049,6 +1049,12 @@ class ScriptTreeGenerator {
         case 'sensing_mousescrolling':
             return new IntermediateInput(InputOpcode.PM_SENSING_MOUSE_SCROLLING, InputType.BOOLEAN, {
                 option: this.descendInputOfBlock(block, 'SCROLL_OPTION')
+            });
+        case 'sensing_regextest':
+            return new IntermediateInput(InputOpcode.PM_SENSING_REGEX_TEST, InputType.BOOLEAN, {
+                text: this.descendInputOfBlock(block, 'text').toType(InputType.STRING),
+                regex: this.descendInputOfBlock(block, 'reg').toType(InputType.STRING),
+                flags: this.descendInputOfBlock(block, 'regrule').toType(InputType.STRING)
             });
         case 'sensing_thing_has_number': {
             let text = this.descendInputOfBlock(block, 'TEXT1');

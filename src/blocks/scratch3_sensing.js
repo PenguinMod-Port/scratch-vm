@@ -478,6 +478,11 @@ class Scratch3SensingBlocks {
         const dy = y2 - y1;
         return MathUtil.wrapClamp(90 - MathUtil.radToDeg(Math.atan2(dy, dx)), -179, 180);
     }
+
+    _regexTest(text, regex, flags) {
+        if (!validateRegex(regex, flags)) return false;
+        return new RegExp(regex, flags).test(text);
+    }
 }
 
 module.exports = Scratch3SensingBlocks;
