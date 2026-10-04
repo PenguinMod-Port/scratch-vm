@@ -352,6 +352,8 @@ const InputOpcode = {
     PM_OP_DECODE_B16: 'op.decodeBase16',
     PM_OP_DECODE_B64: 'op.decodeBase64',
     PM_OP_DECODE_URI: 'op.decodeURI',
+    PM_OP_DIRECTION_COORDINATES: 'operator.direction.coordinates',
+    PM_OP_DISTANCE_COORDINATES: 'operator.distance.coordinates',
     PM_OP_ENCODE_B16: 'op.encodeBase16',
     PM_OP_ENCODE_B64: 'op.encodeBase64',
     PM_OP_ENCODE_URI: 'op.encodeURI',
@@ -383,8 +385,6 @@ const InputOpcode = {
     PM_OP_TEXT_INCLUDES_LETTER_FROM: 'op.textIncludesLetterFrom',
     PM_OP_UPPER_CASE: 'op.upperCase',
     PM_OP_XOR: 'op.xor',
-    PM_OP_DIRECTION_COORDINATES: 'operator.direction.coordinates',
-    PM_OP_DISTANCE_COORDINATES: 'operator.distance.coordinates',
 
     SENSING_ANSWER: 'sensing.answer',
     SENSING_COLOR_TOUCHING_COLOR: 'sensing.colorTouchingColor',
@@ -436,6 +436,7 @@ const InputOpcode = {
     PM_SENSING_REGEX_TEST: 'sensing.regexTest',
     PM_SENSING_SPRITE_WITH_ATTRIB: 'sensing.spriteWithAttrib',
     PM_SENSING_TIME_TIMESTAMP: 'sensing.timestamp',
+    PM_SENSING_UPPERCASE_TEXT: 'sensing.uppercaseText',
     PM_SENSING_URL: 'sensing.url',
 
     PROCEDURE_CALL: 'procedures.call',

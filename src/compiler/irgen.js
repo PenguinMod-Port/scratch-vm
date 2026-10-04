@@ -1022,6 +1022,10 @@ class ScriptTreeGenerator {
             return new IntermediateInput(InputOpcode.PM_SENSING_OS, InputType.STRING);
         case 'sensing_geturl':
             return new IntermediateInput(InputOpcode.PM_SENSING_URL, InputType.STRING);
+        case 'sensing_isUpperCase':
+            return new IntermediateInput(InputOpcode.PM_SENSING_UPPERCASE_TEXT, InputType.BOOLEAN, {
+                text: this.descendInputOfBlock(block, 'text').toType(InputType.STRING)
+            });
         case 'sensing_keyhit':
             return new IntermediateInput(InputOpcode.PM_SENSING_KEY_HIT, InputType.BOOLEAN, {
                 key: this.descendInputOfBlock(block, 'KEY_OPTION', true)

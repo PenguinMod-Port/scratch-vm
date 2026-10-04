@@ -468,7 +468,7 @@ class Scratch3SensingBlocks {
     }
 
     _spriteWithAttrib(name, value) {
-        let target = this.runtime.targets.find(v => Object.values(v.variables).some(w => w.name === name && w.value === value));
+        let target = this.runtime.targets.find(v => Object.values(v.variables).some(w => w.name === name && this.runtime.equals(w.value, value)));
         if (!target) return "No sprites found";
         return `{"id": "${target.id}", "name": "${target.sprite.name}"}`
     }
@@ -482,6 +482,10 @@ class Scratch3SensingBlocks {
     _regexTest(text, regex, flags) {
         if (!validateRegex(regex, flags)) return false;
         return new RegExp(regex, flags).test(text);
+    }
+
+    _isTextUppercase(text) {
+        return text === text.toUpperCase();
     }
 }
 
