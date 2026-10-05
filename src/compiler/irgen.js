@@ -1280,7 +1280,7 @@ class ScriptTreeGenerator {
                 error: this.createConstantInput('All "case" blocks must be inside of a "switch" block.')
             });
         case 'control_continueLoop':
-            return new IntermediateStackBlock(StackOpcode.PM_CONTROL_CONTINUE_LOOP);
+            return new IntermediateStackBlock(StackOpcode.PM_CONTROL_CONTINUE_LOOP, {}, true);
         case 'control_decr_counter':
             return new IntermediateStackBlock(StackOpcode.PM_CONTROL_DECR_COUNTER);
         case 'control_delete_clones_of':

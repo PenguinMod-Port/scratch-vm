@@ -1039,7 +1039,6 @@ class JSGenerator {
         }
         case StackOpcode.PM_CONTROL_ESCAPE_LOOP:
             if (this.inLoop) {
-                this.yieldLoop();
                 this.source += this.loopName ? `break ${this.loopName};\n` : 'break;\n';
             } else {
                 this.source += `throw 'All "escape loop" blocks must be inside of a looping block.';\n`;
