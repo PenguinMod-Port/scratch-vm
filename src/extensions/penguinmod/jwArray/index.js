@@ -1203,7 +1203,7 @@ class Extension {
                             return new IntermediateInput(opcodes.MAP, InputType.CUSTOM_TYPE, {
                                 array: this.descendInputOfBlock(block, 'ARRAY'),
                                 value: this.descendInputOfBlock(block, 'VALUE')
-                            });
+                            }, true);
                         case 'jwArray_basicSort':
                             return new IntermediateInput(opcodes.BASIC_SORT, InputType.CUSTOM_TYPE, {
                                 array: this.descendInputOfBlock(block, 'ARRAY'),
@@ -1231,7 +1231,7 @@ class Extension {
                             return new IntermediateStackBlock(opcodes.FOR_EACH, {
                                 array: this.descendInputOfBlock(block, 'ARRAY'),
                                 substack: this.descendSubstack(block, 'SUBSTACK')
-                            });
+                            }, true);
                             
                         case 'jwArray_toList':
                             return new IntermediateStackBlock(opcodes.TO_LIST, {

@@ -1182,7 +1182,7 @@ class Extension {
                                 object: this.descendInputOfBlock(block, 'OBJECT'),
                                 key: this.descendInputOfBlock(block, 'KEY'),
                                 value: this.descendInputOfBlock(block, 'VALUE'),
-                            });
+                            }, true);
                         case 'dogeiscutObject_basicSort':
                             return new IntermediateInput(opcodes.BASIC_SORT, InputType.CUSTOM_TYPE, {
                                 object: this.descendInputOfBlock(block, 'OBJECT'),
