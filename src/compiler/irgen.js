@@ -1054,6 +1054,16 @@ class ScriptTreeGenerator {
             return new IntermediateInput(InputOpcode.PM_SENSING_MOUSE_SCROLLING, InputType.BOOLEAN, {
                 option: this.descendInputOfBlock(block, 'SCROLL_OPTION')
             });
+        case 'sensing_objecttouchingclonesprite':
+            return new IntermediateInput(InputOpcode.PM_SENSING_OBJECT_TOUCHING_CLONE, InputType.BOOLEAN, {
+                object1: this.descendInputOfBlock(block, 'FULLTOUCHINGOBJECTMENU').toType(InputType.STRING),
+                object2: this.descendInputOfBlock(block, 'SPRITETOUCHINGOBJECTMENU').toType(InputType.STRING)
+            });
+        case 'sensing_objecttouchingobject':
+            return new IntermediateInput(InputOpcode.PM_SENSING_OBJECT_TOUCHING_OBJECT, InputType.BOOLEAN, {
+                object1: this.descendInputOfBlock(block, 'FULLTOUCHINGOBJECTMENU').toType(InputType.STRING),
+                object2: this.descendInputOfBlock(block, 'SPRITETOUCHINGOBJECTMENU').toType(InputType.STRING)
+            });
         case 'sensing_regextest':
             return new IntermediateInput(InputOpcode.PM_SENSING_REGEX_TEST, InputType.BOOLEAN, {
                 text: this.descendInputOfBlock(block, 'text').toType(InputType.STRING),

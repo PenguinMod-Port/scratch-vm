@@ -432,6 +432,8 @@ const InputOpcode = {
     PM_SENSING_MOUSEBTN_DOWN: 'sensing.mousebtnDown',
     PM_SENSING_MOUSEBTN_RELEASED: 'sensing.mousebtnReleased',
     PM_SENSING_MOUSE_SCROLLING: 'sensing.mouseScrolling',
+    PM_SENSING_OBJECT_TOUCHING_CLONE: 'sensing.objectTouchingClone',
+    PM_SENSING_OBJECT_TOUCHING_OBJECT: 'sensing.objectTouchingObject',
     PM_SENSING_OS: 'sensing.operatingSystem',
     PM_SENSING_REGEX_TEST: 'sensing.regexTest',
     PM_SENSING_SPRITE_WITH_ATTRIB: 'sensing.spriteWithAttrib',

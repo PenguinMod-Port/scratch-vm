@@ -735,7 +735,7 @@ class JSGenerator {
         case InputOpcode.PM_SENSING_LOGGED_IN:
             return `runtime.ioDevices.userData._loggedIn`;
         case InputOpcode.PM_SENSING_MOBILE:
-            return `(typeof window !== 'undefined' && 'ontouchstart' in window)`
+            return `(typeof window !== 'undefined' && 'ontouchstart' in window)`;
         case InputOpcode.PM_SENSING_MOUSEBTN_CLICKED:
             return `runtime.ioDevices.mouse.getButtonIsClicked(${node.button})`;
         case InputOpcode.PM_SENSING_MOUSEBTN_DOWN:
@@ -743,7 +743,11 @@ class JSGenerator {
         case InputOpcode.PM_SENSING_MOUSEBTN_RELEASED:
             return `runtime.ioDevices.mouse.getButtonIsReleased(${node.button})`;
         case InputOpcode.PM_SENSING_MOUSE_SCROLLING:
-            return `runtime.ext_scratch3_sensing._mouseScrolling(${this.descendInput(node.option)}, runtime.ioDevices.mouseWheel.scrollDelta)`
+            return `runtime.ext_scratch3_sensing._mouseScrolling(${this.descendInput(node.option)}, runtime.ioDevices.mouseWheel.scrollDelta)`;
+        case InputOpcode.PM_SENSING_OBJECT_TOUCHING_CLONE:
+            return `runtime.ext_scratch3_sensing._objectTouchingCloneOfSprite(${this.descendInput(node.object1)}, ${this.descendInput(node.object2)}, target)`;
+        case InputOpcode.PM_SENSING_OBJECT_TOUCHING_OBJECT:
+            return `runtime.ext_scratch3_sensing._objectTouchingObject(${this.descendInput(node.object1)}, ${this.descendInput(node.object2)}, target)`;
         case InputOpcode.PM_SENSING_OS:
             return `runtime.ext_scratch3_sensing._getOS()`;
         case InputOpcode.PM_SENSING_REGEX_TEST:

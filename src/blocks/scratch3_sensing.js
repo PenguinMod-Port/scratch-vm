@@ -487,6 +487,43 @@ class Scratch3SensingBlocks {
     _isTextUppercase(text) {
         return text === text.toUpperCase();
     }
+
+    _objectTouchingObject (object1, object2, myself) {
+        if (object1 === "_myself_") {
+            object1 = myself.getName();
+        }
+        if (object2 === "_myself_") {
+            return myself.isTouchingObject(object1);
+        }
+        const target = this.runtime.getSpriteTargetByName(object2);
+        if (!target) return false;
+        return target.isTouchingObject(object1);
+    }
+    _objectTouchingCloneOfSprite (object1, object2, myself) {
+        if (object2 === "_myself_") {
+            object2 = myself.getName();
+        }
+        if (object1 === "_myself_") {
+            return myself.isTouchingObject(object2, true);
+        }
+
+        const target = this.runtime.getSpriteTargetByName(object2);
+        if (!target) return false;
+        if (object1 === "_mouse_") {
+            if (!this.runtime.ioDevices.mouse) return false;
+            const mouseX = this.runtime.ioDevices.mouse.getClientX();
+            const mouseY = this.runtime.ioDevices.mouse.getClientY();
+            const clones = target.sprite.clones.filter(clone => !clone.isOriginal && clone.isTouchingPoint(mouseX, mouseY));
+            return clones.length > 0;
+        } else if (object1 === '_edge_') {
+            const clones = target.sprite.clones.filter(clone => !clone.isOriginal && clone.isTouchingEdge());
+            return clones.length > 0;
+        }
+
+        const originalSprite = this.runtime.getSpriteTargetByName(object1);
+        if (!originalSprite) return false;
+        return originalSprite.isTouchingObject(object2, true);
+    }
 }
 
 module.exports = Scratch3SensingBlocks;
