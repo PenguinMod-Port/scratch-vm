@@ -220,6 +220,9 @@ class Scratch3LooksBlocks {
         if (!target.visible) return;
         const bubbleState = this._getBubbleState(target);
         const [bubbleWidth, bubbleHeight] = this.runtime.renderer.getCurrentSkinSize(bubbleState.drawableId);
+
+        this.runtime.renderer._allDrawables[bubbleState.drawableId].setCameraState(target.getCameraState());
+
         let targetBounds;
         try {
             targetBounds = target.getBoundsForBubble();
@@ -233,13 +236,7 @@ class Scratch3LooksBlocks {
                 bottom: target.y
             };
         }
-        const stageSize = this.runtime.renderer.getNativeSize();
-        const stageBounds = {
-            left: -stageSize[0] / 2,
-            right: stageSize[0] / 2,
-            top: stageSize[1] / 2,
-            bottom: -stageSize[1] / 2
-        };
+        const stageBounds = this.runtime.renderer.getCameraBounds(target.getCameraState());
         if (
             !bubbleState._forceSide && bubbleState.onSpriteRight &&
             bubbleWidth + targetBounds.right > stageBounds.right &&

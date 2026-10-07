@@ -1261,14 +1261,32 @@ class RenderedTarget extends Target {
         }
     }
 
+    /** @deprecated */
     bindToCamera(screen) {
         this.cameraBound = screen;
         this.updateAllDrawableProperties();
     }
 
+    /** @deprecated */
     removeCameraBinding() {
         this.cameraBound = null;
         this.updateAllDrawableProperties();
+    }
+
+    getCameraState() {
+        if (this.renderer) {
+            return this.renderer._allDrawables[this.drawableID].cameraState;
+        }
+    }
+
+    setCameraState(name) {
+        if (this.renderer) {
+            this.renderer._allDrawables[this.drawableID].setCameraState(name);
+            if (this.visible) {
+                this.emitVisualChange();
+                this.runtime.requestRedraw();
+            }
+        }
     }
 }
 

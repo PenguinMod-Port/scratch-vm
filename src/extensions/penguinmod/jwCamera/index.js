@@ -85,12 +85,11 @@ class CameraType {
     }
 
     bindTarget(target) {
-        vm.renderer._allDrawables[target.drawableID].setCameraState(this.name);
-        vm.runtime.requestRedraw();
+        target.setCameraState(this.name);
     }
 
     static bindedCamera(target) {
-        return new CameraType(vm.renderer._allDrawables[target.drawableID].cameraState);
+        return new CameraType(target.getCameraState());
     }
 }
 
