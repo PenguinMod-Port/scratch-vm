@@ -946,7 +946,7 @@ class ScriptTreeGenerator {
             }
 
             if (property === 'volume') {
-                return new IntermediateInput(InputOpcode.SENSING_OF_VOLUME, InputType.NUMBER_POS_REAL | InputType.NUMBER_ZERO, {object, property});
+                return new IntermediateInput(InputOpcode.SENSING_OF_VOLUME, InputType.NUMBER_POS_REAL | InputType.NUMBER_ZERO, {object});
             }
 
             if (object.isConstant('_stage_')) {
@@ -1826,6 +1826,74 @@ class ScriptTreeGenerator {
 
         case 'sensing_resettimer':
             return new IntermediateStackBlock(StackOpcode.SENSING_TIMER_RESET);
+
+        // pm sensing
+        
+        case 'sensing_set_of': {
+            const property = block.fields.PROPERTY.value;
+            const object = this.descendInputOfBlock(block, 'OBJECT').toType(InputType.STRING);
+            const value = this.descendInputOfBlock(block, 'VALUE');
+
+            if (object.opcode !== InputOpcode.CONSTANT || true) { // TODO: do other opcodes when im like extremely bored or something
+                return new IntermediateStackBlock(InputOpcode.PM_SENSING_SET_OF, {
+                    object,
+                    property,
+                    value
+                });
+            }
+
+            if (property === 'volume') {
+                return new IntermediateStackBlock(InputOpcode.PM_SENSING_SET_OF_VOLUME, {
+                    object,
+                    value: value.toType(InputType.NUMBER)
+                });
+            }
+
+            if (object.isConstant('_stage_')) {
+                // We assume that the stage always exists, so these don't need to be able to return 0.
+                switch (property) {
+                case 'backdrop':
+                    return new IntermediateStackBlock(InputOpcode.PM_SENSING_SET_OF_BACKDROP, {
+                        value
+                    });
+                }
+            } else {
+                // If the target sprite does not exist, these may all return 0, even the costume name one.
+                switch (property) {
+                case 'x position':
+                    return new IntermediateStackBlock(InputOpcode.PM_SENSING_SET_OF_POS_X, {
+                        object,
+                        value: value.toType(InputType.NUMBER)
+                    });
+                case 'y position':
+                    return new IntermediateStackBlock(InputOpcode.PM_SENSING_SET_OF_POS_Y, {
+                        object,
+                        value: value.toType(InputType.NUMBER)
+                    });
+                case 'direction':
+                    return new IntermediateStackBlock(InputOpcode.PM_SENSING_SET_OF_DIRECTION, {
+                        object,
+                        value: value.toType(InputType.NUMBER)
+                    });
+                case 'costume':
+                    return new IntermediateStackBlock(InputOpcode.PM_SENSING_SET_OF_COSTUME, {
+                        object,
+                        value
+                    });
+                case 'size':
+                    return new IntermediateStackBlock(InputOpcode.PM_SENSING_SET_OF_SIZE, {
+                        object,
+                        value: value.toType(InputType.NUMBER)
+                    });
+                }
+            }
+
+            return new IntermediateStackBlock(InputOpcode.PM_SENSING_SET_OF_VAR, {
+                object,
+                property,
+                value
+            });
+        }
 
         default: {
             // pm: old extension compiler support

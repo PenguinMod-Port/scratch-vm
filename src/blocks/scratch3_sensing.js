@@ -380,6 +380,39 @@ class Scratch3SensingBlocks {
         return 0;
     }
 
+    _setAttributeOf (object, property, value) {
+        let attrTarget;
+
+        if (object === '_stage_') {
+            attrTarget = this.runtime.getTargetForStage();
+        } else {
+            attrTarget = this.runtime.getSpriteTargetByName(Cast.toString(object));
+        }
+
+        if (!attrTarget) return;
+
+        if (attrTarget.isStage) {
+            switch (args.PROPERTY) {
+            case 'backdrop': return this.runtime.ext_scratch3_looks._setBackdrop(attrTarget, value);
+            case 'volume': return this.runtime.ext_scratch3_sound._updateVolume(Cast.toNumber(value), attrTarget);
+            }
+        } else {
+            switch (args.PROPERTY) {
+            case 'x position': return attrTarget.setXY(Cast.toNumber(value), attrTarget.y);
+            case 'y position': return attrTarget.setXY(attrTarget.x, Cast.toNumber(value));
+            case 'direction': return attrTarget.setDirection(Cast.toNumber(value));
+            case 'costume': return this.runtime.ext_scratch3_looks._setCostume(attrTarget, value);
+            case 'size': return attrTarget.setSize(Cast.toNumber(value));
+            case 'volume': return this.runtime.ext_scratch3_sound._updateVolume(Cast.toNumber(value), attrTarget);
+            }
+        }
+        
+        const variable = attrTarget.lookupVariableByNameAndType(property, '', true);
+        if (variable) {
+            variable.value = value;
+        }
+    }
+
     getUsername (args, util) {
         return util.ioQuery('userData', 'getUsername');
     }

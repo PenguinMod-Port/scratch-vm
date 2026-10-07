@@ -1524,6 +1524,11 @@ class JSGenerator {
             this.source += 'runtime.ioDevices.clock.resetProjectTimer();\n';
             break;
 
+        // pm sensing
+        case StackOpcode.PM_SENSING_SET_OF:
+            this.source += `runtime.ext_scratch3_sensing._setAttributeOf(${this.descendInput(node.object)}, ${this.descendInput(node.property)}, ${this.descendInput(node.value)});\n`;
+            break;
+
         case StackOpcode.DEBUGGER:
             this.source += 'debugger;\n';
             break;

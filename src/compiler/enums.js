@@ -235,6 +235,16 @@ const StackOpcode = {
 
     SENSING_TIMER_RESET: 'timer.reset',
 
+    PM_SENSING_SET_OF: 'sensing.setOf',
+    PM_SENSING_SET_OF_BACKDROP: 'sensing.setOf.backdrop',
+    PM_SENSING_SET_OF_COSTUME: 'sensing.setOf.costume',
+    PM_SENSING_SET_OF_DIRECTION: 'sensing.setOf.direction',
+    PM_SENSING_SET_OF_POS_X: 'sensing.setOf.x',
+    PM_SENSING_SET_OF_POS_Y: 'sensing.setOf.y',
+    PM_SENSING_SET_OF_SIZE: 'sensing.setOf.size',
+    PM_SENSING_SET_OF_VAR: 'sensing.setOf.var',
+    PM_SENSING_SET_OF_VOLUME: 'sensing.setOf.volume',
+
     PROCEDURE_CALL: 'procedures.call',
     PROCEDURE_RETURN: 'procedures.return',
 
