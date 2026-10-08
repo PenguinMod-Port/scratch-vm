@@ -351,18 +351,18 @@ class Scratch3SoundBlocks {
 
     setVolume (args, util) {
         const volume = Cast.toNumber(args.VOLUME);
-        return this._updateVolume(volume, util);
+        return this._updateVolume(volume, util.target);
     }
 
     changeVolume (args, util) {
         const volume = Cast.toNumber(args.VOLUME) + util.target.volume;
-        return this._updateVolume(volume, util);
+        return this._updateVolume(volume, util.target);
     }
 
-    _updateVolume (volume, util) {
+    _updateVolume (volume, target) {
         volume = MathUtil.clamp(volume, 0, 100);
-        util.target.volume = volume;
-        this._syncEffectsForTarget(util.target);
+        target.volume = volume;
+        this._syncEffectsForTarget(target);
 
         if (this.runtime.runtimeOptions.miscLimits) {
             // Yield until the next tick.

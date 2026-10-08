@@ -1528,6 +1528,45 @@ class JSGenerator {
         case StackOpcode.PM_SENSING_SET_OF:
             this.source += `runtime.ext_scratch3_sensing._setAttributeOf(${this.descendInput(node.object)}, ${this.descendInput(node.property)}, ${this.descendInput(node.value)});\n`;
             break;
+        case StackOpcode.PM_SENSING_SET_OF_BACKDROP:
+            this.source += `runtime.ext_scratch3_looks._setBackdrop(stage, ${this.descendInput(node.value)});\n`;
+            break;
+        case StackOpcode.PM_SENSING_SET_OF_COSTUME: {
+            const targetRef = this.descendTargetReference(node.object);
+            this.source += `if (${targetRef}) runtime.ext_scratch3_looks._setCostume(${targetRef}, ${this.descendInput(node.value)});\n`;
+            break;
+        }
+        case StackOpcode.PM_SENSING_SET_OF_DIRECTION: {
+            const targetRef = this.descendTargetReference(node.object);
+            this.source += `if (${targetRef}) ${targetRef}.setDirection(${this.descendInput(node.value)});\n`;
+            break;
+        }
+        case StackOpcode.PM_SENSING_SET_OF_POS_X: {
+            const targetRef = this.descendTargetReference(node.object);
+            this.source += `if (${targetRef}) ${targetRef}.setXY(${this.descendInput(node.value)}, ${targetRef}.y);\n`;
+            break;
+        }
+        case StackOpcode.PM_SENSING_SET_OF_POS_Y: {
+            const targetRef = this.descendTargetReference(node.object);
+            this.source += `if (${targetRef}) ${targetRef}.setXY(${targetRef}.x, ${this.descendInput(node.value)});\n`;
+            break;
+        }
+        case StackOpcode.PM_SENSING_SET_OF_SIZE: {
+            const targetRef = this.descendTargetReference(node.object);
+            this.source += `if (${targetRef}) ${targetRef}.setSize(${this.descendInput(node.value)});\n`;
+            break;
+        }
+        case StackOpcode.PM_SENSING_SET_OF_VAR: {
+            const targetRef = this.descendTargetReference(node.object);
+            const varRef = this.evaluateOnce(`${targetRef} && ${targetRef}.lookupVariableByNameAndType("${sanitize(node.property)}", "", true)`);
+            this.source += `if (${varRef}) ${varRef}.value = ${this.descendInput(node.value)};\n;`;
+            break;
+        }
+        case StackOpcode.PM_SENSING_SET_OF_VOLUME: {
+            const targetRef = this.descendTargetReference(node.object);
+            this.source += `if (${targetRef}) runtime.ext_scratch3_sound._updateVolume(${this.descendInput(node.value)}, ${targetRef});\n`;
+            break;
+        }
 
         case StackOpcode.DEBUGGER:
             this.source += 'debugger;\n';

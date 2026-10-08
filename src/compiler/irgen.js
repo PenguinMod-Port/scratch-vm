@@ -1834,8 +1834,8 @@ class ScriptTreeGenerator {
             const object = this.descendInputOfBlock(block, 'OBJECT').toType(InputType.STRING);
             const value = this.descendInputOfBlock(block, 'VALUE');
 
-            if (object.opcode !== InputOpcode.CONSTANT || true) { // TODO: do other opcodes when im like extremely bored or something
-                return new IntermediateStackBlock(InputOpcode.PM_SENSING_SET_OF, {
+            if (object.opcode !== InputOpcode.CONSTANT) {
+                return new IntermediateStackBlock(StackOpcode.PM_SENSING_SET_OF, {
                     object,
                     property,
                     value
@@ -1843,7 +1843,7 @@ class ScriptTreeGenerator {
             }
 
             if (property === 'volume') {
-                return new IntermediateStackBlock(InputOpcode.PM_SENSING_SET_OF_VOLUME, {
+                return new IntermediateStackBlock(StackOpcode.PM_SENSING_SET_OF_VOLUME, {
                     object,
                     value: value.toType(InputType.NUMBER)
                 });
@@ -1853,7 +1853,7 @@ class ScriptTreeGenerator {
                 // We assume that the stage always exists, so these don't need to be able to return 0.
                 switch (property) {
                 case 'backdrop':
-                    return new IntermediateStackBlock(InputOpcode.PM_SENSING_SET_OF_BACKDROP, {
+                    return new IntermediateStackBlock(StackOpcode.PM_SENSING_SET_OF_BACKDROP, {
                         value
                     });
                 }
@@ -1861,34 +1861,34 @@ class ScriptTreeGenerator {
                 // If the target sprite does not exist, these may all return 0, even the costume name one.
                 switch (property) {
                 case 'x position':
-                    return new IntermediateStackBlock(InputOpcode.PM_SENSING_SET_OF_POS_X, {
+                    return new IntermediateStackBlock(StackOpcode.PM_SENSING_SET_OF_POS_X, {
                         object,
                         value: value.toType(InputType.NUMBER)
                     });
                 case 'y position':
-                    return new IntermediateStackBlock(InputOpcode.PM_SENSING_SET_OF_POS_Y, {
+                    return new IntermediateStackBlock(StackOpcode.PM_SENSING_SET_OF_POS_Y, {
                         object,
                         value: value.toType(InputType.NUMBER)
                     });
                 case 'direction':
-                    return new IntermediateStackBlock(InputOpcode.PM_SENSING_SET_OF_DIRECTION, {
+                    return new IntermediateStackBlock(StackOpcode.PM_SENSING_SET_OF_DIRECTION, {
                         object,
                         value: value.toType(InputType.NUMBER)
                     });
                 case 'costume':
-                    return new IntermediateStackBlock(InputOpcode.PM_SENSING_SET_OF_COSTUME, {
+                    return new IntermediateStackBlock(StackOpcode.PM_SENSING_SET_OF_COSTUME, {
                         object,
                         value
                     });
                 case 'size':
-                    return new IntermediateStackBlock(InputOpcode.PM_SENSING_SET_OF_SIZE, {
+                    return new IntermediateStackBlock(StackOpcode.PM_SENSING_SET_OF_SIZE, {
                         object,
                         value: value.toType(InputType.NUMBER)
                     });
                 }
             }
 
-            return new IntermediateStackBlock(InputOpcode.PM_SENSING_SET_OF_VAR, {
+            return new IntermediateStackBlock(StackOpcode.PM_SENSING_SET_OF_VAR, {
                 object,
                 property,
                 value
