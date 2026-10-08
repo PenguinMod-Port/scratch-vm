@@ -362,6 +362,7 @@ class Extension {
                         }
                     },
                     extensions: ["colours_sensing"],
+                    filter: [TargetType.SPRITE],
                     ...Vector.Block
                 },
                 {
