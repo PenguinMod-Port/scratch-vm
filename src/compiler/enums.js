@@ -447,6 +447,8 @@ const InputOpcode = {
     PM_SENSING_OS: 'sensing.operatingSystem',
     PM_SENSING_REGEX_TEST: 'sensing.regexTest',
     PM_SENSING_SPRITE_WITH_ATTRIB: 'sensing.spriteWithAttrib',
+    PM_SENSING_TOUCHING_POINT_X: 'sensing.touchingPoint.x',
+    PM_SENSING_TOUCHING_POINT_Y: 'sensing.touchingPoint.y',
     PM_SENSING_TIME_TIMESTAMP: 'sensing.timestamp',
     PM_SENSING_UPPERCASE_TEXT: 'sensing.uppercaseText',
     PM_SENSING_URL: 'sensing.url',

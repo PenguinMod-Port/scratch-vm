@@ -1022,6 +1022,12 @@ class ScriptTreeGenerator {
             return new IntermediateInput(InputOpcode.PM_SENSING_OS, InputType.STRING);
         case 'sensing_geturl':
             return new IntermediateInput(InputOpcode.PM_SENSING_URL, InputType.STRING);
+        case 'sensing_getxyoftouchingsprite':
+            return new IntermediateInput(
+                block.fields.XY.value === "y" ? InputOpcode.PM_SENSING_TOUCHING_POINT_Y : InputOpcode.PM_SENSING_TOUCHING_POINT_X,
+                InputType.NUMBER | InputType.NULL, {
+                object: this.descendInputOfBlock(block, 'SPRITE').toType(InputType.STRING)
+            });
         case 'sensing_isUpperCase':
             return new IntermediateInput(InputOpcode.PM_SENSING_UPPERCASE_TEXT, InputType.BOOLEAN, {
                 text: this.descendInputOfBlock(block, 'text').toType(InputType.STRING)
@@ -1828,7 +1834,6 @@ class ScriptTreeGenerator {
             return new IntermediateStackBlock(StackOpcode.SENSING_TIMER_RESET);
 
         // pm sensing
-        
         case 'sensing_set_of': {
             const property = block.fields.PROPERTY.value;
             const object = this.descendInputOfBlock(block, 'OBJECT').toType(InputType.STRING);

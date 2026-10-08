@@ -756,6 +756,10 @@ class JSGenerator {
             return `runtime.ext_scratch3_sensing._spriteWithAttrib(${this.descendInput(node.varName)}, ${this.descendInput(node.varValue)})`;
         case InputOpcode.PM_SENSING_TIME_TIMESTAMP:
             return `Date.now()`;
+        case InputOpcode.PM_SENSING_TOUCHING_POINT_X:
+            return `target.objectTouchingPoint(${this.descendInput(node.object)})[0]`;
+        case InputOpcode.PM_SENSING_TOUCHING_POINT_Y:
+            return `target.objectTouchingPoint(${this.descendInput(node.object)})[1]`;
         case InputOpcode.PM_SENSING_UPPERCASE_TEXT:
             return `runtime.ext_scratch3_sensing._isTextUppercase(${this.descendInput(node.text)})`;
         case InputOpcode.PM_SENSING_URL:

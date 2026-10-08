@@ -880,10 +880,24 @@ class RenderedTarget extends Target {
     }
 
     /**
+     * @returns {Array.<number?>}
+     */
+    objectTouchingPoint (requestedObject) {
+        if (requestedObject === '_mouse_') {
+            if (!this.runtime.ioDevices.mouse) return [null, null];
+            const mouseX = this.runtime.ioDevices.mouse.getClientX();
+            const mouseY = this.runtime.ioDevices.mouse.getClientY();
+            if (!this.isTouchingPoint(mouseX, mouseY)) return [null, null];
+            return [mouseX, mouseY];
+        }
+        return this.spriteTouchingPoint(requestedObject);
+    }
+
+    /**
      * Return whether touching a point.
      * @param {number} x X coordinate of test point.
      * @param {number} y Y coordinate of test point.
-     * @return {boolean} True iff the rendered target is touching the point.
+     * @return {boolean} True if the rendered target is touching the point.
      */
     isTouchingPoint (x, y) {
         if (this.renderer) {
@@ -928,6 +942,24 @@ class RenderedTarget extends Target {
         const drawableCandidates = firstClone.sprite.clones.filter(clone => !clone.dragging)
             .map(clone => clone.drawableID);
         return this.renderer.isTouchingDrawables(
+            this.drawableID, drawableCandidates);
+    }
+
+    /**
+     * @return {Array.<number?>}
+     */
+    spriteTouchingPoint (spriteName) {
+        spriteName = Cast.toString(spriteName);
+        const firstClone = this.runtime.getSpriteTargetByName(spriteName);
+        if (!firstClone || !this.renderer) {
+            return [null, null];
+        }
+        // Filter out dragging targets. This means a sprite that is being dragged
+        // can detect other sprites using touching <sprite>, but cannot be detected
+        // by other sprites while it is being dragged. This matches Scratch 2.0 behavior.
+        const drawableCandidates = firstClone.sprite.clones.filter(clone => !clone.dragging)
+            .map(clone => clone.drawableID);
+        return this.renderer.getTouchingDrawablesPoint(
             this.drawableID, drawableCandidates);
     }
 

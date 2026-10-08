@@ -313,6 +313,7 @@ class Scratch3LooksBlocks {
      */
     _formatBubbleText (text) {
         if (text === '') return text;
+        if (text === null) return '';
 
         // Non-integers should be rounded to 2 decimal places (no more, no less), unless they're small enough that
         // rounding would display them as 0.00. This matches 2.0's behavior:
@@ -323,7 +324,7 @@ class Scratch3LooksBlocks {
         }
 
         // Limit the length of the string.
-        text = String(text).substr(0, this.SAY_BUBBLE_LIMIT);
+        text = Cast.toString(text).substr(0, this.SAY_BUBBLE_LIMIT);
 
         return text;
     }

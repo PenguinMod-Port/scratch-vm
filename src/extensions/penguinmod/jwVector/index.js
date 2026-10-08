@@ -354,6 +354,17 @@ class Extension {
                 },
                 "---",
                 {
+                    opcode: 'touchingPoint',
+                    text: 'touching [OBJECT] point',
+                    arguments: {
+                        OBJECT: {
+                            fillInGlobal: 'sensing_distancetomenu'
+                        }
+                    },
+                    extensions: ["colours_sensing"],
+                    ...Vector.Block
+                },
+                {
                     opcode: 'getMouse',
                     text: 'mouse position',
                     extensions: ["colours_sensing"],
@@ -527,6 +538,14 @@ class Extension {
         VECTOR = Vector.Type.toVector(VECTOR)
 
         util.target.setStretch(VECTOR.x, VECTOR.y)
+    }
+
+    touchingPoint({OBJECT}, util) {
+        OBJECT = Cast.toString(OBJECT);
+
+        const point = util.target.objectTouchingPoint(OBJECT);
+        if (point[0] === null) return null;
+        return new Vector.Type(point[0], point[1]);
     }
 
     getMouse({}, util) {
