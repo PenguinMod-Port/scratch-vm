@@ -60,6 +60,7 @@ const defaultBuiltinExtensions = {
 
     // dogeiscut
     dogeiscutObject: () => require('../extensions/penguinmod/dogeiscutObject'),
+    dogeiscutRegularExpressions: () => require('../extensions/penguinmod/dogeiscutRegularExpressions'),
 
     // jeremy
     jgStorage: () => require('../extensions/penguinmod/jgStorage'),
