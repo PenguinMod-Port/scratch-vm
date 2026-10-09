@@ -194,17 +194,17 @@ class RegularExpressionType {
     }
 }
 
-const dogeiscutRegularExpression = {
+const dogeiscutRegularExpressions = {
     Type: RegularExpressionType,
     Block: {
         blockType: BlockType.REPORTER,
         blockShape: BlockShape.SLANTED,
-        forceOutputType: "dogeiscutRegularExpression",
+        forceOutputType: "dogeiscutRegularExpressions",
         disableMonitor: true
     },
     Argument: {
         shape: BlockShape.SLANTED,
-        check: ["dogeiscutRegularExpression"],
+        check: ["dogeiscutRegularExpressions"],
     },
 };
 
@@ -222,15 +222,15 @@ let dogeiscutObject = {
 
 class Extension {
     constructor() {
-        vm.extensionManager.addExtensionDependency("dogeiscutRegularExpression", "jwArray", () => jwArray = vm.jwArray);
-        vm.extensionManager.addExtensionDependency("dogeiscutRegularExpression", "dogeiscutObject", () => dogeiscutObject = vm.dogeiscutObject);
+        vm.extensionManager.addExtensionDependency("dogeiscutRegularExpressions", "jwArray", () => jwArray = vm.jwArray);
+        vm.extensionManager.addExtensionDependency("dogeiscutRegularExpressions", "dogeiscutObject", () => dogeiscutObject = vm.dogeiscutObject);
 
-        vm.dogeiscutRegularExpression = dogeiscutRegularExpression;
+        vm.dogeiscutRegularExpressions = dogeiscutRegularExpressions;
         vm.runtime.registerSerializer(
             "dogeiscutRegularExpression", 
             v => ({ source: v.source, flags: v.flags, lastIndex: v.lastIndex }), 
             v => {
-                let regex = dogeiscutRegularExpression.Type.toRegularExpression(new RegExp(v.source, v.flags));
+                let regex = dogeiscutRegularExpressions.Type.toRegularExpression(new RegExp(v.source, v.flags));
                 regex.lastIndex = v.lastIndex;
                 return regex;
             }
@@ -256,7 +256,7 @@ class Extension {
                             defaultValue: "gm"
                         }
                     },
-                    ...dogeiscutRegularExpression.Block
+                    ...dogeiscutRegularExpressions.Block
                 },
                 {
                     opcode: 'escape',
@@ -275,7 +275,7 @@ class Extension {
                     text: 'source of [REGEX]',
                     blockType: BlockType.REPORTER,
                     arguments: {
-                        REGEX: dogeiscutRegularExpression.Argument,
+                        REGEX: dogeiscutRegularExpressions.Argument,
                     },
                 },
                 {
@@ -283,7 +283,7 @@ class Extension {
                     text: 'flags of [REGEX]',
                     blockType: BlockType.REPORTER,
                     arguments: {
-                        REGEX: dogeiscutRegularExpression.Argument,
+                        REGEX: dogeiscutRegularExpressions.Argument,
                     },
                 },
                 '---',
@@ -297,7 +297,7 @@ class Extension {
                             type: ArgumentType.STRING,
                             defaultValue: "foo"
                         },
-                        REGEX: dogeiscutRegularExpression.Argument
+                        REGEX: dogeiscutRegularExpressions.Argument
                     },
                 },
                 {
@@ -310,7 +310,7 @@ class Extension {
                             type: ArgumentType.STRING,
                             defaultValue: "foo"
                         },
-                        REGEX: dogeiscutRegularExpression.Argument
+                        REGEX: dogeiscutRegularExpressions.Argument
                     },
                 },
                 '---',
@@ -320,7 +320,7 @@ class Extension {
                     blockType: BlockType.REPORTER,
                     disableMonitor: true,
                     arguments: {
-                        REGEX: dogeiscutRegularExpression.Argument,
+                        REGEX: dogeiscutRegularExpressions.Argument,
                         A: {
                             type: ArgumentType.STRING,
                             defaultValue: "foo"
@@ -337,7 +337,7 @@ class Extension {
                     blockType: BlockType.REPORTER,
                     disableMonitor: true,
                     arguments: {
-                        REGEX: dogeiscutRegularExpression.Argument,
+                        REGEX: dogeiscutRegularExpressions.Argument,
                         A: {
                             type: ArgumentType.STRING,
                             defaultValue: "foo"
@@ -357,7 +357,7 @@ class Extension {
                             type: ArgumentType.STRING,
                             defaultValue: "foo"
                         },
-                        REGEX: dogeiscutRegularExpression.Argument,
+                        REGEX: dogeiscutRegularExpressions.Argument,
                     },
                     ...jwArray.Block,
                 },
@@ -365,7 +365,7 @@ class Extension {
                     opcode: 'match',
                     text: 'match [REGEX] with [STRING]',
                     arguments: {
-                        REGEX: dogeiscutRegularExpression.Argument,
+                        REGEX: dogeiscutRegularExpressions.Argument,
                         STRING: {
                             type: ArgumentType.STRING,
                             defaultValue: "foo"
@@ -377,7 +377,7 @@ class Extension {
                     opcode: 'matchAll',
                     text: 'match all [REGEX] with [STRING]',
                     arguments: {
-                        REGEX: dogeiscutRegularExpression.Argument,
+                        REGEX: dogeiscutRegularExpressions.Argument,
                         STRING: {
                             type: ArgumentType.STRING,
                             defaultValue: "foo"
@@ -390,7 +390,7 @@ class Extension {
                     opcode: 'exec',
                     text: 'execute [REGEX] on [STRING]',
                     arguments: {
-                        REGEX: dogeiscutRegularExpression.Argument,
+                        REGEX: dogeiscutRegularExpressions.Argument,
                         STRING: {
                             type: ArgumentType.STRING,
                             defaultValue: "foo"
@@ -404,14 +404,14 @@ class Extension {
                     blockType: BlockType.REPORTER,
                     disableMonitor: true,
                     arguments: {
-                        REGEX: dogeiscutRegularExpression.Argument,
+                        REGEX: dogeiscutRegularExpressions.Argument,
                     },
                 },
                 {
                     opcode: 'setLastIndex',
                     text: 'set last index of [REGEX] to [INDEX]',
                     arguments: {
-                        REGEX: dogeiscutRegularExpression.Argument,
+                        REGEX: dogeiscutRegularExpressions.Argument,
                         INDEX: {
                             type: ArgumentType.NUMBER,
                             defaultValue: 0
