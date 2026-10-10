@@ -84,6 +84,15 @@ class CameraType {
         return vm.renderer.camera.getDirection(this.name);
     }
 
+    setVisible(visible) {
+        vm.renderer.camera.setVisible(visible, this.name);
+        vm.runtime.requestRedraw();
+    }
+
+    getVisible() {
+        return vm.renderer.camera.getVisible(this.name);
+    }
+
     bindTarget(target) {
         target.setCameraState(this.name);
     }
@@ -221,6 +230,17 @@ class Extension {
                         }
                     }
                 },
+                {
+                    opcode: "setVisible",
+                    blockType: BlockType.COMMAND,
+                    text: "set visibility of [CAMERA] to [VISIBLE]",
+                    arguments: {
+                        CAMERA: jwCamera.Argument,
+                        VISIBLE: {
+                            type: ArgumentType.BOOLEAN
+                        }
+                    }
+                },
                 "---",
                 {
                     opcode: "getPosition",
@@ -242,6 +262,14 @@ class Extension {
                     opcode: "getDirection",
                     blockType: BlockType.REPORTER,
                     text: "direction of [CAMERA]",
+                    arguments: {
+                        CAMERA: jwCamera.Argument
+                    }
+                },
+                {
+                    opcode: "getVisible",
+                    blockType: BlockType.BOOLEAN,
+                    text: "is [CAMERA] visible?",
                     arguments: {
                         CAMERA: jwCamera.Argument
                     }
@@ -344,6 +372,12 @@ class Extension {
         CAMERA.setDirection(ANGLE);
     }
 
+    setVisible({CAMERA, VISIBLE}) {
+        CAMERA = jwCamera.Type.toCamera(CAMERA);
+        VISIBLE = Cast.toBoolean(VISIBLE);
+        CAMERA.setVisible(VISIBLE);
+    }
+
     getPosition({CAMERA}) {
         CAMERA = jwCamera.Type.toCamera(CAMERA);
         return new jwVector.Type(...CAMERA.getPosition());
@@ -357,6 +391,11 @@ class Extension {
     getDirection({CAMERA}) {
         CAMERA = jwCamera.Type.toCamera(CAMERA);
         return CAMERA.getDirection();
+    }
+
+    getVisible({CAMERA}) {
+        CAMERA = jwCamera.Type.toCamera(CAMERA);
+        return CAMERA.getVisible();
     }
 
     bindTarget({CAMERA, TARGET}) {
