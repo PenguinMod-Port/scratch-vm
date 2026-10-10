@@ -823,7 +823,7 @@ const serialize = function (runtime, targetId, {allowOptimization = true} = {}) 
     meta.semver = '3.0.0';
     meta.pmVersion = runtime.pmVersion.toString();
     // TW: There isn't a good reason to put the full version number in the json, so we don't.
-    meta.vm = '0.2.0';
+    meta.vm = '1.0.0';
     if (runtime.origin) {
         meta.origin = runtime.origin;
     }
