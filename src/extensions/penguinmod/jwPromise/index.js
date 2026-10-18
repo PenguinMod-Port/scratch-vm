@@ -31,6 +31,7 @@ class PromiseType {
         });
         this.status = PromiseStatus.PENDING;
         this.result = null;
+        this._monitorUpToDate = true;
 
         this.timer = new Timer();
         this.timer.start();
@@ -39,10 +40,12 @@ class PromiseType {
             this.status = PromiseStatus.FUFILLED;
             this.timer = this.timer.timeElapsed();
             this.result = v;
+            this._monitorUpToDate = false;
         }, v => {
             this.status = PromiseStatus.REJECTED;
             this.timer = this.timer.timeElapsed();
             this.result = v;
+            this._monitorUpToDate = false;
         });
     }
 
@@ -105,6 +108,11 @@ class PromiseType {
         }
 
         return span(`Promise${text}`);
+    }
+
+    toMonitorContent() {
+        this._monitorUpToDate = true;
+        return `Promise<${this.toString()}>`;
     }
 
     await = function*() {

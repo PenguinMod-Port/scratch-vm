@@ -3144,6 +3144,14 @@ class Runtime extends EventEmitter {
             this._refreshTargets = false;
         }
 
+        // if a custom type set _monitorUpToDate to false on an existing instance, we need to report that update to the gui
+        for (let item of this._monitorState.values()) {
+            if (item.value !== null && typeof item.value === 'object' && item.value._monitorUpToDate === false) {
+                this._monitorState.dirty = true;
+                break;
+            }
+        }
+
         if (this._monitorState.dirty) {
             this.emit(Runtime.MONITORS_UPDATE, this._monitorState.shallowClone());
             this._monitorState.dirty = false;
