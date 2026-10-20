@@ -2,6 +2,8 @@ const BlockType = require('../../../extension-support/block-type');
 const ArgumentType = require('../../../extension-support/argument-type');
 const Cast = require('../../../util/cast');
 
+const MathJS = require('./mathjs');
+
 const template = {
     extensions: ["colours_operators"]
 };
@@ -16,7 +18,7 @@ function generateJoin(inputs) {
             type: ArgumentType.STRING
         }])),
         hideFromPalette: true,
-        ...template
+        extensions: ["colours_operators_strings"]
     };
 }
 
@@ -190,7 +192,99 @@ class Extension {
                         }
                     },
                     ...template
-                }
+                },
+                "---",
+                {
+                    blockType: BlockType.XML,
+                    xml: '<block type="operator_randomBoolean" />'
+                },
+                "---",
+                {
+                    opcode: "isNumberMultipleOf",
+                    text: "is [NUM] multiple of [MULTIPLE]?",
+                    blockType: BlockType.BOOLEAN,
+                    arguments: {
+                        NUM: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 20
+                        },
+                        MULTIPLE: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 10
+                        }
+                    },
+                    ...template
+                },
+                {
+                    opcode: "isInteger",
+                    text: "is [NUM] an integer?",
+                    blockType: BlockType.BOOLEAN,
+                    arguments: {
+                        NUM: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 0.5
+                        }
+                    },
+                    ...template
+                },
+                {
+                    opcode: "isPrime",
+                    text: "is [NUM] a prime number?",
+                    blockType: BlockType.BOOLEAN,
+                    arguments: {
+                        NUM: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 13
+                        }
+                    },
+                    ...template
+                },
+                {
+                    opcode: "isEven",
+                    text: "is [NUM] even?",
+                    blockType: BlockType.BOOLEAN,
+                    arguments: {
+                        NUM: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 4
+                        }
+                    },
+                    ...template
+                },
+                {
+                    opcode: "betweenNumbers",
+                    text: "is [NUM] between [MIN] and [MAX]?",
+                    blockType: BlockType.BOOLEAN,
+                    arguments: {
+                        NUM: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 5
+                        },
+                        MIN: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 0
+                        },
+                        MAX: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 10
+                        }
+                    },
+                    hideFromPalette: true, // expandable compare does this
+                    ...template
+                },
+                "---",
+                {
+                    opcode: "evaluateMath",
+                    text: "answer to [EQUATION]",
+                    blockType: BlockType.REPORTER,
+                    arguments: {
+                        EQUATION: {
+                            type: ArgumentType.STRING,
+                            defaultValue: "5 * 2"
+                        }
+                    },
+                    ...template
+                },
             ]
         };
     }
@@ -264,6 +358,71 @@ class Extension {
         num1 = Cast.toNumber(num1);
 
         return ~num1;
+    }
+
+    isNumberMultipleOf({NUM, MULTIPLE}) {
+        NUM = Cast.toNumber(NUM);
+        MULTIPLE = Cast.toNumber(MULTIPLE);
+
+        return (NUM % MULTIPLE) === 0;
+    }
+
+    isInteger({NUM}) {
+        NUM = Cast.toNumber(NUM);
+        return Math.trunc(NUM) === NUM;
+    }
+
+    isPrime({NUM}) {
+        NUM = Math.trunc(Cast.toNumber(NUM));
+
+        if (NUM <= 1) return false;
+        for (let i = 2; i < NUM; i++) {
+            if (NUM % i === 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    isEven({NUM}) {
+        NUM = Cast.toNumber(NUM);
+        
+        return NUM % 2 === 0;
+    }
+
+    betweenNumbers({NUM, MIN, MAX}) {
+        NUM = Cast.toNumber(NUM);
+        MIN = Cast.toNumber(MIN);
+        MAX = Cast.toNumber(MAX);
+
+        if (MIN > MAX) [MIN, MAX] = [MAX, MIN];
+
+        return NUM >= MIN && NUM <= MAX;
+    }
+
+    evaluateMath({EQUATION}) {
+        EQUATION = Cast.toString(EQUATION);
+        // "" is undefined when evalutated
+        if (EQUATION.trim().length === 0) return 0;
+        // evalueate
+        let answer = 0;
+        try {
+            answer = MathJS.evaluate(EQUATION);
+        } catch {
+            // syntax errors cause real errors
+            answer = 0;
+        }
+        // multiline or semi-colon breaks create a ResultSet, we can get the last item in the set for that
+        if (typeof answer === "object") {
+            if ("entries" in answer) {
+                const answers = answer.entries;
+                if (answers.length === 0) return 0;
+                const lastIdx = answers.length - 1;
+                return Number(answers[lastIdx]);
+            }
+        }
+        // Cast.toNumber converts NaN to 0
+        return Number(answer);
     }
 }
 
