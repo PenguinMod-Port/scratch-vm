@@ -34,8 +34,9 @@ const defaultBuiltinExtensions = {
     pmMotionExpansion: () => require('../extensions/penguinmod/pmMotionExpansion'),
     pmEventsExpansion: () => require('../extensions/penguinmod/pmEventsExpansion'),
     pmControlsExpansion: () => require('../extensions/penguinmod/pmControlsExpansion'),
-    pmOperatorsExpansion: () => require('../extensions/penguinmod/pmOperatorsExpansion'),
     pmSensingExpansion: () => require('../extensions/penguinmod/pmSensingExpansion'),
+    pmOperatorsExpansion: () => require('../extensions/penguinmod/pmOperatorsExpansion'),
+    pmStringsExpansion: () => require('../extensions/penguinmod/pmStringsExpansion'),
 
     // jwklong
     jwArray: () => require('../extensions/penguinmod/jwArray'),

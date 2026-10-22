@@ -1,5 +1,15 @@
 const SemVer = require('../util/semver');
 
+const operatorToStringExpansion = [
+    'reverseChars',
+    'shuffleChars',
+    'textAfter',
+    'textBefore',
+    'setReplacer',
+    'resetReplacers',
+    'applyReplacers'
+];
+
 /**
  * @param {*} block 
  * @param {SemVer} pmVersion 
@@ -163,6 +173,13 @@ export function compatBlock(block, pmVersion) {
         //sensing_directionTo
         if (block.opcode === "sensing_directionTo") {
             block.opcode = "operator_directionTo"
+        }
+
+        // converting operator expansion blocks into strings expansion
+        if (block.opcode.startsWith("pmOperatorsExpansion_") && operatorToStringExpansion.some(v => block.opcode.endsWith("_" + v))) {
+            const temp = block.opcode.split("_");
+            temp[0] = "pmStringsExpansion";
+            block.opcode = temp.join("_")
         }
     }
 
