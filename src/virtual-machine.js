@@ -27,6 +27,7 @@ const {serializeSounds, serializeCostumes} = require('./serialization/serialize-
 require('canvas-toBlob');
 const {exportCostume} = require('./serialization/tw-costume-import-export');
 const Base64Util = require('./util/base64-util');
+const Sampler = require('./engine/tw-sampler.js');
 const pmSymbol = require('./util/symbol');
 
 const RESERVED_NAMES = ['_mouse_', '_stage_', '_edge_', '_myself_', '_random_'];
@@ -242,6 +243,7 @@ class VirtualMachine extends EventEmitter {
             RenderedTarget,
             JSZip,
             Variable,
+            Sampler,
             pmSymbol,
 
             // pm exported some of these before

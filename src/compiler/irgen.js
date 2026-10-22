@@ -1217,7 +1217,7 @@ class ScriptTreeGenerator {
                 target: this.descendInputOfBlock(block, 'CLONE_OPTION').toType(InputType.STRING)
             });
         case 'control_delete_this_clone':
-            return new IntermediateStackBlock(StackOpcode.CONTROL_CLONE_DELETE, {}, true);
+            return new IntermediateStackBlock(StackOpcode.CONTROL_CLONE_DELETE);
         case 'control_forever':
             return new IntermediateStackBlock(StackOpcode.CONTROL_WHILE, {
                 condition: this.createConstantInput(true).toType(InputType.BOOLEAN),
@@ -1263,7 +1263,7 @@ class ScriptTreeGenerator {
         case 'control_stop': {
             const level = block.fields.STOP_OPTION.value;
             if (level === 'all') {
-                return new IntermediateStackBlock(StackOpcode.CONTROL_STOP_ALL, {}, true);
+                return new IntermediateStackBlock(StackOpcode.CONTROL_STOP_ALL);
             } else if (level === 'other scripts in sprite' || level === 'other scripts in stage') {
                 return new IntermediateStackBlock(StackOpcode.CONTROL_STOP_OTHERS);
             } else if (level === 'this script') {
@@ -2027,6 +2027,8 @@ class ScriptTreeGenerator {
             }
 
             const node = this.descendStackedBlock(block);
+            node.blockId = blockId;
+
             this.script.yields = this.script.yields || node.yields;
             if(this.script.isProcedure && node.opcode === StackOpcode.PM_PROCEDURE_REEVALUATE) {
                 this.script.reevaled.add(node.inputs.index)
@@ -2170,9 +2172,10 @@ class ScriptTreeGenerator {
             return null;
         }
         try {
+            const input = this.descendInput(block);
             return new IntermediateStackBlock(StackOpcode.VISUAL_REPORT, {
-                input: this.descendInput(block)
-            });
+                input
+            }, input.yields);
         } catch (e) {
             return null;
         }
@@ -2407,8 +2410,10 @@ class ScriptTreeGenerator {
             // interpreter parity, but the reuslt is ignored.
             const opcodeFunction = this.runtime.getOpcodeFunction(opcode);
             if (opcodeFunction) {
+                const hat = this.descendCompatLayerStack(hatBlock);
+                this.script.yields = this.script.yields || hat.yields;
                 return new IntermediateStack([
-                    this.descendCompatLayerStack(hatBlock),
+                    hat,
                     ...this.walkStack(nextBlock).blocks
                 ]);
             }

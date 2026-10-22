@@ -7,6 +7,7 @@ const jsexecute = require('./jsexecute');
 const environment = require('./environment');
 const {StackOpcode, InputOpcode, InputType} = require('./enums.js');
 const oldCompilerCompatibility = require('./old-compiler-compatibility.js');
+const Sampler = require('../engine/tw-sampler.js');
 
 // These imports are used by jsdoc comments but eslint doesn't know that
 /* eslint-disable no-unused-vars */
@@ -143,6 +144,17 @@ class JSGenerator {
 
         this.runtime = this.target.runtime;
         this.debug = this.target.runtime.debug;
+
+        const sampler = this.target.runtime.sampler;
+        /**
+         * The current sampler, iff sampling is enabled.
+         * @type {import('../engine/tw-sampler.js')|null}
+         */
+        this.sampler = sampler.enableCommands ? sampler : null;
+        /**
+         * ID of the current command block being sampled.
+         */
+        this.currentSamplerLocation = -1;
 
         this.oldCompilerStub = new oldCompilerCompatibility.JSGeneratorStub(this);
     }
@@ -282,7 +294,7 @@ class JSGenerator {
             return `listGet(${this.referenceVariable(node.list)}.value, ${this.descendInput(node.index)})`;
         }
         case InputOpcode.LIST_INDEX_OF:
-            return `listIndexOf(${this.referenceVariable(node.list)}, ${this.descendInput(node.item)})`;
+            return `(listFind(${this.referenceVariable(node.list)}.value, ${this.descendInput(node.item)}) + 1)`;
         case InputOpcode.LIST_LENGTH:
             return `${this.referenceVariable(node.list)}.value.length`;
 
@@ -1673,11 +1685,22 @@ class JSGenerator {
             }
         }
 
+        const parentSamplerLocation = this.currentSamplerLocation;
+
         for (let i = 0; i < stack.blocks.length; i++) {
             this.isLastBlock = i === stack.blocks.length - 1;
             if (frame) frame.isLastBlock = this.isLastBlock;
-            this.descendStackedBlock(stack.blocks[i]);
+            const block = stack.blocks[i];
+
+            if (this.sampler && block.blockId) {
+                const originalTargetId = this.target.sprite.clones[0].id;
+                this.currentSamplerLocation = this.sampler.blockToLocation(originalTargetId, block.blockId);
+                this.source += `pc[0] = ${this.currentSamplerLocation};\n`;
+            }
+
+            this.descendStackedBlock(block);
         }
+        this.currentSamplerLocation = parentSamplerLocation;
 
         for (let extensionId in JSGenerator.compilerExtensions) {
             let extension = JSGenerator.compilerExtensions[extensionId]
@@ -1743,10 +1766,11 @@ class JSGenerator {
 
     retire () {
         // After running retire() (sets thread status and cleans up some unused data), we need to return to the event loop.
-        // When in a procedure, return will only send us back to the previous procedure, so instead we yield back to the sequencer.
-        // Outside of a procedure, return will correctly bring us back to the sequencer.
-        // also needed for stuff that allows returns cause thats scoped inside another function
-        if (this.isProcedure || this.allowReturns) {
+        // In procedures return just goes back 1 layer of the stack, so instead we throw a magic value that the runtime will
+        // know to ignore.
+        if (this.isProcedure) {
+            this.source += `retire(); throw ${jsexecute.RETIRE_MAGIC};\n`;
+        } else if (this.allowReturns) {
             this.source += 'retire(); yield;\n';
         } else {
             this.source += 'retire(); return;\n';
@@ -1776,6 +1800,9 @@ class JSGenerator {
         if (!this.isWarp) {
             this.source += 'yield;\n';
             this.yielded();
+            if (this.sampler) {
+                this.source += `pc[0] = ${this.currentSamplerLocation};\n`;
+            }
         }
     }
 
@@ -1784,11 +1811,17 @@ class JSGenerator {
      */
     yieldStuckOrNotWarp () {
         if (this.isWarp) {
+            if (this.sampler) {
+                this.source += `pc[0] = ${Sampler.WARP_TIMER};\n`;
+            }
             this.source += 'if (isStuck()) yield;\n';
         } else {
             this.source += 'yield;\n';
         }
         this.yielded();
+        if (this.sampler) {
+            this.source += `pc[0] = ${this.currentSamplerLocation};\n`;
+        }
     }
 
     yielded () {
@@ -1891,6 +1924,9 @@ class JSGenerator {
         script += 'const target = thread.target; ';
         script += 'const runtime = target.runtime; ';
         script += 'const stage = runtime.getTargetForStage();\n';
+        if (this.sampler) {
+            script += 'const pc = runtime.sampler.pc;\n';
+        }
 
         if (this.isProcedure && this.script.globalProcedureData) {
             const globalTarget = this.script.globalProcedureData.target;
