@@ -285,7 +285,136 @@ class Extension {
                     },
                     ...template
                 },
-            ]
+                {
+                    opcode: "partOfRatio",
+                    text: "[PART] part of ratio [RATIO]",
+                    blockType: BlockType.REPORTER,
+                    arguments: {
+                        PART: {
+                            type: ArgumentType.STRING,
+                            menu: "part"
+                        },
+                        RATIO: {
+                            type: ArgumentType.STRING,
+                            defaultValue: "1:2"
+                        }
+                    },
+                    ...template
+                },
+                {
+                    opcode: "simplifyRatio",
+                    text: "simplify ratio [RATIO]",
+                    blockType: BlockType.REPORTER,
+                    arguments: {
+                        RATIO: {
+                            type: ArgumentType.STRING,
+                            defaultValue: "1:2"
+                        }
+                    },
+                    ...template
+                },
+                {
+                    opcode: "pi",
+                    text: "π",
+                    blockType: BlockType.REPORTER,
+                    hideFromPalette: true,
+                    ...template
+                },
+                {
+                    opcode: "euler",
+                    text: "e",
+                    blockType: BlockType.REPORTER,
+                    hideFromPalette: true,
+                    ...template
+                },
+                {
+                    opcode: "infinity",
+                    text: "∞",
+                    blockType: BlockType.REPORTER,
+                    hideFromPalette: true,
+                    ...template
+                },
+                "---",
+                {
+                    opcode: "truncateNumber",
+                    text: "truncate number [NUM]",
+                    blockType: BlockType.REPORTER,
+                    arguments: {
+                        NUM: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 2.5
+                        }
+                    },
+                    ...template
+                },
+                {
+                    opcode: "atan2",
+                    text: "atan2 of x [X] y [Y]",
+                    blockType: BlockType.REPORTER,
+                    arguments: {
+                        X: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 45
+                        },
+                        Y: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 90
+                        },
+                    },
+                    ...template
+                },
+                {
+                    opcode: "exactlyEqual",
+                    text: "[ONE] exactly equals [TWO]?",
+                    blockType: BlockType.BOOLEAN,
+                    arguments: {
+                        ONE: {
+                            type: ArgumentType.STRING,
+                            defaultValue: "a"
+                        },
+                        TWO: {
+                            type: ArgumentType.STRING,
+                            defaultValue: "b"
+                        }
+                    },
+                    hideFromPalette: true,
+                    ...template
+                },
+                "---",
+                {
+                    opcode: "speedToPitch",
+                    text: "speed [SPEED] to pitch",
+                    blockType: BlockType.REPORTER,
+                    arguments: {
+                        SPEED: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 2
+                        },
+                    },
+                    ...template
+                },
+                {
+                    opcode: "pitchToSpeed",
+                    text: "pitch [PITCH] to speed",
+                    blockType: BlockType.REPORTER,
+                    arguments: {
+                        PITCH: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 120
+                        },
+                    },
+                    ...template
+                }
+            ],
+            menus: {
+                part: {
+                    acceptReporters: true,
+                    items: [
+                        { text: "first", value: "first" },
+                        { text: "last", value: "last" },
+                    ]
+                }
+            }
         };
     }
 
@@ -423,6 +552,72 @@ class Extension {
         }
         // Cast.toNumber converts NaN to 0
         return Number(answer);
+    }
+
+    partOfRatio({RATIO, PART}) {
+        RATIO = Cast.toString(RATIO);
+        PART = Cast.toString(PART).toLowerCase();
+
+        if (!RATIO.includes(":")) return "";
+        const split = RATIO.split(":");
+
+        const section = split[Number(PART === "last")];
+        return Cast.toNumber(section);
+    }
+
+    simplifyRatio({RATIO}) {
+        RATIO = Cast.toString(RATIO);
+        if (!RATIO.includes(":")) return "";
+        const split = RATIO.split(":");
+
+        const first = Cast.toNumber(split[0]);
+        const last = Cast.toNumber(split[1]);
+
+        const reduced = this._reduce(first, last);
+
+        return `${Cast.toNumber(reduced[0])}:${Cast.toNumber(reduced[1])}`;
+    }
+    _reduce(numerator, denominator) {
+        let gcd = function gcd(a, b) {
+            return b ? gcd(b, a % b) : a;
+        };
+        gcd = gcd(numerator, denominator);
+        return [numerator / gcd, denominator / gcd];
+    }
+
+    pi() {
+        return Math.PI;
+    }
+
+    euler() {
+        return Math.E;
+    }
+
+    infinity() {
+        return Infinity;
+    }
+
+    truncateNumber({NUM}) {
+        return Math.trunc(Cast.toNumber(NUM));
+    }
+
+    atan2({X, Y}) {
+        X = Cast.toNumber(X);
+        Y = Cast.toNumber(Y);
+
+        return Math.atan2((Y * 180) / Math.PI, (X * 180) / Math.PI);
+    }
+
+    exactlyEqual({A, B}) {
+        return A === B;
+    }
+
+    speedToPitch({SPEED}) {
+        return (1200 * Math.log2(Cast.toNumber(SPEED))) / 10;
+    }
+
+    pitchToSpeed({PITCH}) {
+        return 2 ** (Cast.toNumber(PITCH) * 10) / 1200;
     }
 }
 
