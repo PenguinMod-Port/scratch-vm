@@ -758,7 +758,7 @@ class Scratch3LooksBlocks {
         if (option === '_stage_') ibTarget = this.runtime.getTargetForStage();
         else ibTarget = this.runtime.getSpriteTargetByName(option);
 
-        if (ibTarget) {
+        if (!target.isStage && ibTarget) {
             target.goBehindOther(ibTarget);
             if (infront) target.goForwardLayers(1);
         }

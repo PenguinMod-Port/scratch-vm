@@ -1048,9 +1048,10 @@ class RenderedTarget extends Target {
      */
     goBehindOther (other) {
         if (this.renderer) {
+            const previousLayer = this.renderer.getDrawableOrder(this.drawableID);
             const otherLayer = this.renderer.setDrawableOrder(
                 other.drawableID, 0, StageLayering.SPRITE_LAYER, true);
-            this.renderer.setDrawableOrder(this.drawableID, otherLayer, StageLayering.SPRITE_LAYER);
+            this.renderer.setDrawableOrder(this.drawableID, otherLayer + (previousLayer > otherLayer ? 0 : -1), StageLayering.SPRITE_LAYER);
         }
 
         const executionPosition = this.runtime.executableTargets.indexOf(other);

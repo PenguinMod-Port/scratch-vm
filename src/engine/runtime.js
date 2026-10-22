@@ -614,7 +614,7 @@ class Runtime extends EventEmitter {
         this.serializers = {};
 
         // pm version
-        this.pmVersion = new SemVer('0.3.0');
+        this.pmVersion = new SemVer('0.3.1');
 
         // deprecated camera states
         this.cameraStates = {};
