@@ -1770,7 +1770,7 @@ class JSGenerator {
         // know to ignore.
         if (this.isProcedure) {
             this.source += `retire(); throw ${jsexecute.RETIRE_MAGIC};\n`;
-        else if (this.allowReturns) {
+        } else if (this.allowReturns) {
             this.source += 'retire(); yield;\n';
         } else {
             this.source += 'retire(); return;\n';

@@ -360,7 +360,7 @@ class IntermediateScript {
          * If true, this script will be compiled as a generator function (function*)
          * @type {boolean}
          */
-        this.yields = false;
+        this.yields = true;
 
         /**
          * Whether this script should use the "warp timer"
