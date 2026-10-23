@@ -72,7 +72,10 @@ class Target extends EventEmitter {
          */
         this.extensionStorage = {};
 
-        if (!blocks) {
+        if (blocks) {
+            // Update the container id
+            this.blocks.parentId = this.id;
+        } else {
             // Initialize the blocks class with this target as the parent.
             blocks = new Blocks(runtime, undefined, this.id);
         }
