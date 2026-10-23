@@ -22,6 +22,8 @@ class RenderedTarget extends Target {
          * @type {!Sprite}
          */
         this.sprite = sprite;
+        sprite._id = this.id;
+
         /**
          * Reference to the global renderer for this VM, if one exists.
          * @type {?RenderWebGL}
