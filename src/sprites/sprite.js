@@ -29,12 +29,6 @@ class Sprite {
         this.name = '';
 
         /**
-         * Rendered Target Id. Set by the Rendered Target.
-         * @type {string}
-         */
-        this._id = null;
-
-        /**
          * List of costumes for this sprite.
          * Each entry is an object, e.g.,
          * {
@@ -177,7 +171,7 @@ class Sprite {
         newClone.isOriginal = this.clones.length === 0;
         this.clones.push(newClone);
         newClone.initAudio();
-        newClone.blocks.parentId = this._id;
+        newClone.blocks.parentId = this.clones[0].id;
         if (newClone.isOriginal) {
             // Default to the sprite layer group if optLayerGroup is not provided
             const layerGroup = typeof optLayerGroup === 'string' ? optLayerGroup : StageLayering.SPRITE_LAYER;
