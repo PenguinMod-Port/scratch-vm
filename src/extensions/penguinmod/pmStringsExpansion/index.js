@@ -132,7 +132,7 @@ class Extension {
     }
 
     reverseChars({TEXT}) {
-        return Cast.toString(TEXT).split("").join("");
+        return Cast.toString(TEXT).split("").reverse().join("");
     }
 
     shuffleChars({TEXT}) {
