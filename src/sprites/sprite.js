@@ -170,7 +170,6 @@ class Sprite {
         newClone.isOriginal = this.clones.length === 0;
         this.clones.push(newClone);
         newClone.initAudio();
-        newClone.blocks.parentId = newClone.id;
         if (newClone.isOriginal) {
             // Default to the sprite layer group if optLayerGroup is not provided
             const layerGroup = typeof optLayerGroup === 'string' ? optLayerGroup : StageLayering.SPRITE_LAYER;
