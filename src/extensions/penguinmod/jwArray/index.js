@@ -1,3 +1,4 @@
+const ArgumentAlignment = require('../../../extension-support/argument-alignment');
 const ArgumentType = require('../../../extension-support/argument-type');
 const BlockShape = require('../../../extension-support/block-shape');
 const BlockType = require('../../../extension-support/block-type');
@@ -517,7 +518,8 @@ class Extension {
                             text: '[VALUE]',
                             arguments: {
                                 VALUE: {
-                                    type: ArgumentType.STRING
+                                    type: ArgumentType.STRING,
+                                    alignment: ArgumentAlignment.RIGHT
                                 }
                             }
                         }
