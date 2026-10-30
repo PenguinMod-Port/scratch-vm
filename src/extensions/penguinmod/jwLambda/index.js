@@ -47,6 +47,7 @@ class LambdaType {
         root.style.color = "var(--ui-primary)";
         root.style.padding = "4px";
         root.style.borderRadius = "4px";
+        root.style.height = "max-content";
         return root;
     }
 
