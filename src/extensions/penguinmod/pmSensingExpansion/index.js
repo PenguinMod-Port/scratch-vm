@@ -7,6 +7,7 @@ const ArgumentType = require('../../../extension-support/argument-type');
 const TargetType = require('../../../extension-support/target-type');
 const Clone = require('../../../util/clone');
 const Cast = require('../../../util/cast');
+const Color = require('../../../util/color');
 
 const template = {
     extensions: ["colours_sensing"]
