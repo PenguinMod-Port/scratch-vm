@@ -113,7 +113,7 @@ class Cast {
     /**
      * Cast any Scratch argument to an RGB(A?) color object to be used for the renderer.
      * @param {*} value Value to convert to RGB(?A) color object.
-     * @return {RGBOject} [r,g,b,?a], values between 0-255.
+     * @return {RGBAOject} [r,g,b,?a], values between 0-255.
      */
     static toRgbColorObject (value) {
         let color;

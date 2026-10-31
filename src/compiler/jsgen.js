@@ -251,13 +251,13 @@ class JSGenerator {
                 return node.value.toString();
             } else if (block.isAlwaysType(InputType.COLOR)) {
                 if (!Array.isArray(node.value)) throw new Error(`JS: '${block.type}' type constant was not an array.`);
-                if (node.value.length !== 3) throw new Error(`JS: '${block.type}' type constant had an array of length '${node.value.length}'. Expected 3.`);
-                for (let i = 0; i < 3; i++) {
-                    if (typeof node.value[i] !== 'number') {
+                if (node.value.length !== 4) throw new Error(`JS: '${block.type}' type constant had an array of length '${node.value.length}'. Expected 4.`);
+                for (let i = 0; i < 4; i++) {
+                    if (typeof node.value[i] !== 'number' ) {
                         throw new Error(`JS: '${block.type}' type constant element ${i} had a value of type '${node.value[i]}'. Expected number.`);
                     }
                 }
-                return `[${node.value[0]},${node.value[1]},${node.value[2]}]`;
+                return `[${node.value[0]},${node.value[1]},${node.value[2]},${node.value[3]}]`;
             } else if (block.isSometimesType(InputType.STRING)) {
                 return `"${sanitize(node.value.toString())}"`;
             } throw new Error(`JS: Unknown constant input type '${block.type}'.`);

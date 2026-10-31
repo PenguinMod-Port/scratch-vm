@@ -48,7 +48,7 @@ class Color {
     /**
      * Convert a Scratch decimal color to an RGB color object.
      * @param {number} decimal RGB color as decimal.
-     * @return {RGBObject} rgb - {r: red [0,255], g: green [0,255], b: blue [0,255]}.
+     * @return {RGBAObject} rgb - {r: red [0,255], g: green [0,255], b: blue [0,255]}.
      */
     static decimalToRgb (decimal) {
         const a = (decimal >> 24) & 0xFF;
@@ -78,7 +78,7 @@ class Color {
             const g = parseInt(hex[1] + hex[1], 16);
             const b = parseInt(hex[2] + hex[2], 16);
 
-            const result = {r, g, b};
+            const result = {r, g, b, a: 255};
             if (hex.length === 4) {
                 result.a = parseInt(hex[3] + hex[3], 16);
             }
@@ -90,7 +90,7 @@ class Color {
         const g = parseInt(hex.substring(2, 4), 16);
         const b = parseInt(hex.substring(4, 6), 16);
 
-        const result = {r, g, b};
+        const result = {r, g, b, a: 255};
         if (hex.length === 8) {
             result.a = parseInt(hex.substring(6, 8), 16);
         }
