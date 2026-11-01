@@ -1620,7 +1620,8 @@ class Runtime extends EventEmitter {
             blockJSON,
             categoryInfo,
             blockInfo,
-            inputList: []
+            inputList: [],
+            alignment: null
         };
 
         // If an icon for the extension exists, prepend it to each block, with a vertical separator.
@@ -1753,6 +1754,12 @@ class Runtime extends EventEmitter {
                 } else {
                     blockJSON[`message${outLineNum}`] = convertedText;
                 }
+
+                if (context.alignment != null) {
+                    blockJSON[`lastDummyAlign${outLineNum}`] = context.alignment;
+                    context.alignment = null;
+                }
+
                 ++inTextNum;
                 ++outLineNum;
             }
@@ -1766,6 +1773,15 @@ class Runtime extends EventEmitter {
                 }];
                 ++inBranchNum;
                 ++outLineNum;
+            }
+        }
+
+        // old alignment support
+        if (blockInfo.alignments) {
+            for (let [i, alignment] of Object.entries(blockInfo.alignments)) {
+                if (typeof alignment === "string") {
+                    blockJSON[`lastDummyAlign${i}`] = alignment;
+                }
             }
         }
 
@@ -2045,6 +2061,10 @@ class Runtime extends EventEmitter {
         // laid out
         let argJSON;
 
+        if (argInfo.alignment) {
+            context.alignment = argInfo.alignment;
+        }
+
         // Most field types are inputs (slots on the block that can have other blocks plugged into them)
         // check if this is not one of those cases. E.g. an inline image on a block.
         if (argTypeInfo.fieldType === 'field_image') {
@@ -2177,6 +2197,10 @@ class Runtime extends EventEmitter {
 
                 if (argInfo.fillIn || argInfo.fillInGlobal) {
                     shadowType = argInfo.fillInGlobal || `${context.categoryInfo.id}_${argInfo.fillIn}`;
+                }
+
+                if (context.alignment) {
+                    argJSON.align = context.alignment;
                 }
             }
             argJSON._shadow = { valueName, shadowType, fieldName, variableID, variableName, variableType, defaultValue };
