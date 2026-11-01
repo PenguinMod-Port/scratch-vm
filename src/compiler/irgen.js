@@ -832,6 +832,11 @@ class ScriptTreeGenerator {
                 regex: this.descendInputOfBlock(block, 'reg').toType(InputType.STRING),
                 flags: this.descendInputOfBlock(block, 'regrule').toType(InputType.STRING)
             });
+        case 'operator_repeat':
+            return new IntermediateInput(InputOpcode.PM_OP_REPEAT, InputType.STRING, {
+                text: this.descendInputOfBlock(block, 'TEXT').toType(InputType.STRING),
+                times: this.descendInputOfBlock(block, 'TIMES').toType(InputType.NUMBER)
+            });
         case 'operator_replaceAll':
             return new IntermediateInput(InputOpcode.PM_OP_REPLACEALL, InputType.STRING, {
                 text: this.descendInputOfBlock(block, 'text').toType(InputType.STRING),
@@ -857,7 +862,7 @@ class ScriptTreeGenerator {
             return new IntermediateInput(block.fields.OPTION.value === 'ends' ? InputOpcode.PM_OP_ENDS_WITH : InputOpcode.PM_OP_STARTS_WITH, InputType.BOOLEAN, {
                 text: this.descendInputOfBlock(block, 'TEXT1').toType(InputType.STRING),
                 term: this.descendInputOfBlock(block, 'TEXT2').toType(InputType.STRING)
-            })
+            });
         case 'operator_toUpperLowerCase': {
             let text = this.descendInputOfBlock(block, 'TEXT').toType(InputType.STRING);
             switch (block.fields.OPTION.value) {
@@ -866,6 +871,10 @@ class ScriptTreeGenerator {
                 default: return text;
             }
         }
+        case 'operator_trim':
+            return new IntermediateInput(InputOpcode.PM_OP_TRIM, InputType.STRING, {
+                text: this.descendInputOfBlock(block, 'TEXT').toType(InputType.STRING)
+            });
         case 'operator_trueBoolean':
             return this.createConstantInput(true);
         case 'operator_xnor':

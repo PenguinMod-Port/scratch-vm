@@ -567,6 +567,10 @@ class JSGenerator {
             return `decodeBase64ToString(${this.descendInput(node.text)})`;
         case InputOpcode.PM_OP_DECODE_URI:
             return `decodeURIComponent(${this.descendInput(node.text)})`;
+        case InputOpcode.PM_OP_DIRECTION_COORDINATES:
+            return `runtime.ext_scratch3_sensing._getDirectionToFrom(${this.descendInput(node.x1)}, ${this.descendInput(node.x2)}, ${this.descendInput(node.y1)}, ${this.descendInput(node.y2)})`;
+        case InputOpcode.PM_OP_DISTANCE_COORDINATES:
+            return `Math.hypot(${this.descendInput(node.x2)} - ${this.descendInput(node.x1)}, ${this.descendInput(node.y2)} - ${this.descendInput(node.y1)})`;
         case InputOpcode.PM_OP_ENCODE_B16:
             return `(new TextEncoder().encode(${this.descendInput(node.text)})).toHex()`;
         case InputOpcode.PM_OP_ENCODE_B64:
@@ -635,6 +639,8 @@ class JSGenerator {
             return `(${this.descendInput(node.text)}.split('\\n')[${this.descendInput(node.line)} - 1] ?? "")`;
         case InputOpcode.PM_OP_REGEX_MATCH:
             return `runtime.ext_scratch3_operators._regexMatch(${this.descendInput(node.text)}, ${this.descendInput(node.regex)}, ${this.descendInput(node.flags)})`;
+        case InputOpcode.PM_OP_REPEAT:
+            return `String.prototype.repeat.call(${this.descendInput(node.text)}, Math.max(${this.descendInput(node.times)}, 0))`;
         case InputOpcode.PM_OP_REPLACEALL:
             return `String.prototype.replaceAll.call(${this.descendInput(node.text)}, ${this.descendInput(node.find)}, ${this.descendInput(node.replace)})`;
         case InputOpcode.PM_OP_REPLACEFIRST:
@@ -644,17 +650,15 @@ class JSGenerator {
         case InputOpcode.PM_OP_SIGN:
             return `Math.sign(${this.descendInput(node.value)})`;
         case InputOpcode.PM_OP_TEXT_INCLUDES_LETTER_FROM:
-            return `((${this.descendInput(node.text2)}).split('').some(char => (${this.descendInput(node.text1)}).includes(char)))`
+            return `((${this.descendInput(node.text2)}).split('').some(char => (${this.descendInput(node.text1)}).includes(char)))`;
+        case InputOpcode.PM_OP_TRIM:
+            return `String.prototype.trim.call(${this.descendInput(node.text)})`;
         case InputOpcode.PM_OP_STARTS_WITH:
             return `String.prototype.startsWith.call(${this.descendInput(node.text)}, ${this.descendInput(node.term)})`;
         case InputOpcode.PM_OP_UPPER_CASE:
             return `String.prototype.toUpperCase.call(${this.descendInput(node.text)})`;
         case InputOpcode.PM_OP_XOR:
             return `(${this.descendInput(node.left)} !== ${this.descendInput(node.right)})`;
-        case InputOpcode.PM_OP_DIRECTION_COORDINATES:
-            return `runtime.ext_scratch3_sensing._getDirectionToFrom(${this.descendInput(node.x1)}, ${this.descendInput(node.x2)}, ${this.descendInput(node.y1)}, ${this.descendInput(node.y2)})`;
-        case InputOpcode.PM_OP_DISTANCE_COORDINATES:
-            return `Math.hypot(${this.descendInput(node.x2)} - ${this.descendInput(node.x1)}, ${this.descendInput(node.y2)} - ${this.descendInput(node.y1)})`;
 
         case InputOpcode.SENSING_ANSWER:
             return `runtime.ext_scratch3_sensing._answer`;
