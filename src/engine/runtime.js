@@ -1776,6 +1776,15 @@ class Runtime extends EventEmitter {
             }
         }
 
+        // old alignment support
+        if (blockInfo.alignments) {
+            for (let [i, alignment] of Object.entries(blockInfo.alignments)) {
+                if (typeof alignment === "string") {
+                    blockJSON[`lastDummyAlign${i}`] = alignment;
+                }
+            }
+        }
+
         if (blockInfo.blockType === BlockType.REPORTER || blockInfo.blockType === BlockType.BOOLEAN) {
             if (!blockInfo.disableMonitor && context.inputList.length === 0) {
                 blockJSON.checkboxInFlyout = true;
