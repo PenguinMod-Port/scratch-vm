@@ -31,10 +31,12 @@ const defaultBuiltinExtensions = {
     // -- penguinmod --
 
     // expansions
+    pmMotionExpansion: () => require('../extensions/penguinmod/pmMotionExpansion'),
     pmEventsExpansion: () => require('../extensions/penguinmod/pmEventsExpansion'),
     pmControlsExpansion: () => require('../extensions/penguinmod/pmControlsExpansion'),
+    pmSensingExpansion: () => require('../extensions/penguinmod/pmSensingExpansion'),
     pmOperatorsExpansion: () => require('../extensions/penguinmod/pmOperatorsExpansion'),
-    pmMotionExpansion: () => require('../extensions/penguinmod/pmMotionExpansion'),
+    pmStringsExpansion: () => require('../extensions/penguinmod/pmStringsExpansion'),
 
     // jwklong
     jwArray: () => require('../extensions/penguinmod/jwArray'),
@@ -55,9 +57,11 @@ const defaultBuiltinExtensions = {
     jwPsychic: () => require('../extensions/penguinmod/jwPsychic'),
     jwProto: () => require('../extensions/penguinmod/jwProto'),
     jwFetch: () => require('../extensions/penguinmod/jwFetch'),
+    jwDebugger: () => require('../extensions/penguinmod/jwDebugger'),
 
     // dogeiscut
     dogeiscutObject: () => require('../extensions/penguinmod/dogeiscutObject'),
+    dogeiscutRegularExpressions: () => require('../extensions/penguinmod/dogeiscutRegularExpressions'),
 
     // jeremy
     jgStorage: () => require('../extensions/penguinmod/jgStorage'),
@@ -71,6 +75,7 @@ const defaultBuiltinExtensions = {
 
     // sharkpool
     SPjavascriptV2: () => require('../extensions/penguinmod/SPjavascriptV2'),
+    SPspeechBubbles: () => require('../extensions/penguinmod/SPspeechBubbles'),
 
     // old ass deprecated extensions
     jwUnite: () => require('../extensions/penguinmod/jwUnite'),
@@ -285,7 +290,6 @@ class ExtensionManager {
             const extensionObjects = await load(rewritten, this.vm)
                 .catch(error => this._failedLoadingExtensionScript(error));
             const fakeWorkerId = this.nextExtensionWorker++;
-            this.workerURLs[fakeWorkerId] = extensionURL;
 
             for (const extensionObject of extensionObjects) {
                 const extensionInfo = extensionObject.getInfo();
@@ -297,6 +301,7 @@ class ExtensionManager {
                 await this.loadNewDependencies(extensionInfo.id);
             }
 
+            this.workerURLs[fakeWorkerId] = extensionURL;
             this._finishedLoadingExtensionScript();
             return;
         }
@@ -414,6 +419,7 @@ class ExtensionManager {
         const workerInfo = this.pendingWorkers[id];
         delete this.pendingWorkers[id];
         if (e) {
+            delete this.workerURLs[id];
             workerInfo.reject(e);
         } else {
             workerInfo.resolve();

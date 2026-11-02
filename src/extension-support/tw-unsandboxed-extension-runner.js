@@ -3,6 +3,7 @@ const createScratchX = require('./tw-scratchx-compatibility-layer');
 const AsyncLimiter = require('../util/async-limiter');
 const createTranslate = require('./tw-l10n');
 const staticFetch = require('../util/tw-static-fetch');
+const loadScriptElement = require('./tw-load-script-element');
 
 /* eslint-disable require-await */
 
@@ -94,6 +95,11 @@ const setupUnsandboxedExtensionAPI = vm => new Promise(resolve => {
         if (!parsed) {
             return false;
         }
+        // Embedding javascript: can execute code in the embedding page's origin.
+        // eslint-disable-next-line no-script-url
+        if (parsed.protocol === 'javascript:') {
+            return false;
+        }
         return vm.securityManager.canEmbed(parsed.href);
     };
 
@@ -180,13 +186,7 @@ const teardownUnsandboxedExtensionAPI = () => {
  */
 const loadUnsandboxedExtension = (extensionURL, vm) => new Promise((resolve, reject) => {
     setupUnsandboxedExtensionAPI(vm).then(resolve);
-
-    const script = document.createElement('script');
-    script.onerror = () => {
-        reject(new Error(`Error in unsandboxed script ${extensionURL}. Check the console for more information.`));
-    };
-    script.src = extensionURL;
-    document.body.appendChild(script);
+    loadScriptElement(extensionURL).catch(reject);
 }).then(objects => {
     teardownUnsandboxedExtensionAPI();
     return objects;

@@ -131,7 +131,7 @@ class Extension {
         return {
             id: "jwClass",
             name: "Classes",
-            color1: "#4bbf56",
+            color: "#4bbf56",
             menuIconURI: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCI+CiAgPGVsbGlwc2Ugc3R5bGU9InN0cm9rZTogcmdiKDYwLCAxNTMsIDY5KTsgZmlsbDogcmdiKDc1LCAxOTEsIDg2KTsiIGN4PSIxMCIgY3k9IjEwIiByeD0iOS41IiByeT0iOS41Ij48L2VsbGlwc2U+CiAgPGc+CiAgICA8cGF0aCBkPSJNIDYuOTc4IDUuNTE2IEMgNC43MzYgOC41MDUgNC43MzYgMTEuNDk0IDYuOTc4IDE0LjQ4NCIgc3Ryb2tlPSIjZmZmIiBmaWxsPSJub25lIiBzdHlsZT0ic3Ryb2tlLWxpbmVqb2luOiByb3VuZDsgc3Ryb2tlLWxpbmVjYXA6IHJvdW5kOyBzdHJva2Utd2lkdGg6IDI7Ij48L3BhdGg+CiAgICA8cGF0aCBkPSJNIDE0LjcwMyAxNC40ODQgQyAxMi40NjEgMTEuNDk1IDEyLjQ2MSA4LjUwNiAxNC43MDMgNS41MTYiIHN0cm9rZT0iI2ZmZiIgZmlsbD0ibm9uZSIgc3R5bGU9InN0cm9rZS1saW5lam9pbjogcm91bmQ7IHN0cm9rZS1saW5lY2FwOiByb3VuZDsgc3Ryb2tlLXdpZHRoOiAyOyB0cmFuc2Zvcm0tYm94OiBmaWxsLWJveDsgdHJhbnNmb3JtLW9yaWdpbjogNTAlIDUwJTsiIHRyYW5zZm9ybT0ibWF0cml4KC0xLCAwLCAwLCAtMSwgLTAuMDAwMDAyLCAwKSI+PC9wYXRoPgogIDwvZz4KPC9zdmc+",
             blocks: [
                 {

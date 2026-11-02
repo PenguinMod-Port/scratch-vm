@@ -1,3 +1,4 @@
+const ArgumentAlignment = require('../../../extension-support/argument-alignment');
 const ArgumentType = require('../../../extension-support/argument-type');
 const BlockShape = require('../../../extension-support/block-shape');
 const BlockType = require('../../../extension-support/block-type');
@@ -381,6 +382,11 @@ class ArrayType {
         return this;
     }
 
+    insert(value, index) {
+        this.array.splice(index - 1, 0, ArrayType.forArray(value));
+        return this;
+    }
+
     static concat(...arrays) {
         return new ArrayType(Array.prototype.concat(...arrays.map(v => v.array)), true);
     }
@@ -410,6 +416,15 @@ class ArrayType {
 
     [pmSymbol.equals](other) {
         return this === other || (this.array.length == other.array.length && this.array.every((v, i) => vm.runtime.equals(v, other.array[i])));
+    }
+    
+    shuffle() {
+        const arr = this.array;
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return this;
     }
 }
 
@@ -458,7 +473,7 @@ class Extension {
         return {
             id: "jwArray",
             name: "Arrays",
-            color1: "#ff513d",
+            color: "#ff513d",
             menuIconURI: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCIgeG1sbnM6Yng9Imh0dHBzOi8vYm94eS1zdmcuY29tIj4KICA8Y2lyY2xlIHN0eWxlPSJzdHJva2Utd2lkdGg6IDJweDsgcGFpbnQtb3JkZXI6IHN0cm9rZTsgZmlsbDogcmdiKDI1NSwgODEsIDYxKTsgc3Ryb2tlOiByZ2IoMjA1LCA1OSwgNDQpOyIgY3g9IjEwIiBjeT0iMTAiIHI9IjkiPjwvY2lyY2xlPgogIDxwYXRoIGQ9Ik0gOC4wNzMgNC4yMiBMIDYuMTQ3IDQuMjIgQyA1LjA4MyA0LjIyIDQuMjIgNS4wODMgNC4yMiA2LjE0NyBMIDQuMjIgMTMuODUzIEMgNC4yMiAxNC45MTkgNS4wODMgMTUuNzggNi4xNDcgMTUuNzggTCA4LjA3MyAxNS43OCBMIDguMDczIDEzLjg1MyBMIDYuMTQ3IDEzLjg1MyBMIDYuMTQ3IDYuMTQ3IEwgOC4wNzMgNi4xNDcgTCA4LjA3MyA0LjIyIFogTSAxMS45MjcgMTMuODUzIEwgMTMuODUzIDEzLjg1MyBMIDEzLjg1MyA2LjE0NyBMIDExLjkyNyA2LjE0NyBMIDExLjkyNyA0LjIyIEwgMTMuODUzIDQuMjIgQyAxNC45MTcgNC4yMiAxNS43OCA1LjA4MyAxNS43OCA2LjE0NyBMIDE1Ljc4IDEzLjg1MyBDIDE1Ljc4IDE0LjkxOSAxNC45MTcgMTUuNzggMTMuODUzIDE1Ljc4IEwgMTEuOTI3IDE1Ljc4IEwgMTEuOTI3IDEzLjg1MyBaIiBmaWxsPSIjZmZmIiBzdHlsZT0iIj48L3BhdGg+Cjwvc3ZnPg==",
             blocks: [
                 {
@@ -489,6 +504,26 @@ class Extension {
                 {
                     opcode: 'blank',
                     text: 'blank array',
+                    hideFromPalette: true,
+                    ...jwArray.Block
+                },
+                {
+                    opcode: 'expandable',
+                    text: 'new array [EXPANDABLE]',
+                    arguments: {
+                        EXPANDABLE: {
+                            type: ArgumentType.EXPANDABLE,
+                            minValue: 0,
+                            defaultValue: 0,
+                            text: '[VALUE]',
+                            arguments: {
+                                VALUE: {
+                                    type: ArgumentType.STRING,
+                                    alignment: ArgumentAlignment.RIGHT
+                                }
+                            }
+                        }
+                    },
                     ...jwArray.Block
                 },
                 {
@@ -503,22 +538,6 @@ class Extension {
                     ...jwArray.Block
                 },
                 "---",
-                {
-                    opcode: 'expandable',
-                    text: 'new array [EXPANDABLE]',
-                    arguments: {
-                        EXPANDABLE: {
-                            type: ArgumentType.EXPANDABLE,
-                            text: '[VALUE]',
-                            arguments: {
-                                VALUE: {
-                                    type: ArgumentType.STRING
-                                }
-                            }
-                        }
-                    },
-                    ...jwArray.Block
-                },
                 {
                     opcode: 'range',
                     text: 'range from [START] to [END]',
@@ -697,6 +716,23 @@ class Extension {
                     ...jwArray.Block
                 },
                 {
+                    opcode: 'insert',
+                    text: 'insert [VALUE] at [INDEX] in [ARRAY]',
+                    arguments: {
+                        ARRAY: jwArray.Argument,
+                        VALUE: {
+                            type: ArgumentType.STRING,
+                            defaultValue: "foo",
+                            exemptFromNormalization: true
+                        },
+                        INDEX: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 1
+                        }
+                    },
+                    ...jwArray.Block
+                },
+                {
                     opcode: 'concat',
                     text: 'merge [ONE] [TWO]',
                     arguments: {
@@ -781,6 +817,14 @@ class Extension {
                             type: ArgumentType.NUMBER,
                             defaultValue: 1
                         }
+                    },
+                    ...jwArray.Block
+                },
+                {
+                    opcode: 'shuffle',
+                    text: 'shuffle [ARRAY]',
+                    arguments: {
+                        ARRAY: jwArray.Argument,
                     },
                     ...jwArray.Block
                 },
@@ -957,10 +1001,9 @@ class Extension {
             PARSE: 'jwArray.parse',
             VALIDATE: 'jwArray.validate',
 
-            BLANK: 'jwArray.blank',
+            EXPANDABLE: 'jwArray.expandable',
             BLANK_LENGTH: 'jwArray.blankLength',
 
-            EXPANDABLE: 'jwArray.expandable',
             RANGE: 'jwArray.range',
             SPLIT: 'jwArray.split',
             SPLIT_CHARS: 'jwArray.splitChars',
@@ -978,6 +1021,7 @@ class Extension {
 
             SET: 'jwArray.set',
             APPEND: 'jwArray.append',
+            INSERT: 'jwArray.insert',
             CONCAT: 'jwArray.concat',
             FILL: 'jwArray.fill',
 
@@ -985,6 +1029,7 @@ class Extension {
             SPLICE: 'jwArray.splice',
             REPEAT: 'jwArray.repeat',
             FLAT: 'jwArray.flat',
+            SHUFFLE: 'jwArray.shuffle',
 
             TO_STRING: 'jwArray.toString',
             JOIN: 'jwArray.join',
@@ -1015,7 +1060,9 @@ class Extension {
                             });
 
                         case 'jwArray_blank':
-                            return new IntermediateInput(opcodes.BLANK, InputType.CUSTOM_TYPE);
+                            return new IntermediateInput(opcodes.EXPANDABLE, InputType.CUSTOM_TYPE, {
+                                values: []
+                            });
                         case 'jwArray_blankLength':
                             return new IntermediateInput(opcodes.BLANK_LENGTH, InputType.CUSTOM_TYPE, {
                                 len: this.descendInputOfBlock(block, 'LENGTH').toType(InputType.NUMBER)
@@ -1085,6 +1132,12 @@ class Extension {
                                 array: this.descendInputOfBlock(block, 'ARRAY'),
                                 value: this.descendInputOfBlock(block, 'VALUE')
                             });
+                        case 'jwArray_insert':
+                            return new IntermediateInput(opcodes.INSERT, InputType.CUSTOM_TYPE, {
+                                array: this.descendInputOfBlock(block, 'ARRAY'),
+                                index: this.descendInputOfBlock(block, 'INDEX').toType(InputType.NUMBER),
+                                value: this.descendInputOfBlock(block, 'VALUE')
+                            });
                         case 'jwArray_concat':
                             return new IntermediateInput(opcodes.CONCAT, InputType.CUSTOM_TYPE, {
                                 values: [this.descendInputOfBlock(block, 'ONE'), this.descendInputOfBlock(block, 'TWO')]
@@ -1119,6 +1172,10 @@ class Extension {
                                 array: this.descendInputOfBlock(block, 'ARRAY'),
                                 depth: this.descendInputOfBlock(block, 'DEPTH').toType(InputType.NUMBER)
                             });
+                        case 'jwArray_shuffle':
+                            return new IntermediateInput(opcodes.SHUFFLE, InputType.CUSTOM_TYPE, {
+                                array: this.descendInputOfBlock(block, 'ARRAY'),
+                            });
 
                         case 'jwArray_toString':
                             return new IntermediateInput(opcodes.TO_STRING, InputType.STRING, {
@@ -1148,7 +1205,7 @@ class Extension {
                             return new IntermediateInput(opcodes.MAP, InputType.CUSTOM_TYPE, {
                                 array: this.descendInputOfBlock(block, 'ARRAY'),
                                 value: this.descendInputOfBlock(block, 'VALUE')
-                            });
+                            }, true);
                         case 'jwArray_basicSort':
                             return new IntermediateInput(opcodes.BASIC_SORT, InputType.CUSTOM_TYPE, {
                                 array: this.descendInputOfBlock(block, 'ARRAY'),
@@ -1176,7 +1233,7 @@ class Extension {
                             return new IntermediateStackBlock(opcodes.FOR_EACH, {
                                 array: this.descendInputOfBlock(block, 'ARRAY'),
                                 substack: this.descendSubstack(block, 'SUBSTACK')
-                            });
+                            }, true);
                             
                         case 'jwArray_toList':
                             return new IntermediateStackBlock(opcodes.TO_LIST, {
@@ -1196,13 +1253,11 @@ class Extension {
                         case opcodes.VALIDATE:
                             return `vm.jwArray.Type.validArray(${this.descendInput(node.input)})`;
 
-                        case opcodes.BLANK:
-                            return `(new vm.jwArray.Type([], true))`;
+                        case opcodes.EXPANDABLE:
+                            return `(new vm.jwArray.Type([${node.values.map(v => this.descendInput(v)).join(', ')}]${node.values.length == 0 ? ', true' : ''}))`
                         case opcodes.BLANK_LENGTH:
                             return `(new vm.jwArray.Type(Array(vm.jwArray.Type.parseLength(${this.descendInput(node.len)})).fill(null), true))`;
 
-                        case opcodes.EXPANDABLE:
-                            return `(new vm.jwArray.Type([${node.values.map(v => this.descendInput(v)).join(', ')}]))`
                         case opcodes.RANGE:
                             return `vm.jwArray.Type.range(${this.descendInput(node.start)}, ${this.descendInput(node.end)})`;
                         case opcodes.SPLIT:
@@ -1223,7 +1278,7 @@ class Extension {
                             return `(new vm.jwArray.Type(typeof _jwArrayBuilder !== "undefined" ? _jwArrayBuilder : [], true))`;
                         
                         case opcodes.GET:
-                            return `(vm.jwArray.Type.toArray(${this.descendInput(node.array)}).array[${this.descendInput(node.index)}-1] ?? null)`;
+                            return `(vm.jwArray.Type.toArray(${this.descendInput(node.array)}, true).array[${this.descendInput(node.index)}-1] ?? null)`;
                         case opcodes.ITEMS:
                             return `(new vm.jwArray.Type(vm.jwArray.Type.toArray(${this.descendInput(node.array)}, true).array.slice(Math.max(${this.descendInput(node.from)} - 1, 0), Math.max(${this.descendInput(node.to)}, 0)), true))`;
                         case opcodes.INDEX:
@@ -1237,6 +1292,8 @@ class Extension {
                             return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).set(${this.descendInput(node.index)}, ${this.descendInput(node.value)})`;
                         case opcodes.APPEND:
                             return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).append(${this.descendInput(node.value)})`;
+                        case opcodes.INSERT:
+                            return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).insert(${this.descendInput(node.value)}, ${this.descendInput(node.index)})`;
                         case opcodes.CONCAT:
                             return `vm.jwArray.Type.concat(${node.values.map(v => `vm.jwArray.Type.toArray(${this.descendInput(v)}, true)`).join(', ')})`;
                         case opcodes.FILL:
@@ -1250,6 +1307,8 @@ class Extension {
                             return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).repeat(${this.descendInput(node.times)})`;
                         case opcodes.FLAT:
                             return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).flat(${this.descendInput(node.depth)})`;
+                        case opcodes.SHUFFLE:
+                            return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).shuffle()`;
                         
                         case opcodes.TO_STRING:
                             return `vm.jwArray.Type.toArray(${this.descendInput(node.array)}).toString(${node.pretty ? 'true' : ''})`;

@@ -49,8 +49,30 @@ class CameraType {
     }
 
     toReporterContent() {
-        if (typeof this.name === "symbol") return span(`Camera&lt;<u>${this.name.description}</u>&gt;`);
-        return span(`Camera&lt;${escapeHTML(this.name)}&gt;`);
+        const root = document.createElement('div');
+        root.style.display = "flex";
+        root.style.flexDirection = "column";
+
+        if (typeof this.name === "symbol") root.appendChild(span(`Camera&lt;<u>${this.name.description}</u>&gt;`));
+        else root.appendChild(span(`Camera&lt;${escapeHTML(this.name)}&gt;`));
+
+        const image = document.createElement('img');
+        root.appendChild(image);
+        image.style.width = "240px";
+        image.style.height = "180px";
+        image.style.border = "1px solid #77777777";
+        image.style.borderRadius = "4px";
+
+        vm.renderer.requestCameraSnapshot(this.name, uri => {
+            if (uri === 'data:,') return;
+            image.src = uri;
+            image.style.width = null;
+            image.style.height = null;
+            image.style.maxWidth = "240px";
+            image.style.maxHeight = "180px";
+        });
+
+        return root;
     }
 
     jwArrayHandler() {
@@ -84,13 +106,21 @@ class CameraType {
         return vm.renderer.camera.getDirection(this.name);
     }
 
-    bindTarget(target) {
-        vm.renderer._allDrawables[target.drawableID].setCameraState(this.name);
+    setVisible(visible) {
+        vm.renderer.camera.setVisible(visible, this.name);
         vm.runtime.requestRedraw();
     }
 
+    getVisible() {
+        return vm.renderer.camera.getVisible(this.name);
+    }
+
+    bindTarget(target) {
+        target.setCameraState(this.name);
+    }
+
     static bindedCamera(target) {
-        return new CameraType(vm.renderer._allDrawables[target.drawableID].cameraState);
+        return new CameraType(target.getCameraState());
     }
 }
 
@@ -155,7 +185,7 @@ class Extension {
         return {
             id: "jwCamera",
             name: "Camera",
-            color1: "#0586ff",
+            color: "#0586ff",
             menuIconURI: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCI+CiAgPGVsbGlwc2Ugc3R5bGU9InN0cm9rZTogcmdiKDQsIDEwNywgMjA0KTsgZmlsbDogcmdiKDUsIDEzNCwgMjU1KTsiIGN4PSIxMCIgY3k9IjEwIiByeD0iOS41IiByeT0iOS41Ij48L2VsbGlwc2U+CiAgPHBhdGggZD0iTSA1Ljc3OSA2LjQ4MyBDIDUuMDAzIDYuNDgzIDQuMzcyIDcuMTEzIDQuMzcyIDcuODkgTCA0LjM3MiAxMi4xMSBDIDQuMzcyIDEyLjg4NyA1LjAwMyAxMy41MTcgNS43NzkgMTMuNTE3IEwgMTEuNDA3IDEzLjUxNyBDIDEyLjE4NCAxMy41MTcgMTIuODE0IDEyLjg4NyAxMi44MTQgMTIuMTEgTCAxNS42MjggMTMuNTE3IEwgMTUuNjI4IDYuNDgzIEwgMTIuODE0IDcuODkgQyAxMi44MTQgNy4xMTMgMTIuMTg0IDYuNDgzIDExLjQwNyA2LjQ4MyBMIDUuNzc5IDYuNDgzIFoiIHN0cm9rZS13aWR0aD0iMC41IiBmaWxsPSIjZmZmIiBzdHlsZT0ic3Ryb2tlLXdpZHRoOiAwLjU7IHN0cm9rZTogcmdiKDI1NSwgMjU1LCAyNTUpOyBzdHJva2UtbGluZWpvaW46IHJvdW5kOyBzdHJva2UtbGluZWNhcDogcm91bmQ7Ij48L3BhdGg+Cjwvc3ZnPg==",
             blocks: [
                 {
@@ -222,6 +252,17 @@ class Extension {
                         }
                     }
                 },
+                {
+                    opcode: "setVisible",
+                    blockType: BlockType.COMMAND,
+                    text: "set visibility of [CAMERA] to [VISIBLE]",
+                    arguments: {
+                        CAMERA: jwCamera.Argument,
+                        VISIBLE: {
+                            type: ArgumentType.BOOLEAN
+                        }
+                    }
+                },
                 "---",
                 {
                     opcode: "getPosition",
@@ -243,6 +284,14 @@ class Extension {
                     opcode: "getDirection",
                     blockType: BlockType.REPORTER,
                     text: "direction of [CAMERA]",
+                    arguments: {
+                        CAMERA: jwCamera.Argument
+                    }
+                },
+                {
+                    opcode: "getVisible",
+                    blockType: BlockType.BOOLEAN,
+                    text: "is [CAMERA] visible?",
                     arguments: {
                         CAMERA: jwCamera.Argument
                     }
@@ -345,6 +394,12 @@ class Extension {
         CAMERA.setDirection(ANGLE);
     }
 
+    setVisible({CAMERA, VISIBLE}) {
+        CAMERA = jwCamera.Type.toCamera(CAMERA);
+        VISIBLE = Cast.toBoolean(VISIBLE);
+        CAMERA.setVisible(VISIBLE);
+    }
+
     getPosition({CAMERA}) {
         CAMERA = jwCamera.Type.toCamera(CAMERA);
         return new jwVector.Type(...CAMERA.getPosition());
@@ -358,6 +413,11 @@ class Extension {
     getDirection({CAMERA}) {
         CAMERA = jwCamera.Type.toCamera(CAMERA);
         return CAMERA.getDirection();
+    }
+
+    getVisible({CAMERA}) {
+        CAMERA = jwCamera.Type.toCamera(CAMERA);
+        return CAMERA.getVisible();
     }
 
     bindTarget({CAMERA, TARGET}) {

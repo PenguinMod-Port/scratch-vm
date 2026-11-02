@@ -1,20 +1,9 @@
-const BlockType = require('../../../extension-support/block-type')
-const BlockShape = require('../../../extension-support/block-shape')
-const ArgumentType = require('../../../extension-support/argument-type')
-const Cast = require('../../../util/cast')
+const ArgumentType = require('../../../extension-support/argument-type');
+const BlockShape = require('../../../extension-support/block-shape');
+const BlockType = require('../../../extension-support/block-type');
+const ImageURI = require('../../../extension-support/image-uri');
 
-/**
- * @param {number} x
- * @returns {string}
- */
-function formatNumber(x) {
-    if (x >= 1e6) {
-        return x.toExponential(4)
-    } else {
-        x = Math.floor(x * 1000) / 1000
-        return x.toFixed(Math.min(3, (String(x).split('.')[1] || '').length))
-    }
-}
+const Cast = require('../../../util/cast');
 
 function span(text) {
     let el = document.createElement('span')
@@ -58,6 +47,7 @@ class LambdaType {
         root.style.color = "var(--ui-primary)";
         root.style.padding = "4px";
         root.style.borderRadius = "4px";
+        root.style.height = "max-content";
         return root;
     }
 
@@ -108,7 +98,7 @@ class Extension {
         return {
             id: "jwLambda",
             name: "Lambda",
-            color1: "#c71a4b",
+            color: "#c71a4b",
             menuIconURI: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCI+CiAgPGVsbGlwc2Ugc3R5bGU9ImZpbGw6IHJnYigxOTksIDI2LCA3NSk7IHN0cm9rZTogcmdiKDE1OSwgMjAsIDYwKTsiIGN4PSIxMCIgY3k9IjEwIiByeT0iOS41IiByeD0iOS41Ij48L2VsbGlwc2U+CiAgPHBhdGggZD0iTSA3LjIzNyA1LjI2NCBDIDEwLjM5NSA1LjI2NCAxMC4zOTUgMTQuNzM2IDEzLjU1MSAxNC43MzYgTSAxMC4wNzkgOS4wNTMgTCA2LjQ0OSAxNC43MzYiIHN0eWxlPSJmaWxsOiBub25lOyBzdHJva2U6IHJnYigyNTUsIDI1NSwgMjU1KTsgc3Ryb2tlLWxpbmVjYXA6IHJvdW5kOyBzdHJva2Utd2lkdGg6IDJweDsiPjwvcGF0aD4KPC9zdmc+",
             blocks: [
                 {
@@ -152,10 +142,15 @@ class Extension {
                 },
                 {
                     opcode: 'newLambdaR',
-                    text: 'new lambda [ARG] [VALUE]',
+                    text: 'new lambda [ARG] [ARROW] [VALUE]',
                     arguments: {
                         ARG: {
                             fillIn: 'arg'
+                        },
+                        ARROW: {
+                            type: ArgumentType.IMAGE,
+                            dataURI: ImageURI.ARROW,
+                            flipRTL: true
                         },
                         VALUE: {
                             type: ArgumentType.STRING
@@ -285,25 +280,25 @@ class Extension {
 
                     switch (block.opcode) {
                         case opcodes.ARG:
-                            return `(typeof _jwLambdaArgument === "undefined" ? _jwLambdaArgument : _jwLambdaArgument)`;
+                            return `(typeof _jwLambdaArgument !== "undefined" ? _jwLambdaArgument : null)`;
                         case opcodes.EXECUTE:
                             return `(yield* vm.jwLambda.Type.toLambda(${this.descendInput(node.lambda)}).execute(${this.descendInput(node.arg)}, thread, target, runtime, stage))`;
                         case opcodes.NEW: {
                             let source = '';
                             source += `(new vm.jwLambda.Type(function*(_jwLambdaArgument, thread, target, runtime, stage, _jwLambdaThis) {\n`;
-                            source += this.descendStackInline(node.substack);
-                            source += `}))`;
+                            source += this.descendStackInline(node.substack, {allowReturns: true});
+                            source += `}, thread))`;
                             return source;
                         }
                         case opcodes.NEW_R: {
                             let source = '';
                             source += `(new vm.jwLambda.Type(function*(_jwLambdaArgument, thread, target, runtime, stage, _jwLambdaThis) {\n`;
                             source += `return ${this.descendInput(node.value)};\n`;
-                            source += `}))`;
+                            source += `}, thread))`;
                             return source;
                         }
                         case opcodes.THIS:
-                            return `(typeof _jwLambdaThis === "undefined" ? _jwLambdaThis : _jwLambdaThis)`;
+                            return `(typeof _jwLambdaThis !== "undefined" ? _jwLambdaThis : (new vm.jwLambda.Type()))`;
                     }
                 },
                 command(block) {

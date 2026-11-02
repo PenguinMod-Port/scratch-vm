@@ -37,6 +37,12 @@ class IntermediateStackBlock {
         this.yields = yields;
 
         /**
+         * ID of the Scratch block this was generated from, if any.
+         * @type {string?}
+         */
+        this.blockId = null;
+
+        /**
          * Should state changes made by this stack block be ignored? Used for testing.
          * @type {boolean}
          */
@@ -183,7 +189,7 @@ class IntermediateInput {
             case InputOpcode.CAST_NUMBER:
             case InputOpcode.CAST_NUMBER_INDEX:
             case InputOpcode.CAST_NUMBER_OR_NAN: {
-                if (this.isAlwaysType(InputType.BOOLEAN_INTERPRETABLE)) {
+                if (this.isAlwaysType(InputType.BOOLEAN)) {
                     this.type = InputType.NUMBER;
                     this.inputs.value = +Cast.toBoolean(this.inputs.value);
                 }
@@ -329,7 +335,18 @@ class IntermediateScript {
          * @type {string[]}
          */
         this.arguments = [];
+
+        /**
+         * List of argument ids of this function, if it is a procedure.
+         * @type {string[]}
+         */
         this.argumentIds = [];
+        
+        /**
+         * Set of arguments that are reevaluated, if it is a procedure.
+         * @type {Set<number>}
+         */
+        this.reevaled = new Set();
 
         /**
          * Whether this script should be run in warp mode.

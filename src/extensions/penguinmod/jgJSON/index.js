@@ -35,8 +35,6 @@ class JgJSONBlocks {
         return {
             id: 'jgJSON',
             name: 'JSON',
-            color1: '#0FBD8C',
-            color2: '#0EAF82',
             blocks: [
                 {
                     opcode: 'json_validate',

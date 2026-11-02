@@ -25,14 +25,14 @@ class jwUnite {
             id: 'jwUnite',
             name: 'Unite',
             blockIconURI: blockIconURI,
-            color1: '#7ddcff',
-            color2: '#4a98ff',
+            color: '#7ddcff',
+            blockText: "#575e75",
             blocks: [
                 {
                     opcode: 'always',
                     text: 'always',
                     disableMonitor: true,
-                    blockType: BlockType.EVENT
+                    blockType: BlockType.HAT
                 },
                 {
                     opcode: 'whenanything',
@@ -385,6 +385,10 @@ class jwUnite {
 
     replacers = {}
     knownLinks = {}
+
+    always(args, util) {
+        return true;
+    }
 
     whenanything(args, util) {
         return Boolean(args.ANYTHING || false)

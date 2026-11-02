@@ -21,6 +21,10 @@ class MouseWheel {
         // pm: store scroll delta
         this.scrollDelta = data.deltaY;
 
+        if ('ext_pmSensingExpansion' in this.runtime) {
+            this.runtime.ext_pmSensingExpansion.scrollDistance -= data.deltaY;
+        }
+
         const matchFields = {};
         const scrollFields = {};
         if (data.deltaY < 0) {

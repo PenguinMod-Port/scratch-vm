@@ -141,7 +141,7 @@ class Extension {
         return {
             id: "jwTargets",
             name: "Targets",
-            color1: "#4254f5",
+            color: "#4254f5",
             menuIconURI: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCIgeG1sbnM6Yng9Imh0dHBzOi8vYm94eS1zdmcuY29tIj4KICA8Y2lyY2xlIHN0eWxlPSJzdHJva2Utd2lkdGg6IDJweDsgcGFpbnQtb3JkZXI6IHN0cm9rZTsgZmlsbDogcmdiKDY2LCA4NCwgMjQ1KTsgc3Ryb2tlOiByZ2IoNDAsIDU1LCAxOTkpOyIgY3g9IjEwIiBjeT0iMTAiIHI9IjkiPjwvY2lyY2xlPgogIDxwYXRoIGQ9Ik0gMTAgMy4yMjIgQyA0Ljc4MyAzLjIyMiAxLjUyMyA4Ljg3IDQuMTMgMTMuMzg5IEMgNS4zNCAxNS40ODUgNy41OCAxNi43NzggMTAgMTYuNzc4IEMgMTUuMjE4IDE2Ljc3OCAxOC40OCAxMS4xMyAxNS44NjkgNi42MTEgQyAxNC42NjEgNC41MTUgMTIuNDIyIDMuMjIyIDEwIDMuMjIyIE0gMTAgNS40ODEgQyAxMy40NzkgNS40ODEgMTUuNjUzIDkuMjQ4IDEzLjkxMyAxMi4yNTkgQyAxMy4xMDYgMTMuNjU4IDExLjYxNiAxNC41MTkgMTAgMTQuNTE5IEMgNi41MjIgMTQuNTE5IDQuMzUgMTAuNzUyIDYuMDg3IDcuNzQxIEMgNi44OTUgNi4zNDIgOC4zODUgNS40ODEgMTAgNS40ODEgTSAxMCA3Ljc0MSBDIDguMjYyIDcuNzQxIDcuMTczIDkuNjIyIDguMDQ0IDExLjEzIEMgOC40NDggMTEuODI4IDkuMTkzIDEyLjI1OSAxMCAxMi4yNTkgQyAxMS43NCAxMi4yNTkgMTIuODI3IDEwLjM3OCAxMS45NTYgOC44NyBDIDExLjU1MyA4LjE3MiAxMC44MDggNy43NDEgMTAgNy43NDEiIGZpbGw9IiNmZmYiIHN0eWxlPSIiPjwvcGF0aD4KPC9zdmc+",
             blocks: [
                 {
@@ -188,6 +188,21 @@ class Extension {
                     }
                 },
                 {
+                    opcode: 'getVector',
+                    text: '[TARGET] [MENU]',
+                    blockType: BlockType.REPORTER,
+                    blockShape: BlockShape.LEAF,
+                    arguments: {
+                        TARGET: Target.Argument,
+                        MENU: {
+                            menu: "targetPropertyVector",
+                            defaultValue: "position"
+                        }
+                    },
+                    hideFromPalette: !vm.runtime.ext_jwVector,
+                    ...(vm.jwVector ? vm.jwVector.Block : {})
+                },
+                {
                     opcode: 'set',
                     text: 'set [TARGET] [MENU] to [VALUE]',
                     blockType: BlockType.COMMAND,
@@ -198,10 +213,23 @@ class Extension {
                             defaultValue: "x"
                         },
                         VALUE: {
-                            type: ArgumentType.STRING,
-                            exemptFromNormalization: true
+                            type: ArgumentType.STRING
                         }
                     }
+                },
+                {
+                    opcode: 'setVector',
+                    text: 'set [TARGET] [MENU] to [VALUE]',
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        TARGET: Target.Argument,
+                        MENU: {
+                            menu: "targetPropertyVector",
+                            defaultValue: "position"
+                        },
+                        VALUE: (vm.jwVector ? vm.jwVector.Argument : {})
+                    },
+                    hideFromPalette: !vm.runtime.ext_jwVector
                 },
                 '---',
                 {
@@ -363,6 +391,13 @@ class Extension {
                         "volume"
                     ]
                 },
+                targetPropertyVector: {
+                    acceptReporters: true,
+                    items: [
+                        "position",
+                        "stretch"
+                    ]
+                },
                 touchingObject: [
                     { text: "mouse-pointer", value: "_mouse_" },
                     { text: "edge", value: "_edge_" }
@@ -406,7 +441,7 @@ class Extension {
         TARGET = Target.Type.toTarget(TARGET)
         MENU = Cast.toString(MENU)
 
-        if (!TARGET.target) return ""
+        if (!TARGET.target) return null;
 
         switch(MENU) {
             case "name": return TARGET.target.sprite.name
@@ -424,7 +459,23 @@ class Extension {
             case "volume": return TARGET.target.volume
         }
 
-        return ""
+        return null;
+    }
+
+    getVector({TARGET, MENU}) {
+        if (!vm.jwVector) return;
+
+        TARGET = Target.Type.toTarget(TARGET);
+        MENU = Cast.toString(MENU);
+
+        if (!TARGET.target) return new vm.jwVector.Type();
+
+        switch (MENU) {
+            case "position": return new vm.jwVector.Type(TARGET.target.x, TARGET.target.y);
+            case "stretch": return new vm.jwVector.Type(...TARGET.target.stretch);
+        }
+
+        return new vm.jwVector.Type();
     }
 
     set({TARGET, MENU, VALUE}) {
@@ -468,6 +519,21 @@ class Extension {
             case "volume":
                 vm.runtime.ext_scratch3_sound._updateVolume(Cast.toNumber(VALUE), TARGET.target)
                 break
+        }
+    }
+
+    setVector({TARGET, MENU, VALUE}) {
+        if (!vm.jwVector) return;
+
+        TARGET = Target.Type.toTarget(TARGET);
+        MENU = Cast.toString(MENU);
+        VALUE = vm.jwVector.Type.toVector(VALUE);
+
+        if (!TARGET.target) return;
+
+        switch (MENU) {
+            case "position": TARGET.target.setXY(VALUE.x, VALUE.y); break;
+            case "stretch": TARGET.target.setStretch(VALUE.x, VALUE.y); break;
         }
     }
 

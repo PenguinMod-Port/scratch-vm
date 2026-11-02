@@ -8,6 +8,13 @@
 /* eslint-disable valid-jsdoc */
 /* eslint-disable max-len */
 
+/**
+ * Magic value thrown when a procedure needs to end the whole thread's execution.
+ * Must be a number because this is inlined directly into compiled JS.
+ * @type {number}
+ */
+const RETIRE_MAGIC = 1;
+
 const globalState = {
     Timer: require('../util/timer'),
     Cast: require('../util/cast'),
@@ -34,6 +41,60 @@ const isStuck = () => {
         return globalState.thread.target.runtime.sequencer.timer.timeElapsed() > 500;
     }
     return false;
+};`;
+
+
+/**
+ * Decodes any Base64 string. Will not throw errors for invalid text.
+ * @param {string} input The Base64 to decode
+ * @returns {string} The decoded text
+ */
+runtimeFunctions.decodeBase64ToString = `const decodeBase64ToString = input => {
+    const keyStr = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+    input = input.replace(/[^a-z0-9+/]/gi, '');
+
+    const bytes = Math.floor((input.length / 4) * 3);
+    const out = new Uint8Array(bytes);
+
+    let c = 0;
+    for (let i = 0; i < bytes; i += 3) {
+        // get the 3 octects in 4 ascii chars
+        const enc1 = keyStr.indexOf(input.charAt(c++));
+        const enc2 = keyStr.indexOf(input.charAt(c++));
+        const enc3 = keyStr.indexOf(input.charAt(c++));
+        const enc4 = keyStr.indexOf(input.charAt(c++));
+
+        const chr1 = (enc1 << 2) | (enc2 >> 4);
+        const chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
+        const chr3 = ((enc3 & 3) << 6) | enc4;
+
+        out[i] = chr1;
+        out[i +1] = chr2;
+        out[i +2] = chr3;
+    }
+
+    return new TextDecoder().decode(out);
+};`;
+
+/**
+ * !! copied from ../util/b64-binary !!
+ * Encodes any string.
+ * @param {string} string The text to encode
+ * @returns {string} The Base64 encoded string
+ */
+runtimeFunctions.encodeStringToBase64 = `const encodeStringToBase64 = string => {
+    const keyStr = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+    const bytes = new TextEncoder().encode(string);
+    let out = '';
+    for (let i = 0; i < bytes.length; i += 3) {
+        const num = ((bytes[i] << 16) & 0xFF0000) + ((bytes[i +1] << 8) & 0x00FF00) + (bytes[i +2] & 0x0000FF);
+        out += keyStr[(num >> 18) & 0x3F];
+        out += keyStr[(num >> 12) & 0x3F];
+        out += keyStr[(num >> 6) & 0x3F];
+        out += keyStr[num & 0x3F];
+    }
+
+    return out.replace(/A(?=A*$)/g, '=');
 };`;
 
 /**
@@ -110,6 +171,8 @@ runtimeFunctions.executeInCompatibilityLayer = `let hasResumedFromPromise = fals
 const waitPromise = function*(promise) {
     const thread = globalState.thread;
     let returnValue;
+    let error;
+    let isError = false;
 
     // enter STATUS_PROMISE_WAIT and yield
     // this will stop script execution until the promise handlers reset the thread status
@@ -120,12 +183,17 @@ const waitPromise = function*(promise) {
         .then(value => {
             returnValue = value;
             thread.status = 0; // STATUS_RUNNING
-        }, error => {
+        }, err => {
+            error = err;
+            isError = true;
             thread.status = 0; // STATUS_RUNNING
-            throw error;
         });
 
     yield;
+
+    if (isError) {
+        throw error;
+    }
 
     return returnValue;
 };
@@ -222,15 +290,6 @@ runtimeFunctions.retire = `const retire = () => {
 }`;
 
 /**
- * Converts NaN to zero. Used to match Scratch's string-to-number.
- * Unlike (x || 0), -0 stays as -0 and is not converted to 0.
- * This function needs to be written such that it's very easy for browsers to inline it.
- * @param {number} value A number. Might be NaN.
- * @returns {number} A number. Never NaN.
- */
-runtimeFunctions.toNotNaN = `const toNotNaN = value => Number.isNaN(value) ? 0 : value`;
-
-/**
  * Scratch cast to boolean.
  * Similar to Cast.toBoolean()
  * @param {*} value The value to cast
@@ -270,11 +329,58 @@ baseRuntime += `const isNotActuallyZero = val => {
     if (typeof val !== 'string') return false;
     for (let i = 0; i < val.length; i++) {
         const code = val.charCodeAt(i);
-        if (code === 48 || code === 9) {
+        if ((code >= 48 && code <= 57) || code === 9) {
             return false;
         }
     }
     return true;
+};`;
+
+/**
+ * Determine if two values are equal.
+ * @param {*} v1 First value
+ * @param {*} v2 Second value
+ * @returns {boolean} true if v1 is equal to v2
+ */
+baseRuntime += `const compareEqualSlow = (v1, v2) => {
+    const n1 = +v1;
+    if (n1 !== n1 || (n1 === 0 && isNotActuallyZero(v1))) return ('' + v1).toLowerCase() === ('' + v2).toLowerCase();
+    const n2 = +v2;
+    if (n2 !== n2 || (n2 === 0 && isNotActuallyZero(v2))) return ('' + v1).toLowerCase() === ('' + v2).toLowerCase();
+    return n1 === n2;
+};
+const compareEqual = (v1, v2) => (typeof v1 === 'number' && typeof v2 === 'number' && v1 === v1 && v2 === v2 || v1 === v2) ? v1 === v2 : compareEqualSlow(v1, v2);`;
+
+/**
+ * Find the first item in a list that is equal to a value according to compareEqual.
+ * @param {unknown[]} list The list's array.
+ * @param {any} item The value to search for.
+ * @returns {number} The 0-indexed index of the item, otherwise -1.
+ */
+baseRuntime += `const listFind = (list, item) => {
+    const itemNumber = +item;
+    const itemString = ('' + item).toLowerCase();
+    if (itemNumber !== itemNumber || (itemNumber === 0 && isNotActuallyZero(item))) {
+        for (let i = 0; i < list.length; i++) {
+            const value = list[i];
+            if (value === item || ('' + value).toLowerCase() === itemString) {
+                return i;
+            }
+        }
+        return -1;
+    }
+    for (let i = 0; i < list.length; i++) {
+        const value = list[i];
+        const n = +value;
+        if (n !== n || (n === 0 && isNotActuallyZero(value))) {
+            if (('' + value).toLowerCase() === itemString) {
+                return i;
+            }
+        } else if (n === itemNumber) {
+            return i;
+        }
+    }
+    return -1;
 };`;
 
 /**
@@ -291,14 +397,14 @@ runtimeFunctions.compareGreaterThan = `const compareGreaterThanSlow = (v1, v2) =
     } else if (n2 === 0 && isNotActuallyZero(v2)) {
         n2 = NaN;
     }
-    if (Number.isNaN(n1) || Number.isNaN(n2)) {
+    if (n1 !== n1 || n2 !== n2) {
         const s1 = ('' + v1).toLowerCase();
         const s2 = ('' + v2).toLowerCase();
         return s1 > s2;
     }
     return n1 > n2;
 };
-const compareGreaterThan = (v1, v2) => typeof v1 === 'number' && typeof v2 === 'number' && !Number.isNaN(v1) ? v1 > v2 : compareGreaterThanSlow(v1, v2)`;
+const compareGreaterThan = (v1, v2) => typeof v1 === 'number' && typeof v2 === 'number' && v1 === v1 ? v1 > v2 : compareGreaterThanSlow(v1, v2)`;
 
 /**
  * Determine if one value is less than another.
@@ -314,14 +420,14 @@ runtimeFunctions.compareLessThan = `const compareLessThanSlow = (v1, v2) => {
     } else if (n2 === 0 && isNotActuallyZero(v2)) {
         n2 = NaN;
     }
-    if (Number.isNaN(n1) || Number.isNaN(n2)) {
+    if (n1 !== n1 || n2 !== n2) {
         const s1 = ('' + v1).toLowerCase();
         const s2 = ('' + v2).toLowerCase();
         return s1 < s2;
     }
     return n1 < n2;
 };
-const compareLessThan = (v1, v2) => typeof v1 === 'number' && typeof v2 === 'number' && !Number.isNaN(v2) ? v1 < v2 : compareLessThanSlow(v1, v2)`;
+const compareLessThan = (v1, v2) => typeof v1 === 'number' && typeof v2 === 'number' && v2 === v2 ? v1 < v2 : compareLessThanSlow(v1, v2)`;
 
 /**
  * Generate a random integer.
@@ -422,12 +528,19 @@ const listIndex = (index, length) => {
  * @param {*} idx The 1-indexed index in the list.
  * @returns {*} The list item, otherwise empty string if it does not exist.
  */
-runtimeFunctions.listGet = `const listGet = (list, idx) => {
+runtimeFunctions.listGet = `const listGetSlow = (list, idx) => {
     const index = listIndex(idx, list.length);
     if (index === -1) {
         return '';
     }
     return list[index];
+};
+const listGet = (list, idx) => {
+    if (typeof idx === 'number' && idx >= 1) {
+        const item = list[(idx | 0) - 1];
+        return item === undefined ? '' : item;
+    }
+    return listGetSlow(list, idx);
 }`;
 
 /**
@@ -436,13 +549,21 @@ runtimeFunctions.listGet = `const listGet = (list, idx) => {
  * @param {*} idx List index, Scratch style.
  * @param {*} value The new value.
  */
-runtimeFunctions.listReplace = `const listReplace = (list, idx, value) => {
+runtimeFunctions.listReplace = `const listReplaceSlow = (list, idx, value) => {
     const index = listIndex(idx, list.value.length);
     if (index === -1) {
         return;
     }
     list.value[index] = value;
     list._monitorUpToDate = false;
+};
+const listReplace = (list, idx, value) => {
+    if (typeof idx === 'number' && idx >= 1 && idx <= list.value.length) {
+        list.value[(idx | 0) - 1] = value;
+        list._monitorUpToDate = false;
+    } else {
+        listReplaceSlow(list, idx, value);
+    }
 }`;
 
 /**
@@ -474,7 +595,13 @@ runtimeFunctions.listDelete = `const listDelete = (list, idx) => {
     if (index === -1) {
         return;
     }
-    list.value.splice(index, 1);
+    if (index === 0) {
+        list.value.shift();
+    } else if (index === list.value.length - 1) {
+        list.value.pop();
+    } else {
+        list.value.splice(index, 1);
+    }
     list._monitorUpToDate = false;
 }`;
 
@@ -489,6 +616,7 @@ runtimeFunctions.listContains = `const listContains = (list, item) => {
     if (list.value.indexOf(item) !== -1) {
         return true;
     }
+    return listFind(list.value, item) !== -1;
     for (let i = 0; i < list.value.length; i++) {
         if (vm.runtime.equals(list.value[i], item)) {
             return true;
@@ -554,11 +682,44 @@ runtimeFunctions.mod = `const mod = (n, modulus) => {
  * @returns {number} value of tangent or Infinity or -Infinity
  */
 runtimeFunctions.tan = `const tan = (angle) => {
-    switch (angle % 360) {
+    angle = angle % 360;
+    switch (angle) {
     case -270: case 90: return Infinity;
     case -90: case 270: return -Infinity;
     }
     return Math.round(Math.tan((Math.PI * angle) / 180) * 1e10) / 1e10;
+}`;
+
+/**
+ * Joins global procedure target private variables to the caller's variables.
+ * JavaScript aliasing does us a favour here, we don't have to update any values.
+ * @param {VM.Target} target The caller target.
+ * @param {VM.Target.id} sourceId The id of the global source target.
+ */
+runtimeFunctions.setupGlobalProcState = `const setupGlobalProcState = function (target, sourceId) {
+    if (sourceId === target.id) return;
+    const sourceTarget = target.runtime.getTargetById(sourceId);
+    const sourceVariables = sourceTarget.variables;
+    for (const varId in sourceTarget.variables) {
+        const variable = sourceTarget.variables[varId];
+        variable._glob_isFromOtherTarg = true;
+    }
+
+    target.variables = {
+        ...target.variables,
+        ...sourceVariables,
+    };
+}`;
+
+/**
+ * Separates private variables back to their original sprites after a global procedure.
+ * @param {VM.Target.variables} variables The joined variables of a target.
+ */
+runtimeFunctions.resetGlobalProcState = `const resetGlobalProcState = function (variables) {
+    for (varId in variables) {
+        const variable = variables[varId];
+        if (variable._glob_isFromOtherTarg) delete variables[varId];
+    }
 }`;
 
 /**
@@ -590,8 +751,18 @@ runtimeFunctions.stringify = `const stringify = (value) => value === null ? '' :
  * @param {import("../engine/thread")} thread The thread to step.
  */
 const execute = thread => {
-    globalState.thread = thread;
-    thread.generator.next();
+    try {
+        globalState.thread = thread;
+        if (thread.compiledFunction) {
+            thread.compiledFunction();
+        } else {
+            thread.generator.next();
+        }
+    } catch (e) {
+        if (e !== RETIRE_MAGIC) {
+            throw e;
+        }
+    }
 };
 
 const threadStack = [];
@@ -632,5 +803,6 @@ execute.scopedEval = scopedEval;
 execute.runtimeFunctions = runtimeFunctions;
 execute.saveGlobalState = saveGlobalState;
 execute.restoreGlobalState = restoreGlobalState;
+execute.RETIRE_MAGIC = RETIRE_MAGIC;
 
 module.exports = execute;

@@ -21,11 +21,15 @@ const isNotActuallyZero = val => {
     for (let i = 0; i < val.length; i++) {
         const code = val.charCodeAt(i);
         // '0'.charCodeAt(0) === 48
+        // '9'.charCodeAt(0) === 57
+        // Any digit between those (inclusive) mean this is not purely whitespace.
+        // Consider edge cases like 1e-324 before trying to optimize this to just checking for 0.
+        //
         // '\t'.charCodeAt(0) === 9
         // We include tab for compatibility with scratch-www's broken trim() polyfill.
         // https://github.com/TurboWarp/scratch-vm/issues/115
         // https://scratch.mit.edu/projects/788261699/
-        if (code === 48 || code === 9) {
+        if ((code >= 48 && code <= 57) || code === 9) {
             return false;
         }
     }
@@ -97,19 +101,19 @@ class Cast {
     }
 
     /**
-     * Cast any Scratch argument to an RGB color array to be used for the renderer.
-     * @param {*} value Value to convert to RGB color array.
-     * @return {Array.<number>} [r,g,b], values between 0-255.
+     * Cast any Scratch argument to an RGB(?A) color array to be used for the renderer.
+     * @param {*} value Value to convert to RGB(?A) color array.
+     * @return {Array.<number>} [r,g,b,?a], values between 0-255.
      */
     static toRgbColorList (value) {
         const color = Cast.toRgbColorObject(value);
-        return [color.r, color.g, color.b];
+        return [color.r, color.g, color.b, color.a];
     }
 
     /**
-     * Cast any Scratch argument to an RGB color object to be used for the renderer.
-     * @param {*} value Value to convert to RGB color object.
-     * @return {RGBOject} [r,g,b], values between 0-255.
+     * Cast any Scratch argument to an RGB(A?) color object to be used for the renderer.
+     * @param {*} value Value to convert to RGB(?A) color object.
+     * @return {RGBAOject} [r,g,b,?a], values between 0-255.
      */
     static toRgbColorObject (value) {
         let color;

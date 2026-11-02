@@ -4,77 +4,77 @@ const ArgumentType = require('../../../extension-support/argument-type')
 const Cast = require('../../../util/cast')
 
 const jwScope = {
-    create(array, name) {
-        array[array.length-1][name] ??= null
+    create(scope, name) {
+        scope.vars[name] ??= null
     },
 
-    delete(array, name) {
-        for (let i = array.length-1; i >= 0; i--) {
-            if (name in array[i]) {
-                delete array[i][name]
+    delete(scope, name) {
+        for (let s = scope; s; s = s.parent) {
+            if (name in s.vars) {
+                delete s.vars[name]
                 return
             }
         }
     },
 
-    set(array, name, value) {
-        for (let i = array.length-1; i >= 0; i--) {
-            if (name in array[i]) {
-                array[i][name] = value
+    set(scope, name, value) {
+        for (let s = scope; s; s = s.parent) {
+            if (name in s.vars) {
+                s.vars[name] = value
                 return
             }
         }
-        array[array.length-1][name] = value
+        scope.vars[name] = value
     },
 
-    change(array, name, value) {
-        for (let i = array.length-1; i >= 0; i--) {
-            if (name in array[i]) {
-                array[i][name] = Cast.toNumber(array[i][name]) + value
+    change(scope, name, value) {
+        for (let s = scope; s; s = s.parent) {
+            if (name in s.vars) {
+                s.vars[name] = Cast.toNumber(s.vars[name]) + value
                 return
             }
         }
-        array[array.length-1][name] = value
+        scope.vars[name] = value
     },
 
-    get(array, name) {
-        for (let i = array.length-1; i >= 0; i--) {
-            if (name in array[i]) {
-                return array[i][name]
-            }
-        }
+    get(scope, name) {
+        for (let s = scope; s; s = s.parent)
+            if (name in s.vars) return s.vars[name]
         return null
     },
 
-    has(array, name) {
-        for (let i = array.length-1; i >= 0; i--) {
-            if (name in array[i]) {
-                return true
-            }
-        }
+    has(scope, name) {
+        for (let s = scope; s; s = s.parent)
+            if (name in s.vars) return true
         return false
     },
 
-    reset(array) {
-        for (let i = array.length-1; i >= 0; i--) {
-            array[i] = Object.create(null);
-        }
+    reset(scope) {
+        for (let s = scope; s; s = s.parent)
+            s.vars = Object.create(null);
     },
 
-    depth(array) {
-        return array.length
+    depth(scope) {
+        return scope.depth
     },
 
-    current(array) {
+    current(scope) {
         let set = new Set()
-        for (let i = 0; i < array.length; i++) {
-            Object.keys(array[i]).forEach(v => {set.delete(v); set.add(v)})
-        }
+        this.all(scope).array.forEach(scope => 
+            scope.array.forEach(v => {set.delete(v); set.add(v)})
+        )
         return new vm.jwArray.Type(Array.from(set))
     },
 
-    all(array) {
-        return new vm.jwArray.Type(array.map(v => Object.keys(v)).filter(v => v.length > 0).map(v => new vm.jwArray.Type(v)))
+    all(scope) {
+        let scopes = []
+        for (let s = scope; s; s = s.parent) scopes.push(s.vars)
+        return new vm.jwArray.Type(
+            scopes.map(v => Object.keys(v))
+            .filter(v => v.length > 0)
+            .map(v => new vm.jwArray.Type(v))
+            .reverse()
+        )
     }
 }
 
@@ -89,7 +89,7 @@ class Extension {
         return {
             id: "jwScope",
             name: "Scope",
-            color1: "#4f85f3",
+            color: "#4f85f3",
             menuIconURI: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCI+CiAgPGVsbGlwc2Ugc3R5bGU9InN0cm9rZS1saW5lam9pbjogcm91bmQ7IHBhaW50LW9yZGVyOiBmaWxsOyBmaWxsOiByZ2IoNzksIDEzMywgMjQzKTsgc3Ryb2tlLXdpZHRoOiAxOyBzdHJva2U6IHJnYig2MywgMTA2LCAxOTQpOyIgY3g9IjEwIiBjeT0iMTAiIHJ4PSI5LjUiIHJ5PSI5LjUiPjwvZWxsaXBzZT4KICA8cmVjdCBzdHlsZT0icGFpbnQtb3JkZXI6IHN0cm9rZTsgZmlsbDogbm9uZTsgc3Ryb2tlOiByZ2IoMjU1LCAyNTUsIDI1NSk7IHN0cm9rZS1saW5lam9pbjogcm91bmQ7IHN0cm9rZS13aWR0aDogMjsiIHg9IjUiIHk9IjUiIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCIgcng9IjMiIHJ5PSIzIj48L3JlY3Q+Cjwvc3ZnPg==",
             docsURI: 'https://docs.penguinmod.com/extensions/jwScope/',
             blocks: [
@@ -257,10 +257,10 @@ class Extension {
             },
             js: {
                 scriptStart() {
-                    this.source += "let jwScope = [];\n"
+                    this.source += "let jwScope = null;\n"
                 },
                 stackStart() {
-                    this.source += "var jwScopeT = [...jwScope, Object.create(null)];\n"
+                    this.source += "var jwScopeT = {parent: jwScope, vars: Object.create(null), depth: (jwScope?.depth ?? 0)+1};\n"
                     this.source += "{\n" // create scope
                     this.source += "let jwScope = jwScopeT;\n"
                 },

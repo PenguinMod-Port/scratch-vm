@@ -2,6 +2,8 @@ const BlockType = require('../../../extension-support/block-type');
 const ArgumentType = require('../../../extension-support/argument-type');
 const Cast = require('../../../util/cast');
 
+const MathJS = require('./mathjs');
+
 const template = {
     extensions: ["colours_operators"]
 };
@@ -16,7 +18,7 @@ function generateJoin(inputs) {
             type: ArgumentType.STRING
         }])),
         hideFromPalette: true,
-        ...template
+        extensions: ["colours_operators_strings"]
     };
 }
 
@@ -25,9 +27,7 @@ class Extension {
         return {
             id: "pmOperatorsExpansion",
             name: "Operators Expansion",
-            color1: "#59c059",
-            color2: "#46b946",
-            color3: "#389438",
+            color: "#59c059",
             blocks: [
                 //legacy joins
                 generateJoin(4),
@@ -195,55 +195,226 @@ class Extension {
                 },
                 "---",
                 {
-                blockType: BlockType.XML,
-                xml: `
-                <block type="operator_character_to_code">
-                    <value name="ONE">
-                        <shadow type="text">
-                        <field name="TEXT">a</field>
-                        </shadow>
-                    </value>
-                </block>
-                <block type="operator_code_to_character">
-                    <value name="ONE">
-                        <shadow type="text">
-                        <field name="TEXT">97</field>
-                        </shadow>
-                    </value>
-                </block>
-                `
+                    blockType: BlockType.XML,
+                    xml: '<block type="operator_randomBoolean" />'
                 },
                 "---",
                 {
-                blockType: BlockType.XML,
-                xml: `
-                <block type="operator_countAppearTimes">
-                    <value name="TEXT1">
-                        <shadow type="text">
-                        <field name="TEXT">a</field>
-                        </shadow>
-                    </value>
-                    <value name="TEXT2">
-                        <shadow type="text">
-                        <field name="TEXT">abc abc abc</field>
-                        </shadow>
-                    </value>
-                </block>
-                <block type="operator_textIncludesLetterFrom">
-                    <value name="TEXT1">
-                        <shadow type="text">
-                        <field name="TEXT">abcdef</field>
-                        </shadow>
-                    </value>
-                    <value name="TEXT2">
-                        <shadow type="text">
-                        <field name="TEXT">fgh</field>
-                        </shadow>
-                    </value>
-                </block>
-                `
+                    opcode: "isNumberMultipleOf",
+                    text: "is [NUM] multiple of [MULTIPLE]?",
+                    blockType: BlockType.BOOLEAN,
+                    arguments: {
+                        NUM: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 20
+                        },
+                        MULTIPLE: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 10
+                        }
+                    },
+                    ...template
+                },
+                {
+                    opcode: "isInteger",
+                    text: "is [NUM] an integer?",
+                    blockType: BlockType.BOOLEAN,
+                    arguments: {
+                        NUM: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 0.5
+                        }
+                    },
+                    ...template
+                },
+                {
+                    opcode: "isPrime",
+                    text: "is [NUM] a prime number?",
+                    blockType: BlockType.BOOLEAN,
+                    arguments: {
+                        NUM: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 13
+                        }
+                    },
+                    ...template
+                },
+                {
+                    opcode: "isEven",
+                    text: "is [NUM] even?",
+                    blockType: BlockType.BOOLEAN,
+                    arguments: {
+                        NUM: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 4
+                        }
+                    },
+                    ...template
+                },
+                {
+                    opcode: "betweenNumbers",
+                    text: "is [NUM] between [MIN] and [MAX]?",
+                    blockType: BlockType.BOOLEAN,
+                    arguments: {
+                        NUM: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 5
+                        },
+                        MIN: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 0
+                        },
+                        MAX: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 10
+                        }
+                    },
+                    hideFromPalette: true, // expandable compare does this
+                    ...template
+                },
+                "---",
+                {
+                    opcode: "evaluateMath",
+                    text: "answer to [EQUATION]",
+                    blockType: BlockType.REPORTER,
+                    arguments: {
+                        EQUATION: {
+                            type: ArgumentType.STRING,
+                            defaultValue: "5 * 2"
+                        }
+                    },
+                    ...template
+                },
+                {
+                    opcode: "partOfRatio",
+                    text: "[PART] part of ratio [RATIO]",
+                    blockType: BlockType.REPORTER,
+                    arguments: {
+                        PART: {
+                            type: ArgumentType.STRING,
+                            menu: "part"
+                        },
+                        RATIO: {
+                            type: ArgumentType.STRING,
+                            defaultValue: "1:2"
+                        }
+                    },
+                    ...template
+                },
+                {
+                    opcode: "simplifyRatio",
+                    text: "simplify ratio [RATIO]",
+                    blockType: BlockType.REPORTER,
+                    arguments: {
+                        RATIO: {
+                            type: ArgumentType.STRING,
+                            defaultValue: "1:2"
+                        }
+                    },
+                    ...template
+                },
+                {
+                    opcode: "pi",
+                    text: "π",
+                    blockType: BlockType.REPORTER,
+                    hideFromPalette: true,
+                    ...template
+                },
+                {
+                    opcode: "euler",
+                    text: "e",
+                    blockType: BlockType.REPORTER,
+                    hideFromPalette: true,
+                    ...template
+                },
+                {
+                    opcode: "infinity",
+                    text: "∞",
+                    blockType: BlockType.REPORTER,
+                    hideFromPalette: true,
+                    ...template
+                },
+                "---",
+                {
+                    opcode: "truncateNumber",
+                    text: "truncate number [NUM]",
+                    blockType: BlockType.REPORTER,
+                    arguments: {
+                        NUM: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 2.5
+                        }
+                    },
+                    ...template
+                },
+                {
+                    opcode: "atan2",
+                    text: "atan2 of x [X] y [Y]",
+                    blockType: BlockType.REPORTER,
+                    arguments: {
+                        X: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 45
+                        },
+                        Y: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 90
+                        },
+                    },
+                    ...template
+                },
+                {
+                    opcode: "exactlyEqual",
+                    text: "[ONE] exactly equals [TWO]?",
+                    blockType: BlockType.BOOLEAN,
+                    arguments: {
+                        ONE: {
+                            type: ArgumentType.STRING,
+                            defaultValue: "a"
+                        },
+                        TWO: {
+                            type: ArgumentType.STRING,
+                            defaultValue: "b"
+                        }
+                    },
+                    hideFromPalette: true,
+                    ...template
+                },
+                "---",
+                {
+                    opcode: "speedToPitch",
+                    text: "speed [SPEED] to pitch",
+                    blockType: BlockType.REPORTER,
+                    arguments: {
+                        SPEED: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 2
+                        },
+                    },
+                    ...template
+                },
+                {
+                    opcode: "pitchToSpeed",
+                    text: "pitch [PITCH] to speed",
+                    blockType: BlockType.REPORTER,
+                    arguments: {
+                        PITCH: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 120
+                        },
+                    },
+                    ...template
                 }
-            ]
+            ],
+            menus: {
+                part: {
+                    acceptReporters: true,
+                    items: [
+                        { text: "first", value: "first" },
+                        { text: "last", value: "last" },
+                    ]
+                }
+            }
         };
     }
 
@@ -316,6 +487,137 @@ class Extension {
         num1 = Cast.toNumber(num1);
 
         return ~num1;
+    }
+
+    isNumberMultipleOf({NUM, MULTIPLE}) {
+        NUM = Cast.toNumber(NUM);
+        MULTIPLE = Cast.toNumber(MULTIPLE);
+
+        return (NUM % MULTIPLE) === 0;
+    }
+
+    isInteger({NUM}) {
+        NUM = Cast.toNumber(NUM);
+        return Math.trunc(NUM) === NUM;
+    }
+
+    isPrime({NUM}) {
+        NUM = Math.trunc(Cast.toNumber(NUM));
+
+        if (NUM <= 1) return false;
+        for (let i = 2; i < NUM; i++) {
+            if (NUM % i === 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    isEven({NUM}) {
+        NUM = Cast.toNumber(NUM);
+        
+        return NUM % 2 === 0;
+    }
+
+    betweenNumbers({NUM, MIN, MAX}) {
+        NUM = Cast.toNumber(NUM);
+        MIN = Cast.toNumber(MIN);
+        MAX = Cast.toNumber(MAX);
+
+        if (MIN > MAX) [MIN, MAX] = [MAX, MIN];
+
+        return NUM >= MIN && NUM <= MAX;
+    }
+
+    evaluateMath({EQUATION}) {
+        EQUATION = Cast.toString(EQUATION);
+        // "" is undefined when evalutated
+        if (EQUATION.trim().length === 0) return 0;
+        // evalueate
+        let answer = 0;
+        try {
+            answer = MathJS.evaluate(EQUATION);
+        } catch {
+            // syntax errors cause real errors
+            answer = 0;
+        }
+        // multiline or semi-colon breaks create a ResultSet, we can get the last item in the set for that
+        if (typeof answer === "object") {
+            if ("entries" in answer) {
+                const answers = answer.entries;
+                if (answers.length === 0) return 0;
+                const lastIdx = answers.length - 1;
+                return Number(answers[lastIdx]);
+            }
+        }
+        // Cast.toNumber converts NaN to 0
+        return Number(answer);
+    }
+
+    partOfRatio({RATIO, PART}) {
+        RATIO = Cast.toString(RATIO);
+        PART = Cast.toString(PART).toLowerCase();
+
+        if (!RATIO.includes(":")) return "";
+        const split = RATIO.split(":");
+
+        const section = split[Number(PART === "last")];
+        return Cast.toNumber(section);
+    }
+
+    simplifyRatio({RATIO}) {
+        RATIO = Cast.toString(RATIO);
+        if (!RATIO.includes(":")) return "";
+        const split = RATIO.split(":");
+
+        const first = Cast.toNumber(split[0]);
+        const last = Cast.toNumber(split[1]);
+
+        const reduced = this._reduce(first, last);
+
+        return `${Cast.toNumber(reduced[0])}:${Cast.toNumber(reduced[1])}`;
+    }
+    _reduce(numerator, denominator) {
+        let gcd = function gcd(a, b) {
+            return b ? gcd(b, a % b) : a;
+        };
+        gcd = gcd(numerator, denominator);
+        return [numerator / gcd, denominator / gcd];
+    }
+
+    pi() {
+        return Math.PI;
+    }
+
+    euler() {
+        return Math.E;
+    }
+
+    infinity() {
+        return Infinity;
+    }
+
+    truncateNumber({NUM}) {
+        return Math.trunc(Cast.toNumber(NUM));
+    }
+
+    atan2({X, Y}) {
+        X = Cast.toNumber(X);
+        Y = Cast.toNumber(Y);
+
+        return Math.atan2((Y * 180) / Math.PI, (X * 180) / Math.PI);
+    }
+
+    exactlyEqual({A, B}) {
+        return A === B;
+    }
+
+    speedToPitch({SPEED}) {
+        return (1200 * Math.log2(Cast.toNumber(SPEED))) / 10;
+    }
+
+    pitchToSpeed({PITCH}) {
+        return 2 ** (Cast.toNumber(PITCH) * 10) / 1200;
     }
 }
 

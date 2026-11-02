@@ -27,6 +27,7 @@ const {serializeSounds, serializeCostumes} = require('./serialization/serialize-
 require('canvas-toBlob');
 const {exportCostume} = require('./serialization/tw-costume-import-export');
 const Base64Util = require('./util/base64-util');
+const Sampler = require('./engine/tw-sampler.js');
 const pmSymbol = require('./util/symbol');
 
 const RESERVED_NAMES = ['_mouse_', '_stage_', '_edge_', '_myself_', '_random_'];
@@ -84,6 +85,11 @@ class VirtualMachine extends EventEmitter {
          * @type {Target}
          */
         this._dragTarget = null;
+
+        /**
+         * Ordering of toolbox categories by their respective IDs.
+         */
+        this._categoryOrdering = [];
 
         // Runtime emits are passed along as VM emits.
         this.runtime.on(Runtime.SCRIPT_GLOW_ON, glowData => {
@@ -214,6 +220,11 @@ class VirtualMachine extends EventEmitter {
         this.securityManager = this.extensionManager.securityManager;
         this.runtime.extensionManager = this.extensionManager;
 
+        this.customPrompt = function () {
+            // Defined by GUI.
+            console.warn("Custom Prompt is not implemented!");
+        }
+
         // Load core extensions
         for (const id of CORE_EXTENSIONS) {
             this.extensionManager.loadExtensionIdSync(id);
@@ -232,7 +243,11 @@ class VirtualMachine extends EventEmitter {
             RenderedTarget,
             JSZip,
             Variable,
+            Sampler,
             pmSymbol,
+
+            // pm exported some of these before
+            Thread: require('./engine/thread.js'),
 
             these_broke_before_and_will_break_again: () => {
                 console.warn('You are using unsupported APIs. WHEN your code breaks, do not expect help.');
@@ -771,7 +786,7 @@ class VirtualMachine extends EventEmitter {
             return Promise.reject('Unable to verify Scratch Project version.');
         };
         return deserializePromise()
-            .then(({targets, extensions}) => {
+            .then(({targets, extensions, layerOrder}) => {
                 if (typeof performance !== 'undefined') {
                     performance.mark('scratch-vm-deserialize-end');
                     try {
@@ -785,7 +800,7 @@ class VirtualMachine extends EventEmitter {
                         log.error(e);
                     }
                 }
-                return this.installTargets(targets, extensions, true);
+                return this.installTargets(targets, extensions, true, layerOrder);
             });
     }
 
@@ -795,15 +810,15 @@ class VirtualMachine extends EventEmitter {
      */
     async _loadExtensions (extensionIDs, extensionURLs = new Map()) {
         const defaultExtensionURLs = require('./extension-support/tw-default-extension-urls');
-        const extensionPromises = [];
+        const builtinExtensionIDs = [];
+        const customExtensionIDs = [];
+        const customExtensionURLs = [];
         for (const extensionID of extensionIDs) {
             if (this.extensionManager.isExtensionLoaded(extensionID)) {
                 // Already loaded
             } else if (this.extensionManager.isBuiltinExtension(extensionID)) {
-                // Builtin extension
-                await this.extensionManager.loadExtensionIdSync(extensionID);
+                builtinExtensionIDs.push(extensionID);
             } else {
-                // Custom extension
                 let url = extensionURLs.get(extensionID);
                 if (!url && Object.prototype.hasOwnProperty.call(defaultExtensionURLs, extensionID)) {
                     url = defaultExtensionURLs[extensionID];
@@ -811,14 +826,25 @@ class VirtualMachine extends EventEmitter {
                 if (!url) {
                     throw new Error(`Unknown extension: ${extensionID}`);
                 }
-                if (await this.securityManager.canLoadExtensionFromProject(url)) {
-                    extensionPromises.push(this.extensionManager.loadExtensionURL(url));
-                } else {
-                    throw new Error(`Permission to load extension denied: ${extensionID}`);
-                }
+                customExtensionIDs.push(extensionID);
+                customExtensionURLs.push(url);
             }
         }
-        return Promise.all(extensionPromises);
+
+        // Ask about every custom extension concurrently, before loading any of them, so that the
+        // security manager can combine them into a single prompt if it wants to.
+        const permissions = await Promise.all(
+            customExtensionURLs.map(url => this.securityManager.canLoadExtensionFromProject(url))
+        );
+        const deniedExtensionIDs = customExtensionIDs.filter((_, i) => !permissions[i]);
+        if (deniedExtensionIDs.length > 0) {
+            throw new Error(`Permission to load extension denied: ${deniedExtensionIDs.join(', ')}`);
+        }
+
+        for (const extensionID of builtinExtensionIDs) {
+            await this.extensionManager.loadExtensionIdSync(extensionID);
+        }
+        return Promise.all(customExtensionURLs.map(url => this.extensionManager.loadExtensionURL(url)));
     }
 
     /**
@@ -826,10 +852,21 @@ class VirtualMachine extends EventEmitter {
      * @param {Array.<Target>} targets - the targets to be installed
      * @param {ImportedExtensionsInfo} extensions - metadata about extensions used by these targets
      * @param {boolean} wholeProject - set to true if installing a whole project, as opposed to a single sprite.
+     * @param {number[]} [layerOrder] - layer order of each target, same order as targets.
      * @returns {Promise} resolved once targets have been installed
      */
-    async installTargets (targets, extensions, wholeProject) {
+    async installTargets (targets, extensions, wholeProject, layerOrder) {
         await this.extensionManager.allAsyncExtensionsLoaded();
+
+        let layerOrders = null;
+        if (layerOrder) {
+            layerOrders = new Map();
+            targets.forEach((target, index) => {
+                if (target) {
+                    layerOrders.set(target, layerOrder[index]);
+                }
+            });
+        }
 
         targets = targets.filter(target => !!target);
 
@@ -850,9 +887,10 @@ class VirtualMachine extends EventEmitter {
                 // Ensure unique sprite name
                 if (target.isSprite()) this.renameSprite(target.id, target.getName());
             });
-            // Sort the executable targets by layerOrder.
-            // Remove layerOrder property after use.
-            this.runtime.executableTargets.sort((a, b) => a.layerOrder - b.layerOrder);
+            if (layerOrders) {
+                // Sort the executable targets by layer order.
+                this.runtime.executableTargets.sort((a, b) => layerOrders.get(a) - layerOrders.get(b));
+            }
             targets.forEach(target => {
                 delete target.layerOrder;
 
@@ -975,8 +1013,8 @@ class VirtualMachine extends EventEmitter {
 
         const sb2 = require('./serialization/sb2');
         return sb2.deserialize(sprite, this.runtime, true, zip)
-            .then(({targets, extensions}) =>
-                this.installTargets(targets, extensions, false));
+            .then(({targets, extensions, layerOrder}) =>
+                this.installTargets(targets, extensions, false, layerOrder));
     }
 
     /**
@@ -990,7 +1028,7 @@ class VirtualMachine extends EventEmitter {
         const sb3 = require('./serialization/sb3');
         return sb3
             .deserialize(sprite, this.runtime, zip, true)
-            .then(({targets, extensions}) => this.installTargets(targets, extensions, false));
+            .then(({targets, extensions, layerOrder}) => this.installTargets(targets, extensions, false, layerOrder));
     }
 
     /**
@@ -1083,17 +1121,27 @@ class VirtualMachine extends EventEmitter {
     /**
      * Delete a costume from the current editing target.
      * @param {int} costumeIndex - the index of the costume to be removed.
-     * @return {?function} A function to restore the deleted costume, or null,
+     * @returns {(() => Promise<void>)|null} A function to restore the deleted costume, or null
      * if no costume was deleted.
      */
     deleteCostume (costumeIndex) {
-        const deletedCostume = this.editingTarget.deleteCostume(costumeIndex);
+        const target = this.editingTarget;
+        const deletedCostume = target.deleteCostume(costumeIndex);
         if (deletedCostume) {
-            const target = this.editingTarget;
             this.runtime.emitProjectChanged();
             return () => {
-                target.addCostume(deletedCostume);
-                this.emitTargetsUpdate();
+                const md5ext = `${deletedCostume.assetId}.${deletedCostume.dataFormat}`;
+                return loadCostume(md5ext, deletedCostume, this.runtime).then(() => {
+                    if (target.sprite.clones.length === 0) {
+                        // Sprite was deleted while we were loading
+                        if (this.runtime.renderer && typeof deletedCostume.skinId === 'number') {
+                            this.runtime.renderer.destroySkin(deletedCostume.skinId);
+                        }
+                        return;
+                    }
+                    target.addCostume(deletedCostume);
+                    this.emitTargetsUpdate();
+                });
             };
         }
         return null;
@@ -1186,8 +1234,8 @@ class VirtualMachine extends EventEmitter {
     /**
      * Delete a sound from the current editing target.
      * @param {int} soundIndex - the index of the sound to be removed.
-     * @return {?Function} A function to restore the sound that was deleted,
-     * or null, if no sound was deleted.
+     * @returns {(() => Promise<void>)|null} A function to restore the deleted sound, or null
+     * if no sound was deleted.
      */
     deleteSound (soundIndex) {
         const target = this.editingTarget;
@@ -1195,8 +1243,18 @@ class VirtualMachine extends EventEmitter {
         if (deletedSound) {
             this.runtime.emitProjectChanged();
             const restoreFun = () => {
-                target.addSound(deletedSound);
-                this.emitTargetsUpdate();
+                const soundBank = target.sprite.soundBank;
+                return loadSound(deletedSound, this.runtime, soundBank).then(() => {
+                    if (target.sprite.clones.length === 0) {
+                        // Sprite was deleted while we were loading
+                        if (soundBank && typeof soundBank.removeSoundPlayer === 'function') {
+                            soundBank.removeSoundPlayer(deletedSound.soundId);
+                        }
+                        return;
+                    }
+                    target.addSound(deletedSound);
+                    this.emitTargetsUpdate();
+                });
             };
             return restoreFun;
         }
@@ -1226,10 +1284,11 @@ class VirtualMachine extends EventEmitter {
     /**
      * TW: Get the raw binary data to use when exporting a costume to the user's local file system.
      * @param {Costume} costumeObject scratch-vm costume object
+     * @param {Boolean} [optIncludeExtras] if true and costume is an SVG, will add things like custom fonts to the export
      * @returns {Uint8Array}
      */
-    getExportedCostume (costumeObject) {
-        return exportCostume(costumeObject);
+    getExportedCostume (costumeObject, optIncludeExtras) {
+        return exportCostume(costumeObject, optIncludeExtras, this);
     }
 
     /**
@@ -1420,7 +1479,6 @@ class VirtualMachine extends EventEmitter {
         const target = this.runtime.getTargetById(targetId);
 
         if (target) {
-            const targetIndexBeforeDelete = this.runtime.targets.map(t => t.id).indexOf(target.id);
             if (!target.isSprite()) {
                 throw new Error('Cannot delete non-sprite targets.');
             }
@@ -1433,19 +1491,21 @@ class VirtualMachine extends EventEmitter {
             // Remove monitors from the runtime state and remove the
             // target-specific monitored blocks (e.g. local variables)
             target.deleteMonitors();
-            const currentEditingTarget = this.editingTarget;
-            for (let i = 0; i < sprite.clones.length; i++) {
-                const clone = sprite.clones[i];
-                this.runtime.stopForTarget(sprite.clones[i]);
-                this.runtime.disposeTarget(sprite.clones[i]);
-                // Ensure editing target is switched if we are deleting it.
-                if (clone === currentEditingTarget) {
-                    const nextTargetIndex = Math.min(this.runtime.targets.length - 1, targetIndexBeforeDelete);
-                    if (this.runtime.targets.length > 0){
-                        this.setEditingTarget(this.runtime.targets[nextTargetIndex].id);
-                    } else {
-                        this.editingTarget = null;
-                    }
+            const targetIndexBeforeDelete = this.runtime.targets.indexOf(target);
+
+            // disposeTarget removes from sprite.clones, so iterate over a copy
+            const clones = sprite.clones.slice();
+            for (const clone of clones) {
+                this.runtime.stopForTarget(clone);
+                this.runtime.disposeTarget(clone);
+            }
+
+            if (this.editingTarget && this.editingTarget.sprite === sprite) {
+                const targets = this.runtime.targets;
+                if (targets.length > 0) {
+                    this.setEditingTarget(targets[Math.min(targets.length - 1, targetIndexBeforeDelete)].id);
+                } else {
+                    this.editingTarget = null;
                 }
             }
             // Sprite object should be deleted by GC.

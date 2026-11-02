@@ -11,9 +11,7 @@ class Extension {
         return {
             id: "pmControlsExpansion",
             name: "Controls Expansion",
-            color1: "#ffab19",
-            color2: "#ec9c13",
-            color3: "#cf8b17",
+            color: "#ffab19",
             blocks: [
                 {
                     blockType: BlockType.XML,

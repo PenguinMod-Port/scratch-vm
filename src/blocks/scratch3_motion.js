@@ -410,7 +410,7 @@ class Scratch3MotionBlocks {
         const bounceTarget = this.runtime.getSpriteTargetByName(spriteName);
         if (!bounceTarget) return;
         const point = util.target.spriteTouchingPoint(spriteName);
-        if (!point) return;
+        if (!point[0]) return;
         return this.ifOnXYBounce({ X: point[0], Y: point[1] }, util);
         
     }

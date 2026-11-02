@@ -111,8 +111,8 @@ class PolygonType {
         return {
             left: Math.min(...this.points.map(v => v.x)),
             right: Math.max(...this.points.map(v => v.x)),
-            top: Math.min(...this.points.map(v => v.y)),
-            bottom: Math.max(...this.points.map(v => v.y))
+            top: Math.max(...this.points.map(v => v.y)),
+            bottom: Math.min(...this.points.map(v => v.y))
         }
     }
 
@@ -235,6 +235,11 @@ let jwPolygon = {
 class Extension {
     constructor() {
         vm.jwPolygon = jwPolygon;
+        vm.runtime.registerSerializer(
+            "jwPolygon", 
+            v => v.points, 
+            v => new jwPolygon.Type(v)
+        );
 
         vm.extensionManager.addExtensionDependency("jwPolygon", "jwArray", () => jwArray = vm.jwArray);
         vm.extensionManager.addExtensionDependency("jwPolygon", "jwVector", () => jwVector = vm.jwVector);
@@ -244,7 +249,7 @@ class Extension {
         return {
             id: "jwPolygon",
             name: "Polygons",
-            color1: "#d36bff",
+            color: "#d36bff",
             menuIconURI: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCI+CiAgPGVsbGlwc2Ugc3R5bGU9InN0cm9rZTogcmdiKDE2OSwgODYsIDIwNCk7IGZpbGw6IHJnYigyMTEsIDEwNywgMjU1KTsiIGN4PSIxMCIgY3k9IjEwIiByeD0iOS41IiByeT0iOS41Ij48L2VsbGlwc2U+CiAgPHBhdGggZD0iTSA4LjQ1OSA0LjM5MiBDIDkuNDAzIDMuOTI0IDEwLjU5NyAzLjkyNCAxMS41NDEgNC4zOTIgTCAxNC4wODYgNS44NjEgQyAxNC45NjMgNi40NDUgMTUuNTYgNy40NzkgMTUuNjI3IDguNTMgTCAxNS42MjcgMTEuNDY5IEMgMTUuNTYgMTIuNTIgMTQuOTYzIDEzLjU1NSAxNC4wODYgMTQuMTM4IEwgMTEuNTQxIDE1LjYwNyBDIDEwLjU5NyAxNi4wNzUgOS40MDMgMTYuMDc1IDguNDU5IDE1LjYwNyBMIDUuOTE0IDE0LjEzOCBDIDUuMDM3IDEzLjU1NCA0LjQ0IDEyLjUyIDQuMzczIDExLjQ2OSBMIDQuMzczIDguNTMgQyA0LjQ0IDcuNDc5IDUuMDM3IDYuNDQ0IDUuOTE0IDUuODYxIFogTSA2LjkxNCA3LjU5MyBDIDYuNDAzIDcuODExIDYuMzA2IDcuOTc5IDYuMzczIDguNTMgTCA2LjM3MyAxMS40NjkgQyA2LjMwNiAxMi4wMiA2LjQwMyAxMi4xODkgNi45MTQgMTIuNDA2IEwgOS40NTkgMTMuODc1IEMgOS45MDMgMTQuMjA5IDEwLjA5NyAxNC4yMDkgMTAuNTQxIDEzLjg3NSBMIDEzLjA4NiAxMi40MDYgQyAxMy41OTcgMTIuMTg4IDEzLjY5NCAxMi4wMiAxMy42MjcgMTEuNDY5IEwgMTMuNjI3IDguNTMgQyAxMy42OTQgNy45NzkgMTMuNTk3IDcuODEgMTMuMDg2IDcuNTkzIEwgMTAuNTQxIDYuMTI0IEMgMTAuMDk3IDUuNzkgOS45MDMgNS43OSA5LjQ1OSA2LjEyNCBaIiBzdHlsZT0iZmlsbDogcmdiKDI1NSwgMjU1LCAyNTUpOyI+PC9wYXRoPgo8L3N2Zz4=",
             blocks: [
                 {
@@ -498,7 +503,7 @@ class Extension {
         let bounds = POLYGON.bounds();
         switch (DIMENSION) {
             case "width": return bounds.right - bounds.left;
-            case "height": return bounds.bottom - bounds.top;
+            case "height": return bounds.top - bounds.bottom;
             default: return 0;
         }
     }

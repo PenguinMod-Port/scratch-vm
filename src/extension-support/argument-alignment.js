@@ -1,5 +1,4 @@
 /**
- * TODO: implement on port
  * Types of argument alignments
  * @enum {string?}
  */

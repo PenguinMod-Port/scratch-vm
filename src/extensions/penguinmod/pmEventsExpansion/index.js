@@ -22,9 +22,7 @@ class Extension {
         return {
             id: "pmEventsExpansion",
             name: 'Events Expansion',
-            color1: '#ffbf00',
-            color2: '#e6ac00',
-            color3: '#cc9900',
+            color: '#ffbf00',
             blocks: [
                 {
                     opcode: 'everyOtherFrame',

@@ -36,9 +36,7 @@ class pmMotionExpansion {
         return {
             id: 'pmMotionExpansion',
             name: 'Motion Expansion',
-            color1: '#4C97FF',
-            color2: '#4280D7',
-            color3: '#3373CC',
+            color: '#4C97FF',
             blocks: [
                 {
                     blockType: BlockType.LABEL,

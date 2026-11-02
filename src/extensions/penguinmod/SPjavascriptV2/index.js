@@ -1,187 +1,49 @@
-// awesome code runner
-let runCode;
-(() => {runCode = async function (x) {
-  return await Object.getPrototypeOf(async function() {}).constructor(x)();
-};})();
-
 const BlockType = require("../../../extension-support/block-type");
 const BlockShape = require("../../../extension-support/block-shape");
 const ArgumentType = require("../../../extension-support/argument-type");
 const SandboxRunner = require("../../../util/sandboxed-javascript-runner");
 const Cast = require("../../../util/cast");
+const {
+  initCodeInput,
+  setAutocompleteExtrasCallback,
+} = require("./input-connector.js");
 
-let isScratchBlocksReady = typeof ScratchBlocks === "object";
-const codeEditorHandlers = new Map();
-
-// we cant have nice things
+// We cant have nice things...
 const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
-function initBlockTools() {
-  window.addEventListener("message", (e) => {
-    if (e.data?.type === "code-change") {
-      const handler = codeEditorHandlers.get(e.data.id);
-      if (handler) handler(e.data.value);
+const ASYNC_FUNC_PROTO = Object.getPrototypeOf(async function() {});
+const SECRET_BLOCK_KEY = "needsInit-1@#4%^7*(0";
+
+let isScratchBlocksReady = false;
+const checkScratchBlocksReady = () => {
+  if (!isScratchBlocksReady) {
+    isScratchBlocksReady = typeof ScratchBlocks === "object";
+
+    if (isScratchBlocksReady) {
+      initCodeInput();
     }
-  });
-
-  const recyclableDiv = document.createElement("div");
-  recyclableDiv.setAttribute("style", `display: flex; justify-content: center; padding-top: 10px; width: 250px; height: 200px;`);
-
-  const fakeDiv = document.createElement("div");
-  fakeDiv.setAttribute("style", "background: #272822; border-radius: 10px; border: none; width: 100%; height: calc(100% - 20px);");
-  recyclableDiv.appendChild(fakeDiv);
-
-  ScratchBlocks.FieldCustom.registerInput(
-    "SPjavascriptV2-codeEditor",
-    recyclableDiv,
-    (field) => {
-      /* on init */
-      const inputObject = field.inputSource;
-      const input = inputObject.firstChild;
-      const srcBlock = field.sourceBlock_;
-      const parent = srcBlock.parentBlock_;
-      const dragCheck = parent.isInFlyout || srcBlock.svgGroup_.classList.contains("blocklyDragging") ? "none" : "all";
-
-      inputObject.setAttribute("pointer-events", "none");
-      input.style.height = "210px";
-      const iframe = document.createElement("iframe");
-      iframe.setAttribute("style", `pointer-events: ${dragCheck}; background: #272822; border-radius: 10px; border: none; ${isSafari ? "" : "width: 100%;"} height: calc(100% - 20px);`);
-      iframe.setAttribute("sandbox", "allow-scripts");
-
-      const html = `
-<!DOCTYPE html>
-<html><head>
-  <style>html, body, #editor {background: #272822; margin: 0; padding: 0; height: 100%; width: 100%;}</style>
-</head>
-<body>
-  <div id="editor"></div>
-  <script src="https://cdn.jsdelivr.net/npm/ace-builds@1.32.3/src-min-noconflict/ace.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/ace-builds@1.32.3/src-min-noconflict/mode-javascript.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/ace-builds@1.32.3/src-min-noconflict/theme-monokai.js"></script>
-  <script>
-    window.addEventListener("message", function(e) {
-      const editor = ace.edit("editor");
-      editor.setOptions({
-        fontSize: "15px", showPrintMargin: false,
-        highlightActiveLine: true, useWorker: false
-      });
-
-      editor.session.setMode("ace/mode/javascript");
-      editor.setTheme("ace/theme/monokai");
-      editor.setValue(e.data.value);
-      editor.session.on("change", () => parent.postMessage({
-        type: "code-change", id: "${srcBlock.id}", value: editor.getValue()
-      }, "*"));
-    }, { once: true });
-  </script>
-</body>
-</html>`;
-      iframe.src = URL.createObjectURL(new Blob([html], { type: "text/html" }));
-      input.replaceChild(iframe, input.firstChild);
-      iframe.onload = () => {
-        let value = field.getValue();
-        if (value === "needsInit-1@#4%^7*(0") {
-          const outerType = srcBlock.parentBlock_.type;
-          if (outerType.endsWith("jsCommandBinded")) value = `alert(FOO);`;
-          else if (outerType.endsWith("jsReporterBinded")) value = `return STRING + Math.random()`;
-          else if (outerType.endsWith("jsBooleanBinded")) value = `return Math.random() > THRESHOLD`;
-          else if (outerType.endsWith("defineGlobalFunc")) value = `(param1) => {\nreturn btoa(param1);\n}`;
-          field.setValue(value);
-        }
-
-        iframe.contentWindow.postMessage({ value }, "*");
-      };
-
-      // listen for code updates
-      codeEditorHandlers.set(srcBlock.id, (value) => field.setValue(value));
-
-      const resizeHandle = document.createElement("div");
-      resizeHandle.setAttribute("style", `pointer-events: ${dragCheck}; position: absolute; right: 5px; bottom: 15px; width: 12px; height: 12px; background: #ffffff40; cursor: se-resize; border-radius: 0px 0 50px 0;`);
-      input.appendChild(resizeHandle);
-
-      let isResizing = false;
-      let startX, startY, startW, startH;
-      resizeHandle.addEventListener("mousedown", (e) => {
-        if (parent.isInFlyout) return;
-        e.preventDefault();
-        isResizing = true;
-        startX = e.clientX;
-        startY = e.clientY;
-        startW = input.offsetWidth;
-        startH = input.offsetHeight;
-        ScratchBlocks.mainWorkspace.allowDragging = false;
-        parent.setMovable(false);
-
-        function onMouseMove(ev) {
-          if (!isResizing) return;
-          iframe.style.pointerEvents = "none";
-          const newW = Math.max(150, startW + (ev.clientX - startX));
-          const newH = Math.max(100, startH + (ev.clientY - startY));
-          input.style.width = `${newW}px`;
-          input.style.height = `${newH}px`;
-          resizeHandle.style.left = `${newW - 20}px`;
-          resizeHandle.style.top = `${newH - 40}px`;
-          inputObject.setAttribute("width", newW);
-          inputObject.setAttribute("height", newH);
-          field.size_.width = newW;
-          field.size_.height = newH - 10;
-          if (srcBlock?.render) srcBlock.render();
-        }
-
-        function onMouseUp() {
-          isResizing = false;
-          ScratchBlocks.mainWorkspace.allowDragging = true;
-          parent.setMovable(true);
-          document.removeEventListener("mousemove", onMouseMove);
-          document.removeEventListener("mouseup", onMouseUp);
-        }
-
-        document.addEventListener("mousemove", onMouseMove);
-        document.addEventListener("mouseup", onMouseUp);
-      });
-
-      // monkey patch this function since MutationObservers will lag
-      // this patch allows dragging blocks to not act weird with mouse touching
-      const ogSetAtt = parent.svgGroup_.setAttribute;
-      parent.svgGroup_.setAttribute = (...args) => {
-        if (args[0] === "class") {
-          if (parent.isInFlyout || args[1].includes("blocklyDragging")) {
-            iframe.style.pointerEvents = "none";
-            resizeHandle.style.pointerEvents = "none";
-          } else {
-            iframe.style.pointerEvents = "all";
-            resizeHandle.style.pointerEvents = "all";
-          }
-        }
-        ogSetAtt.call(parent.svgGroup_, ...args);
-      }
-    },
-    () => { /* no work needs to be done here */ },
-    () => { /* no work needs to be done here */ }
-  );
+  }
 }
-if (isScratchBlocksReady) initBlockTools();
+
+checkScratchBlocksReady()
 
 class SPjavascriptV2 {
   constructor(runtime) {
     this.runtime = runtime;
     this.isEditorUnsandboxed = false;
-
-    this.runtime.vm.on("workspaceUpdate", () => {
-      codeEditorHandlers.clear();
-      if (!isScratchBlocksReady) {
-        isScratchBlocksReady = typeof ScratchBlocks === "object";
-        if (isScratchBlocksReady) initBlockTools();
-      }
-    });
+    this.forceSandboxNextExecute = false;
 
     this.globalFuncs = new Map();
+
+    this.runtime.vm.on("workspaceUpdate", checkScratchBlocksReady);
+
+    setAutocompleteExtrasCallback(this.updateEditorSchema.bind(this));
   }
   getInfo() {
     return {
       id: "SPjavascriptV2",
       name: "JavaScript",
-      color1: "#f7df1e",
+      color: "#f7df1e",
       blockText: "#323330",
       menuIconURI: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCI+CiAgPGVsbGlwc2Ugc3R5bGU9InN0cm9rZTogcmdiKDIxMiwgMTkwLCAxNSk7IGZpbGw6IHJnYigyNDcsIDIyMywgMzApOyIgY3g9IjEwIiBjeT0iMTAiIHJ4PSI5LjUiIHJ5PSI5LjUiPjwvZWxsaXBzZT4KICA8cGF0aCB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGQ9Ik0gMTEuMzU5IDExLjYxIEMgMTEuNzA2IDEyLjE3NyAxMi4xNTcgMTIuNTkzIDEyLjk1NCAxMi41OTMgQyAxMy42MjYgMTIuNTkzIDE0LjA1MyAxMi4yNTggMTQuMDUzIDExLjc5NSBDIDE0LjA1MyAxMS4yNCAxMy42MTMgMTEuMDQ0IDEyLjg3NiAxMC43MjEgTCAxMi40NzEgMTAuNTQ3IEMgMTEuMzA0IDEwLjA1IDEwLjUyOCA5LjQyNyAxMC41MjggOC4xMDkgQyAxMC41MjggNi44OTYgMTEuNDUyIDUuOTczIDEyLjg5OCA1Ljk3MyBDIDEzLjkyNiA1Ljk3MyAxNC42NjYgNi4zMyAxNS4xOTkgNy4yNjggTCAxMy45MzkgOC4wNzcgQyAxMy42NjEgNy41OCAxMy4zNjMgNy4zODMgMTIuODk4IDcuMzgzIEMgMTIuNDIzIDcuMzgzIDEyLjEyNCA3LjY4NCAxMi4xMjQgOC4wNzcgQyAxMi4xMjQgOC41NjMgMTIuNDI0IDguNzU5IDEzLjExOSA5LjA1OSBMIDEzLjUyMyA5LjIzMiBDIDE0Ljg5OCA5LjgyMiAxNS42NzQgMTAuNDIyIDE1LjY3NCAxMS43NzQgQyAxNS42NzQgMTMuMjMxIDE0LjUzIDE0LjAyOCAxMi45OTIgMTQuMDI4IEMgMTEuNDkgMTQuMDI4IDEwLjUxOSAxMy4zMTMgMTAuMDQ0IDEyLjM3NCBMIDExLjM1OSAxMS42MSBaIE0gNS42NDMgMTEuNzUxIEMgNS44OTggMTIuMjAyIDYuMTI5IDEyLjU4MyA2LjY4NSAxMi41ODMgQyA3LjIxNSAxMi41ODMgNy41NTEgMTIuMzc1IDcuNTUxIDExLjU2NiBMIDcuNTUxIDYuMDY0IEwgOS4xNjkgNi4wNjQgTCA5LjE2OSAxMS41ODggQyA5LjE2OSAxMy4yNjMgOC4xODcgMTQuMDI2IDYuNzUzIDE0LjAyNiBDIDUuNDU5IDE0LjAyNiA0LjcwOCAxMy4zNTYgNC4zMjYgMTIuNTQ4IEwgNS42NDMgMTEuNzUxIFoiIHN0eWxlPSJzdHJva2Utd2lkdGg6IDE7Ij48L3BhdGg+Cjwvc3ZnPg==",
       blocks: [
@@ -198,8 +60,9 @@ class SPjavascriptV2 {
           hideFromPalette: true,
           arguments: {
             CODE: {
-              type: ArgumentType.CUSTOM, id: "SPjavascriptV2-codeEditor",
-              defaultValue: "needsInit-1@#4%^7*(0"
+              type: ArgumentType.CUSTOM,
+              id: "SPjavascriptV2-codeEditor",
+              defaultValue: SECRET_BLOCK_KEY
             }
           },
         },
@@ -221,7 +84,7 @@ class SPjavascriptV2 {
             DATA: { type: ArgumentType.STRING }
           },
         },
-        /* shown if ScratchBlocks is not availiable */
+        /* Shows if ScratchBlocks is not availiable. */
         {
           opcode: "jsCommand",
           text: "run [CODE]",
@@ -258,7 +121,7 @@ class SPjavascriptV2 {
             }
           }
         },
-        /* shown if ScratchBlocks is availiable */
+        /* Shows if ScratchBlocks is availiable. */
         {
           opcode: "jsCommandBinded",
           text: "run [CODE] with data [ARGS]",
@@ -351,6 +214,13 @@ class SPjavascriptV2 {
             }
           }
         },
+        "---",
+        {
+          opcode: "runNextInSandbox",
+          text: "run next code in sandbox",
+          blockType: BlockType.COMMAND,
+          hideFromPalette: !this.isEditorUnsandboxed,
+        },
         {
           opcode: "packagerInfo",
           text: "Sandbox in Packager Notice",
@@ -361,7 +231,7 @@ class SPjavascriptV2 {
     };
   }
 
-  // helper funcs
+  // Helper Funcs
   toggleSandbox() {
     if (this.isEditorUnsandboxed) {
       this.isEditorUnsandboxed = false;
@@ -369,6 +239,7 @@ class SPjavascriptV2 {
     } else {
       this.runtime.vm.securityManager.canUnsandbox("JavaScript").then((isAllowed) => {
         if (!isAllowed) return;
+
         this.isEditorUnsandboxed = true;
         this.runtime.extensionManager.refreshBlocks("SPjavascriptV2");
       });
@@ -383,22 +254,13 @@ class SPjavascriptV2 {
     ].join("\n"));
   }
 
-  parseArguments(argJSON) {
-    try {
-      if (argJSON.constructor?.name === "Object") return argJSON;
-      else {
-        // this is a PM custom return api value
-        argJSON = argJSON.toString();
-        if (typeof argJSON === "object" && !Array.isArray(argJSON)) return argJSON;
-        else return JSON.parse(argJSON);
-      }
-    } catch(err) {
-      console.warn(`Failed to parse Javascript Data JSON: ${err}`);
-      return {};
-    }
+  _getThisBlockID(util) {
+    return util.thread.isCompiled ?
+      util.thread.peekStack() :
+      util.thread.peekStackFrame().op.id;
   }
 
-  isLegalFuncName(name) {
+  _isLegalFuncName(name) {
     try {
       new Function(`function ${name}(){}`);
       return true;
@@ -407,137 +269,278 @@ class SPjavascriptV2 {
     }
   }
 
-  async runCode(code, binds) {
-    let binders = "";
+  _parseArguments(arg) {
+    if (!arg) return [];
 
-    /* inject global functions */
-    if (this.globalFuncs.size > 0) {
-      const funcs = this.globalFuncs.entries().toArray();
-      for (const [name, funcData] of funcs) {
-        if (funcData.isBlockCode) {
-          binders += `const ${name} = async function(...args) {\n`;
-          if (funcData.id) {
-            binders += `return new Promise((resolve) => {\n`;
-            binders += `const target = vm.runtime.getTargetById("${funcData.origin}");\n`;
-            binders += `const thread = vm.runtime._pushThread("${funcData.id}", target);\n`;
-            binders += `const threadID = thread.getId();\n`;
-            binders += `thread.jsExtData = [...args];\n`;
-
-            /* listener for thread returns */
-            binders += `const endHandler = (t) => {\n`;
-            binders += `if (t.getId() === thread.getId()) {\n`;
-            binders += `vm.runtime.removeListener("THREAD_FINISHED", endHandler);\n`;
-            binders += `resolve(t.justReported);\n`;
-            binders += "}\n";
-            binders += "};\n";
-            binders += `vm.runtime.on("THREAD_FINISHED", endHandler);\n`;
-            binders += "});\n";
-          }
-          binders += "}\n";
+    try {
+      if (typeof arg === "object") {
+        const argType = arg.constructor?.name;
+        if (argType === "Object" || argType === "Array") {
+          // This is raw JSON, dont re-parse.
+          return arg;
         } else {
-          binders += `const ${name} = ${funcData.code}\n`;
+          // This is a custom return api value, try calling toJSON.
+          if (typeof arg.toJSON === "function") {
+            return arg.toJSON();
+          }
+
+          arg = arg.toString();
         }
       }
-    }
 
-    /* inject arguments */
-    if (binds !== undefined) {
-      for (let [name, value] of Object.entries(binds)) {
-        // normalize values
-        switch (typeof value) {
-          case "string":
-            value = `"${value}"`;
-            break;
-          case "object":
-            value = JSON.stringify(value);
-            break;
-          default: break;
-        }
-        binders += `const ${name} = ${value};\n`;
-      }
+      const parsed = JSON.parse(arg);
+      return typeof parsed === "object" ? parsed : [];
+    } catch {
+      console.warn(`Failed to parse JavaScript data JSON: ${err}`);
+      return [];
     }
-
-    /* 'extensionRuntimeOptions.javascriptUnsandboxed' is used for packager */
-    if (this.isEditorUnsandboxed) {
-      let result;
-      try {
-        // eslint-disable-next-line no-eval
-        result = await runCode(binders + code);
-      } catch (err) {
-        throw err;
-      }
-      return result;
-    }
-    // we are sandboxed
-    const codeRunner = `Object.getPrototypeOf(async function() {}).constructor(\`${(binders + code).replaceAll("`", "\\`")}\`)()`;
-    return new Promise((resolve) => {
-      SandboxRunner.execute(codeRunner).then(result => {
-        // result is { value: any, success: boolean }
-        // in PM, we always ignore errors
-        return resolve(result.value);
-      });
-    });
   }
 
-  // block funcs
+  _compileCode(code, codeArgs = [], util) {
+    // Check if we have a cached function so we can run code faster
+    let cacheKey = null;
+    let newFunc = null;
+    if (!this.forceSandboxNextExecute && this.isEditorUnsandboxed) {
+      cacheKey = this._getThisBlockID(util);
+
+      const cached = util.thread._JSV2cache?.get(cacheKey);
+      if (cached) newFunc = cached;
+    }
+
+    const isArgArray = Array.isArray(codeArgs);
+    const argEntries = Object.entries(codeArgs);
+    if (newFunc === null) {
+      let binders = "";
+
+      /* Inject global functions */
+      if (this.globalFuncs.size > 0) {
+        const entries = this.globalFuncs.entries();
+        let iteratorValue = entries.next();
+        while (!iteratorValue.done) {
+          const [name, funcData] = iteratorValue.value;
+          if (funcData.isBlockCode) {
+            /* Convert block stacks to a js-like function. */
+            binders += `const ${name} = async function(...args) {\n`;
+            if (funcData.id) {
+              binders += `return new Promise((resolve) => {\n`;
+              binders += `const target = vm.runtime.getTargetById("${funcData.origin}");\n`;
+              binders += `const thread = vm.runtime._pushThread("${funcData.id}", target);\n`;
+              binders += `const threadID = thread.getId();\n`;
+              binders += `thread.jsExtData = [...args];\n`;
+
+              /* Listener for thread returns. */
+              binders += `const endHandler = (t) => {\n`;
+              binders += `if (t.getId() === thread.getId()) {\n`;
+              binders += `vm.runtime.removeListener("THREAD_FINISHED", endHandler);\n`;
+              binders += `resolve(t.justReported);\n`;
+              binders += "}\n";
+              binders += "};\n";
+              binders += `vm.runtime.on("THREAD_FINISHED", endHandler);\n`;
+              binders += "});\n";
+            }
+            binders += "}\n";
+          } else {
+            binders += `const ${name} = ${funcData.code}\n`;
+          }
+
+          iteratorValue = entries.next();
+        }
+      }
+
+      /* Append the running target */
+      if (!this.forceSandboxNextExecute && this.isEditorUnsandboxed) {
+        binders += `const target = vm.runtime.getTargetById("${util.target.id}");\n`;
+        binders += `const sprite = target;\n`;
+      }
+
+      /* Generate arguments */
+      let argNames = [];
+      if (codeArgs !== undefined) {
+        if (isArgArray) argNames.push("...data");
+        else argNames.push(...argEntries.map((a) => a[0]));
+      }
+
+      newFunc = ASYNC_FUNC_PROTO.constructor(...argNames, binders + code);
+    }
+
+    return {
+      cacheKey,
+      isArgArray,
+      argEntries,
+      func: newFunc,
+    };
+  }
+
+  async _executeCode(code, codeArgs = [], util) {
+    const {
+      cacheKey,
+      isArgArray,
+      argEntries,
+      func,
+    } = this._compileCode(code, codeArgs, util);
+
+    if (!this.forceSandboxNextExecute && this.isEditorUnsandboxed) {
+      // Cache the function.
+      if (!util.thread._JSV2cache) {
+        util.thread._JSV2cache = new Map();
+      }
+
+      util.thread._JSV2cache.set(cacheKey, func);
+
+      // Run unsandboxed code
+      let successful = true;
+      let result;
+      try {
+        if (isArgArray) {
+          result = await func(...codeArgs);
+        } else {
+          result = await func(...argEntries.map((a) => a[1]));
+        }
+      } catch (err) {
+        successful = false;
+        result = err.message || err;
+      }
+
+      return {
+        success: successful,
+        result: result ?? null
+      };
+    } else {
+      // Run sandboxed code
+      let caller = "(";
+      if (!isArgArray) codeArgs = argEntries.map((a) => a[1]);
+
+      // Unfortunately, arguments using custom return types wont work.
+      // Nothing we can do in that case.
+      caller += codeArgs.map(a => JSON.stringify(a)).join(",");
+      caller += ")";
+
+      const funcString = "(" + func.toString() + ")" + caller;
+      let executionResult;
+      await new Promise((resolve) => {
+        SandboxRunner.execute(funcString).then(result => {
+          // Results are { value: any, success: boolean }
+          executionResult = result;
+          resolve();
+        });
+      });
+
+      this.forceSandboxNextExecute = false;
+      return {
+        success: executionResult.success,
+        result: executionResult.value ?? null
+      };
+    }
+  }
+
+  updateEditorSchema() {
+    // Append various autocompletions to the code editor.
+    const autocompletions = [
+      "data", // variable used when passing an array into a js data input
+    ];
+
+    // Add global functions into autocomplete
+    const globalFuncNames = {};
+    if (this.globalFuncs.size > 0) {
+      const iterator = this.globalFuncs.keys();
+      let iteratorValue = iterator.next();
+      while (!iteratorValue.done) {
+        autocompletions.push(iteratorValue.value);
+        iteratorValue = iterator.next();
+      }
+    }
+
+    return autocompletions;
+  };
+
+  // Block Funcs
   codeInput(args) {
     return args.CODE;
   }
 
-  async jsCommand(args) {
-    await this.runCode(Cast.toString(args.CODE));
+  async jsCommand(args, util) {
+    const output = await this._executeCode(Cast.toString(args.CODE), [], util);
+    if (output.success) return output.result;
+    else throw output.result;
   }
-  async jsCommandBinded(args) {
-    await this.runCode(
+  async jsCommandBinded(args, util) {
+    const output = await this._executeCode(
       Cast.toString(args.CODE),
-      this.parseArguments(args.ARGS)
+      this._parseArguments(args.ARGS),
+      util
     );
+
+    if (output.success) return output.result;
+    else throw output.result;
   }
 
-  async jsReporter(args) {
-    return await this.runCode(Cast.toString(args.CODE));
+  async jsReporter(args, util) {
+    const output = await this._executeCode(Cast.toString(args.CODE), [], util);
+
+    if (output.success) return output.result;
+    else throw output.result;
   }
-  async jsReporterBinded(args) {
-    return await this.runCode(
+  async jsReporterBinded(args, util) {
+    const output = await this._executeCode(
       Cast.toString(args.CODE),
-      this.parseArguments(args.ARGS)
+      this._parseArguments(args.ARGS),
+      util
     );
+
+    if (output.success) return output.result;
+    else throw output.result;
   }
 
-  async jsBoolean(args) {
-    const possiblePromise = await this.runCode(Cast.toString(args.CODE));
+  async jsBoolean(args, util) {
+    const output = await this._executeCode(
+      Cast.toString(args.CODE),
+      [],
+      util
+    );
+    if (!output.success) throw output.result;
+
     /* force output a boolean */
+    const possiblePromise = output.result;
     if (possiblePromise && typeof possiblePromise.then === "function") {
       return (async () => {
         const value = await possiblePromise;
         return Cast.toBoolean(value);
       })();
     }
+
     return Cast.toBoolean(possiblePromise);
   }
-  async jsBooleanBinded(args) {
-    const possiblePromise = await this.runCode(
+  async jsBooleanBinded(args, util) {
+    const output = await this._executeCode(
       Cast.toString(args.CODE),
-      this.parseArguments(args.ARGS)
+      this._parseArguments(args.ARGS),
+      util
     );
+    if (!output.success) throw output.result;
+
     /* force output a boolean */
+    const possiblePromise = output.result;
     if (possiblePromise && typeof possiblePromise.then === "function") {
       return (async () => {
         const value = await possiblePromise;
         return Cast.toBoolean(value);
       })();
     }
+
     return Cast.toBoolean(possiblePromise);
   }
 
   defineGlobalFunc(args) {
     const funcName = Cast.toString(args.NAME);
-    if (this.isLegalFuncName(funcName)) {
+    if (this._isLegalFuncName(funcName)) {
       const funcRegex = /^function\s*\([^)]*\)\s*\{[\s\S]*\}$/;
       const lambRegex = /^\([^)]*\)\s*=>\s*(\{[\s\S]*\}|[^{}][^\n]*)$/;
       const code = Cast.toString(args.CODE).trim();
-      if (funcRegex.test(code) || lambRegex.test(code)) this.globalFuncs.set(funcName, { code, isBlockCode: false });
-      else throw new Error("Global Code must be 'function' or 'lambda'!");
+      if (funcRegex.test(code) || lambRegex.test(code)) {
+        this.globalFuncs.set(funcName, { code, isBlockCode: false });
+      } else {
+        throw new Error("Global Code must be 'function' or 'lambda'!");
+      }
     } else {
       throw new Error("Illegal Function Name!");
     }
@@ -545,31 +548,53 @@ class SPjavascriptV2 {
 
   defineScratchCode(args, util) {
     const funcName = Cast.toString(args.NAME);
-    if (this.isLegalFuncName(funcName)) {
+    if (this._isLegalFuncName(funcName)) {
       const branch = util.thread.blockContainer.getBranch(util.thread.peekStack(), 1);
-      this.globalFuncs.set(funcName, { id: branch, origin: util.target.id, isBlockCode: true });
+      this.globalFuncs.set(funcName, {
+        id: branch,
+        origin: util.target.id,
+        isBlockCode: true
+      });
     } else {
       throw new Error("Illegal Function Name!");
     }
-  }
-
-  argumentReport(_, util) {
-    return util.thread.jsExtData ? JSON.stringify(util.thread.jsExtData) : "[]";
   }
 
   deleteGlobalFunc(args) {
     this.globalFuncs.delete(Cast.toString(args.NAME));
   }
 
+  argumentReport(_, util) {
+    return util.thread.jsExtData ? JSON.stringify(util.thread.jsExtData) : "[]";
+  }
+
   returnData(args, util) {
     util.thread.justReported = args.DATA;
+
     // Delay the Deletion of this Thread
     if (util.stackTimerNeedsInit()) {
       util.startStackTimer(0);
       this.runtime.requestRedraw();
       util.yield();
-    } else if (!util.stackTimerFinished()) util.yield();
+    } else if (!util.stackTimerFinished()) {
+      util.yield();
+    }
+
     util.thread.stopThisScript();
+  }
+
+  runNextInSandbox() {
+    this.forceSandboxNextExecute = true;
+  }
+
+  // save state to storage
+  serialize() {
+    return {
+      isUnsandboxed: this.isEditorUnsandboxed
+    };
+  }
+  deserialize(data) {
+    if (data.isUnsandboxed) this.toggleSandbox();
   }
 }
 
