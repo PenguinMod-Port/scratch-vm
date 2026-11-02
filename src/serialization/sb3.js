@@ -1418,11 +1418,17 @@ const parseScratchObject = function (object, runtime, pmVersion, extensions, zip
 
     // Repair global block target links & publish mutations to Blockly.
     if (globalBlocksToRepair.length) {
+        const blocklyGlobalProcs = [];
+        const mutationToXML = target.blocks.mutationToXML;
         for (const mutation of globalBlocksToRepair) {
             runtime._globalProcedureSourceMap[mutation.proccode] = target.id;
+            blocklyGlobalProcs.push({
+                proccode: mutation.proccode,
+                textContent: mutationToXML(mutation),
+            });
         }
 
-        runtime.publishGlobalProcMutations(globalBlocksToRepair);
+        runtime.publishGlobalProcMutations(blocklyGlobalProcs);
     }
 
     Promise.all(costumePromises).then(costumes => {
