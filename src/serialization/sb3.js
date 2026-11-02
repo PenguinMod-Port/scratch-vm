@@ -1279,7 +1279,7 @@ const parseScratchObject = function (object, runtime, pmVersion, extensions, zip
                 blockJSON.opcode === 'procedures_prototype' &&
                 blockJSON.mutation.global === 'true'
             ) {
-                globalBlocksToRepair.push(blockJSON.mutation.proccode);
+                globalBlocksToRepair.push(blockJSON.mutation);
             }
 
             // If the block is from an extension, record it.
@@ -1416,11 +1416,13 @@ const parseScratchObject = function (object, runtime, pmVersion, extensions, zip
         target.extensionStorage = object.extensionStorage;
     }
 
-    // Repair global block target links
+    // Repair global block target links & publish mutations to Blockly.
     if (globalBlocksToRepair.length) {
-        for (const proccode of globalBlocksToRepair) {
-            runtime._globalProcedureSourceMap[proccode] = target.id;
+        for (const mutation of globalBlocksToRepair) {
+            runtime._globalProcedureSourceMap[mutation.proccode] = target.id;
         }
+
+        runtime.publishGlobalProcMutations(globalBlocksToRepair);
     }
 
     Promise.all(costumePromises).then(costumes => {

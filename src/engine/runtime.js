@@ -612,7 +612,7 @@ class Runtime extends EventEmitter {
         this.serializers = {};
 
         // pm version
-        this.pmVersion = new SemVer('0.4.2');
+        this.pmVersion = new SemVer('0.4.3');
 
         // deprecated camera states
         this.cameraStates = {};
@@ -4241,6 +4241,9 @@ class Runtime extends EventEmitter {
         }
     }
 
+    /**
+     * Counts & updates the number of blocks in the project.
+     */
     updateProjectBlockCounter () {
         let total = 0;
         for (let i = 0; i < this.targets.length; i++) {
@@ -4251,6 +4254,14 @@ class Runtime extends EventEmitter {
         }
 
         this._projectBlockCount = total;
+    }
+
+    /**
+     * Publishes global procedure mutations to ScratchBlocks.
+     * @param {Array<Object>} mutations list of objects representing a mutation to publish
+     */
+    publishGlobalProcMutations (mutations) {
+        alert("Error: GUI has not overridden 'publishGlobalProcMutations'")
     }
 }
 
