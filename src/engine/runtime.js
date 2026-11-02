@@ -61,8 +61,6 @@ const interpolate = require('./tw-interpolate');
 const FrameLoop = require('./tw-frame-loop');
 const MonitorRecord = require('./monitor-record.js');
 
-const defaultExtensionColors = ['#0FBD8C', '#0DA57A', '#0B8E69'];
-
 const COMMENT_CONFIG_MAGIC = ' // _twconfig_';
 
 /**
@@ -1251,8 +1249,6 @@ class Runtime extends EventEmitter {
             categoryInfo.color = extensionInfo.color;
         } else if (extensionInfo.color1) {
             categoryInfo.color = extensionInfo.color1;
-        } else {
-            categoryInfo.color = defaultExtensionColors[0];
         }
 
         // undefined will default to the regular text color
@@ -1424,8 +1420,13 @@ class Runtime extends EventEmitter {
                 type: 'field_dropdown',
                 name: menuName,
                 options: this._convertMenuItems(menuInfo.items),
-            }]
+            }],
+            extensions: []
         };
+
+        if (!categoryInfo.colour) {
+            baseJson.extensions.push('default_extension_colors', 'colours_pen');
+        }
 
         switch (menuInfo.menuType) {
             case MenuType.STRICT:
@@ -1437,15 +1438,11 @@ class Runtime extends EventEmitter {
 
             case MenuType.TYPEABLE:
                 baseJson.colour = '#FFFFFF';
-                baseJson.colourSecondary = '#FFFFFF';
-                baseJson.colourTertiary = '#FFFFFF';
                 baseJson.args0[0].type = 'field_textdropdown';
                 break;
 
             case MenuType.TYPEABLE_NUMERIC:
                 baseJson.colour = '#FFFFFF';
-                baseJson.colourSecondary = '#FFFFFF';
-                baseJson.colourTertiary = '#FFFFFF';
                 baseJson.args0[0].type = 'field_numberdropdown';
                 break;
 
@@ -1511,7 +1508,8 @@ class Runtime extends EventEmitter {
                                 name: menuName,
                                 options: menuItems
                             }))
-                ]
+                ],
+                extensions: categoryInfo.color ? [] : ['default_extension_colors', 'colours_pen']
             }
         };
     }
@@ -1633,12 +1631,8 @@ class Runtime extends EventEmitter {
         blockJSON.extensions.push('from_extension');
 
         // Allow easily detecting which blocks use default colors
-        if (
-            blockJSON.colour === defaultExtensionColors[0] &&
-            blockJSON.colourSecondary === defaultExtensionColors[1] &&
-            blockJSON.colourTertiary === defaultExtensionColors[2]
-        ) {
-            blockJSON.extensions.push('default_extension_colors');
+        if (!blockJSON.colour) {
+            blockJSON.extensions.push('default_extension_colors', 'colours_pen');
         }
 
         if (iconURI) {
