@@ -157,7 +157,12 @@ const ArgumentTypeMap = (() => {
     };
     map[ArgumentType.EXPANDABLE] = {
         fieldType: 'field_expandable'
-    }
+    };
+    map[ArgumentType.DUAL] = {
+        fieldType: 'input_dual',
+        check: null,
+        statementCheck: null
+    };
     return map;
 })();
 
@@ -2084,6 +2089,32 @@ class Runtime extends EventEmitter {
             };
         } else if (argTypeInfo.fieldType === 'field_expandable') {
             argJSON = this._constructExpandableJson(context, placeholder, argInfo);
+        } else if (argTypeInfo.fieldType === 'input_dual' || argInfo.type === 'DUAL') {
+            argJSON = {
+                type: 'input_dual',
+                name: placeholder
+            };
+
+            const defaultValue =
+                typeof argInfo.defaultValue === 'undefined' ? null :
+                    maybeFormatMessage(argInfo.defaultValue, this.makeMessageContextForTarget()).toString();
+
+            argJSON.check = argInfo.check === undefined ? argTypeInfo.check : argInfo.check;
+            argJSON.statementCheck = argInfo.statementCheck === undefined ? argTypeInfo.statementCheck : argInfo.statementCheck;
+
+            let valueName = placeholder;
+            let shadowType = (argTypeInfo.shadow && argTypeInfo.shadow.type) || null;
+            let fieldName = (argTypeInfo.shadow && argTypeInfo.shadow.fieldName) || null;
+
+            if (argInfo.fillIn || argInfo.fillInGlobal) {
+                shadowType = argInfo.fillInGlobal || `${context.categoryInfo.id}_${argInfo.fillIn}`;
+            }
+
+            if (context.alignment) {
+                argJSON.align = context.alignment;
+            }
+
+            argJSON._shadow = { valueName, shadowType, fieldName, defaultValue };
         } else {
             // Construct input value
 

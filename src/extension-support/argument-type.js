@@ -76,7 +76,12 @@ const ArgumentType = {
     /**
      * pm: expandables
      */
-    EXPANDABLE: 'expandable'
+    EXPANDABLE: 'expandable',
+
+    /**
+     * pm: dual inputs
+     */
+    DUAL: 'dual',
 };
 
 module.exports = ArgumentType;
