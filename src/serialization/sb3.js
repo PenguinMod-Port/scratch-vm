@@ -1428,7 +1428,7 @@ const parseScratchObject = function (object, runtime, pmVersion, extensions, zip
             });
         }
 
-        runtime.publishGlobalProcMutations(blocklyGlobalProcs);
+        runtime.emit(Runtime.PUBLISH_GLOBAL_PROCS, blocklyGlobalProcs);
     }
 
     Promise.all(costumePromises).then(costumes => {

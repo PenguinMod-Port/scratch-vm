@@ -1077,6 +1077,13 @@ class Runtime extends EventEmitter {
     }
 
     /**
+     * Event name when global procedures should be published to ScratchBlocks.
+     */
+    static get PUBLISH_GLOBAL_PROCS () {
+        return 'PUBLISH_GLOBAL_PROCS';
+    }
+
+    /**
      * How rapidly we try to step threads by default, in ms.
      */
     static get THREAD_STEP_INTERVAL () {
