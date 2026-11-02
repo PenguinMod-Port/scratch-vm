@@ -82,6 +82,62 @@ class VectorType {
         component -= 1;
         return this.components[component] ?? 0;
     }
+
+    /**
+     * @param  {...VectorType} vectors 
+     */
+    static add(...vectors) {
+        const outputDimension = vectors.reduce((o, v) => Math.max(o, v.components.length), 0);
+        const components = [];
+        for (let i = 1; i <= outputDimension; i++) {
+            components.push(vectors.reduce((o, v) => o + v.getComponent(i), 0));
+        }
+        return new VectorType(...components);
+    }
+
+    /**
+     * @param  {...VectorType} vectors 
+     */
+    static subtract(...vectors) {
+        const outputDimension = vectors.reduce((o, v) => Math.max(o, v.components.length), 0);
+        const components = [];
+        for (let i = 1; i <= outputDimension; i++) {
+            components.push(vectors.reduce((o, v) => o - v.getComponent(i), 0));
+        }
+        return new VectorType(...components);
+    }
+
+    /**
+     * @param  {...VectorType} vectors 
+     */
+    static multiply(...vectors) {
+        const outputDimension = vectors.reduce((o, v) => Math.max(o, v.components.length), 0);
+        const components = [];
+        for (let i = 1; i <= outputDimension; i++) {
+            components.push(vectors.reduce((o, v) => o * v.getComponent(i), 1));
+        }
+        return new VectorType(...components);
+    }
+
+    /**
+     * @param  {...VectorType} vectors 
+     */
+    static divide(...vectors) {
+        const outputDimension = vectors.reduce((o, v) => Math.max(o, v.components.length), 0);
+        const components = [];
+        for (let i = 1; i <= outputDimension; i++) {
+            components.push(vectors.reduce((o, v, j) => j === 0 ? v.getComponent(i) : (o / v.getComponent(i)), 0));
+        }
+        return new VectorType(...components);
+    }
+
+    multiply(factor) {
+        return new VectorType(...this.components.map(v => v * factor));
+    }
+
+    divide(factor) {
+        return new VectorType(...this.components.map(v => v / factor));
+    }
 }
 
 const jwVector = {
@@ -210,7 +266,141 @@ class Extension {
                     arguments: {
                         VECTOR: jwVector.Argument
                     }
-                }
+                },
+                "---",
+                {
+                    opcode: 'add',
+                    text: '[X] + [Y]',
+                    arguments: {
+                        X: jwVector.Argument,
+                        Y: jwVector.Argument
+                    },
+                    hideFromPalette: true,
+                    ...jwVector.Block
+                },
+                {
+                    opcode: 'addExpandable',
+                    text: '[EXPANDABLE]',
+                    arguments: {
+                        EXPANDABLE: {
+                            type: ArgumentType.EXPANDABLE,
+                            minValue: 2,
+                            defaultValue: 2,
+                            text: '[VECTOR]',
+                            arguments: {
+                                VECTOR: jwVector.Argument
+                            },
+                            separator: ' + '
+                        }
+                    },
+                    ...jwVector.Block
+                },
+                {
+                    opcode: 'subtract',
+                    text: '[X] - [Y]',
+                    arguments: {
+                        X: jwVector.Argument,
+                        Y: jwVector.Argument
+                    },
+                    hideFromPalette: true,
+                    ...jwVector.Block
+                },
+                {
+                    opcode: 'subtractExpandable',
+                    text: '[EXPANDABLE]',
+                    arguments: {
+                        EXPANDABLE: {
+                            type: ArgumentType.EXPANDABLE,
+                            minValue: 2,
+                            defaultValue: 2,
+                            text: '[VECTOR]',
+                            arguments: {
+                                VECTOR: jwVector.Argument
+                            },
+                            separator: ' - '
+                        }
+                    },
+                    ...jwVector.Block
+                },
+                {
+                    opcode: 'multiplyB',
+                    text: '[X] * [Y]',
+                    arguments: {
+                        X: jwVector.Argument,
+                        Y: jwVector.Argument
+                    },
+                    hideFromPalette: true,
+                    ...jwVector.Block
+                },
+                {
+                    opcode: 'multiplyExpandable',
+                    text: '[EXPANDABLE]',
+                    arguments: {
+                        EXPANDABLE: {
+                            type: ArgumentType.EXPANDABLE,
+                            minValue: 2,
+                            defaultValue: 2,
+                            text: '[VECTOR]',
+                            arguments: {
+                                VECTOR: jwVector.Argument
+                            },
+                            separator: ' * '
+                        }
+                    },
+                    ...jwVector.Block
+                },
+                {
+                    opcode: 'divideB',
+                    text: '[X] / [Y]',
+                    arguments: {
+                        X: jwVector.Argument,
+                        Y: jwVector.Argument
+                    },
+                    hideFromPalette: true,
+                    ...jwVector.Block
+                },
+                {
+                    opcode: 'divideExpandable',
+                    text: '[EXPANDABLE]',
+                    arguments: {
+                        EXPANDABLE: {
+                            type: ArgumentType.EXPANDABLE,
+                            minValue: 2,
+                            defaultValue: 2,
+                            text: '[VECTOR]',
+                            arguments: {
+                                VECTOR: jwVector.Argument
+                            },
+                            separator: ' / '
+                        }
+                    },
+                    ...jwVector.Block
+                },
+                "---",
+                {
+                    opcode: 'multiplyA',
+                    text: '[X] * [Y]',
+                    arguments: {
+                        X: jwVector.Argument,
+                        Y: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 1
+                        }
+                    },
+                    ...jwVector.Block
+                },
+                {
+                    opcode: 'divideA',
+                    text: '[X] / [Y]',
+                    arguments: {
+                        X: jwVector.Argument,
+                        Y: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 1
+                        }
+                    },
+                    ...jwVector.Block
+                },
             ],
             menus: {
                 component: {
@@ -231,7 +421,15 @@ class Extension {
             FROM_MAGNITUDE: 'jwVector.fromMagnitude',
 
             GET_COMPONENT: 'jwVector.getComponent',
-            GET_DIMENSION: 'jwVector.getDimension'
+            GET_DIMENSION: 'jwVector.getDimension',
+
+            ADD: 'jwVector.add',
+            SUBTRACT: 'jwVector.subtract',
+            MULTIPLY: 'jwVector.multiply',
+            DIVIDE: 'jwVector.divide',
+
+            MULTIPLY_FACTOR: 'jwVector.multiplyFactor',
+            DIVIDE_FACTOR: 'jwVector.divideFactor'
         };
 
         return {
@@ -286,6 +484,62 @@ class Extension {
                             return new IntermediateInput(opcodes.GET_DIMENSION, InputType.NUMBER_WHOLE, {
                                 vector: this.descendInputOfBlock(block, 'VECTOR')
                             });
+
+                        case 'jwVector_add':
+                            return new IntermediateInput(opcodes.ADD, InputType.CUSTOM_TYPE, {
+                                vectors: [
+                                    this.descendInputOfBlock(block, 'X'),
+                                    this.descendInputOfBlock(block, 'Y')
+                                ]
+                            });
+                        case 'jwVector_addExpandable':
+                            return new IntermediateInput(opcodes.ADD, InputType.CUSTOM_TYPE, {
+                                vectors: this.descendExpandableValue(block, 'EXPANDABLE', 'VECTOR')
+                            });
+                        case 'jwVector_subtract':
+                            return new IntermediateInput(opcodes.SUBTRACT, InputType.CUSTOM_TYPE, {
+                                vectors: [
+                                    this.descendInputOfBlock(block, 'X'),
+                                    this.descendInputOfBlock(block, 'Y')
+                                ]
+                            });
+                        case 'jwVector_subtractExpandable':
+                            return new IntermediateInput(opcodes.SUBTRACT, InputType.CUSTOM_TYPE, {
+                                vectors: this.descendExpandableValue(block, 'EXPANDABLE', 'VECTOR')
+                            });
+                        case 'jwVector_multiplyB':
+                            return new IntermediateInput(opcodes.MULTIPLY, InputType.CUSTOM_TYPE, {
+                                vectors: [
+                                    this.descendInputOfBlock(block, 'X'),
+                                    this.descendInputOfBlock(block, 'Y')
+                                ]
+                            });
+                        case 'jwVector_multiplyExpandable':
+                            return new IntermediateInput(opcodes.MULTIPLY, InputType.CUSTOM_TYPE, {
+                                vectors: this.descendExpandableValue(block, 'EXPANDABLE', 'VECTOR')
+                            });
+                        case 'jwVector_divideB':
+                            return new IntermediateInput(opcodes.DIVIDE, InputType.CUSTOM_TYPE, {
+                                vectors: [
+                                    this.descendInputOfBlock(block, 'X'),
+                                    this.descendInputOfBlock(block, 'Y')
+                                ]
+                            });
+                        case 'jwVector_divideExpandable':
+                            return new IntermediateInput(opcodes.DIVIDE, InputType.CUSTOM_TYPE, {
+                                vectors: this.descendExpandableValue(block, 'EXPANDABLE', 'VECTOR')
+                            });
+
+                        case 'jwVector_multiplyA':
+                            return new IntermediateInput(opcodes.MULTIPLY_FACTOR, InputType.CUSTOM_TYPE, {
+                                vector: this.descendInputOfBlock(block, 'X'),
+                                factor: this.descendInputOfBlock(block, 'Y').toType(InputType.NUMBER)
+                            });
+                        case 'jwVector_divideA':
+                            return new IntermediateInput(opcodes.DIVIDE_FACTOR, InputType.CUSTOM_TYPE, {
+                                vector: this.descendInputOfBlock(block, 'X'),
+                                factor: this.descendInputOfBlock(block, 'Y').toType(InputType.NUMBER)
+                            });
                     }
                 }
             },
@@ -303,6 +557,20 @@ class Extension {
                             return `vm.jwVector.Type.toVector(${this.descendInput(node.vector)}).getComponent(${this.descendInput(node.component)})`;
                         case opcodes.GET_DIMENSION:
                             return `vm.jwVector.Type.toVector(${this.descendInput(node.vector)}).components.length`;
+
+                        case opcodes.ADD:
+                            return `vm.jwVector.Type.add(${node.vectors.map(v => `vm.jwVector.Type.toVector(${this.descendInput(v)})`).join(', ')})`;
+                        case opcodes.SUBTRACT:
+                            return `vm.jwVector.Type.subtract(${node.vectors.map(v => `vm.jwVector.Type.toVector(${this.descendInput(v)})`).join(', ')})`;
+                        case opcodes.MULTIPLY:
+                            return `vm.jwVector.Type.multiply(${node.vectors.map(v => `vm.jwVector.Type.toVector(${this.descendInput(v)})`).join(', ')})`;
+                        case opcodes.DIVIDE:
+                            return `vm.jwVector.Type.divide(${node.vectors.map(v => `vm.jwVector.Type.toVector(${this.descendInput(v)})`).join(', ')})`;
+
+                        case opcodes.MULTIPLY_FACTOR:
+                            return `vm.jwVector.Type.toVector(${this.descendInput(node.vector)}).multiply(${this.descendInput(node.factor)})`;
+                        case opcodes.DIVIDE_FACTOR:
+                            return `vm.jwVector.Type.toVector(${this.descendInput(node.vector)}).divide(${this.descendInput(node.factor)})`;
                     }
                 }
             }
