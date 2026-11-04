@@ -239,6 +239,29 @@ class BlockUtility {
     }
 
     expandableValue(args, fieldName, valueName) {
+        if (valueName === null) {
+            const regex = new RegExp(`${fieldName}\.\\d+\.(.*)`);
+            const keys = Array.from(new Set(Object.keys(args).filter((v => regex.test(v))).map((v) => regex.exec(v).at(1))));
+            const _expandableValues = [];
+            const values = [];
+            const outcome = [];
+            for (const key of keys) {
+                _expandableValues.push([args, fieldName, key])
+            }
+            for (const [args, fieldName, valueName] of _expandableValues) {
+                values.push(this.expandableValue(args, fieldName, valueName).map((value) => [valueName, value]))
+            }
+            for (const i of Array.from({length: values.at(0)?.length}).map((_, i) => i)) {
+                const obj = {};
+                for (const _member of values) {
+                    const member = _member.at(i);
+                    Object.assign(obj, {[member.at(0)]: member.at(1)});
+                }
+                outcome.push(obj)
+            }
+
+            return outcome;
+        }
         let amount = Number(args[fieldName]);
         let values = [];
         for (let i = 1; i <= amount; i++) {
