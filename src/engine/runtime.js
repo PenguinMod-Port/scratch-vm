@@ -4198,31 +4198,31 @@ class Runtime extends EventEmitter {
         this.requestRedraw();
     }
 
-    equals (a, b) {
-        const isCustomType = v => {
-            let prototype = Object.getPrototypeOf(v)
-            return prototype !== Object.prototype && prototype !== null && v.customId
-        };
-        const isNotActuallyZero = val => {
-            if (typeof val !== 'string') return false;
-            for (let i = 0; i < val.length; i++) {
-                const code = val.charCodeAt(i);
-                if (code === 48 || code === 9) {
-                    return false;
-                }
-            }
-            return true;
-        };
+    isCustomType (value) {
+        const prototype = Object.getPrototypeOf(value);
+        return prototype !== Object.prototype && prototype !== null;
+    }
 
+    isNotActuallyZero (value) {
+        if (typeof value !== 'string') return false;
+        for (let i = 0; i < val.length; i++) {
+            const code = value.charCodeAt(i);
+            if (code === 48 || code === 9) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    equals (a, b) {
         if (a === b) return true;
-        if (a === null && b === null) return true;
         if (typeof a === 'number' && !isNaN(a) && typeof b === 'number' && !isNaN(b)) return a === b;
 
         if (this.compilerOptions.strictEquality) {
             if (a === null || b === null) return false;
             
-            let aC = isCustomType(a);
-            let bC = isCustomType(b);
+            let aC = this.isCustomType(a);
+            let bC = this.isCustomType(b);
             if (aC !== bC) return false;
             if (aC) { // if aC is true then bC is also true
                 if (a.customId !== b.customId) return false;
@@ -4236,14 +4236,14 @@ class Runtime extends EventEmitter {
             if (b === null && a === "") return true;
             if (a === null || b === null) return false;
 
-            if (isCustomType(a) && isCustomType(b) && a.customId === b.customId) {
+            if (this.isCustomType(a) && this.isCustomType(b) && a.customId === b.customId) {
                 if (a[pmSymbol.equals] && a[pmSymbol.equals](b)) return true;
             }
 
             const n1 = +a;
-            if (Number.isNaN(n1) || (n1 === 0 && isNotActuallyZero(a))) return ('' + a).toLowerCase() === ('' + b).toLowerCase();
+            if (Number.isNaN(n1) || (n1 === 0 && this.isNotActuallyZero(a))) return ('' + a).toLowerCase() === ('' + b).toLowerCase();
             const n2 = +b;
-            if (Number.isNaN(n2) || (n2 === 0 && isNotActuallyZero(b))) return ('' + a).toLowerCase() === ('' + b).toLowerCase();
+            if (Number.isNaN(n2) || (n2 === 0 && this.isNotActuallyZero(b))) return ('' + a).toLowerCase() === ('' + b).toLowerCase();
             return n1 === n2;
         }
     }
