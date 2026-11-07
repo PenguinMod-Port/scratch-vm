@@ -80,7 +80,8 @@ export function compatBlock(block, pmVersion) {
                         inputs: {},
                         fields: {},
                         x: block.x,
-                        y: block.y
+                        y: block.y,
+                        topLevel: block.topLevel
                     };
                     break;
                 case "​​log​​ %s":
@@ -96,7 +97,8 @@ export function compatBlock(block, pmVersion) {
                             LOG: {name: "LOG", value: "log"}
                         },
                         x: block.x,
-                        y: block.y
+                        y: block.y,
+                        topLevel: block.topLevel
                     };
                     break;
                 case "​​warn​​ %s":
@@ -112,7 +114,8 @@ export function compatBlock(block, pmVersion) {
                             LOG: {name: "LOG", value: "warn"}
                         },
                         x: block.x,
-                        y: block.y
+                        y: block.y,
+                        topLevel: block.topLevel
                     };
                     break;
                 case "​​error​​ %s":
@@ -128,7 +131,8 @@ export function compatBlock(block, pmVersion) {
                             LOG: {name: "LOG", value: "error"}
                         },
                         x: block.x,
-                        y: block.y
+                        y: block.y,
+                        topLevel: block.topLevel
                     };
                     break;
                 default:
@@ -179,6 +183,24 @@ export function compatBlock(block, pmVersion) {
             const temp = block.opcode.split("_");
             temp[0] = "pmStringsExpansion";
             block.opcode = temp.join("_")
+        }
+    }
+
+    
+    /* --- PRE v0.5.0 COMPATABILITY --- */
+    if (pmVersion.lessThan('0.5.0')) {
+        if (block.opcode === "control_if" || block.opcode === "control_if_else") {
+            block.fields.EXPANDABLE = {name: 'EXPANDABLE', value: block.opcode === "control_if_else" ? '2' : '1'};
+            block.opcode = "control_expandableIf";
+
+            if (block.inputs.CONDITION) {
+                block.inputs.BOOL1 = {...block.inputs.CONDITION, name: 'BOOL1'};
+                delete block.inputs.CONDITION;
+            }
+            if (block.inputs.SUBSTACK) {
+                block.inputs.SUBSTACK1 = {...block.inputs.SUBSTACK, name: 'SUBSTACK1'};
+                delete block.inputs.SUBSTACK;
+            }
         }
     }
 
