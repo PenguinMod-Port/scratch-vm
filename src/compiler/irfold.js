@@ -111,8 +111,8 @@ class IRFolder {
                 if (!this.isConstant(node.left, node.right)) break;
                 return this.createConstantInput(node.left.inputs.value * node.right.inputs.value);
             case InputOpcode.OP_NOT:
-                if (!this.isConstant(node.value)) break;
-                return this.createConstantInput(!node.value.inputs.value);
+                if (!this.isConstant(node.operand)) break;
+                return this.createConstantInput(!node.operand.inputs.value);
             case InputOpcode.OP_OR:
                 if (!this.isConstant(node.left, node.right)) break;
                 return this.createConstantInput(node.left.inputs.value || node.right.inputs.value);
