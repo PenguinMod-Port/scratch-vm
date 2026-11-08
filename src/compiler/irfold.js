@@ -88,7 +88,7 @@ class IRFolder {
                 if (!this.isConstant(node.left, node.right)) break;
                 return this.createConstantInput(node.left.inputs.value + node.right.inputs.value);
             case InputOpcode.OP_LENGTH:
-                if (!this.isConstant(node.value)) break;
+                if (!this.isConstant(node.string)) break;
                 return this.createConstantInput(node.value.inputs.value.length);
             case InputOpcode.OP_LESS:
                 if (!this.isConstant(node.left, node.right)) break;
@@ -102,11 +102,12 @@ class IRFolder {
             case InputOpcode.OP_LOG_10:
                 if (!this.isConstant(node.value)) break;
                 return this.createConstantInput(Math.log(node.value.inputs.value) / Math.LN10);
-            case InputOpcode.OP_MOD:
+            case InputOpcode.OP_MOD: {
                 if (!this.isConstant(node.left, node.right)) break;
                 let result = node.left.inputs.value % node.right.inputs.value
                 if (result / node.right.inputs.value < 0) result += node.right.inputs.value;
                 return this.createConstantInput(result);
+            }
             case InputOpcode.OP_MULTIPLY:
                 if (!this.isConstant(node.left, node.right)) break;
                 return this.createConstantInput(node.left.inputs.value * node.right.inputs.value);
@@ -140,6 +141,42 @@ class IRFolder {
             case InputOpcode.OP_TAN:
                 if (!this.isConstant(node.value)) break;
                 return this.createConstantInput(Math.round(Math.tan(Math.PI * node.value.inputs.value) * 1e10) / 1e10);
+
+            case InputOpcode.PM_OP_AVERAGE:
+                if (!this.isConstant(...node.inputs)) break;
+                return this.createConstantInput(node.inputs.map(input => input.inputs.value).reduce((o, v) => o + v / node.inputs.length, 0));
+            // case InputOpcode.PM_OP_BOOL_EXPANDABLE: (this one is really evil to do)
+            case InputOpcode.PM_OP_COMPARE_EXPANDABLE: {
+                if (!this.isConstant(...node.inputs)) break;
+                const opMap = {
+                    "e": (a, b) => this.runtime.equals(a, b),
+                    "n": (a, b) => !this.runtime.equals(a, b),
+                    "m": (a, b) => Cast.compare(a, b) > 0,
+                    "M": (a, b) => Cast.compare(a, b) >= 0,
+                    "l": (a, b) => Cast.compare(a, b) < 0,
+                    "L": (a, b) => Cast.compare(a, b) <= 0,
+                };
+
+                for (let i = 0; i < node.operations.length; i++) {
+                    if (!opMap[node.operations[i]](node.inputs[i].inputs.value, node.inputs[i + 1].inputs.value)) {
+                        return this.createConstantInput(false);
+                    }
+                }
+
+                return this.createConstantInput(true);
+            }
+            case InputOpcode.PM_OP_CHARACTER_TO_CODE:
+                if (!this.isConstant(node.one)) break;
+                return this.createConstantInput(node.one.inputs.value.charCodeAt(0));
+            case InputOpcode.PM_OP_CODE_TO_CHARACTER:
+                if (!this.isConstant(node.one)) break;
+                return this.createConstantInput(String.fromCharCode(node.one.inputs.value));
+            case InputOpcode.PM_OP_COUNT_APPEAR_TIMES:
+                if (!this.isConstant(node.text1, node.text2)) break;
+                return this.createConstantInput(node.text2.inputs.value.split(node.text1.inputs.value).length - 1);
+            case InputOpcode.PM_OP_CONSTRAIN:
+                if (!this.isConstant(node.min, node.input, node.max)) break;
+                return Math.min(Math.max(node.min.inputs.value, node.input.inputs.value), node.max.inputs.value);
         }
 
         // no folding needed
