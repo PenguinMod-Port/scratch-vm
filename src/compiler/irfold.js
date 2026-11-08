@@ -1,13 +1,16 @@
 const {StackOpcode, InputOpcode, InputType} = require('./enums');
 const {IntermediateInput, IntermediateStack, IntermediateStackBlock, IntermediateScript, IntermediateRepresentation} = require('./intermediate');
+const Cast = require('../util/cast');
 
 class IRFolder {
     /**
      * @param {IntermediateRepresentation} ir
      */
-    constructor(ir) {
+    constructor(ir, runtime) {
         /** @type {IntermediateRepresentation} */
         this.ir = ir;
+
+        this.runtime = runtime;
     }
 
     /**
@@ -42,10 +45,54 @@ class IRFolder {
         const node = block.inputs;
 
         switch (block.opcode) {
+            case InputOpcode.OP_ABS:
+                if (!this.isConstant(node.value)) break;
+                return this.createConstantInput(Math.abs(node.value.inputs.value));
+            case InputOpcode.OP_ACOS:
+                if (!this.isConstant(node.value)) break;
+                return this.createConstantInput(Math.acos(node.value.inputs.value) * 180 / Math.PI);
             case InputOpcode.OP_ADD:
-                if (this.isConstant(node.left, node.right)) {
-                    return this.createConstantInput(node.left.inputs.value + node.right.inputs.value);
-                }
+                if (!this.isConstant(node.left, node.right)) break;
+                return this.createConstantInput(node.left.inputs.value + node.right.inputs.value);
+            case InputOpcode.OP_AND:
+                if (!this.isConstant(node.left, node.right)) break;
+                return this.createConstantInput(node.left.inputs.value && node.right.inputs.value);
+            case InputOpcode.OP_ASIN:
+                if (!this.isConstant(node.value)) break;
+                return this.createConstantInput(Math.asin(node.value.inputs.value) * 180 / Math.PI);
+            case InputOpcode.OP_ATAN:
+                if (!this.isConstant(node.value)) break;
+                return this.createConstantInput(Math.atan(node.value.inputs.value) * 180 / Math.PI);
+            case InputOpcode.OP_CEILING:
+                if (!this.isConstant(node.value)) break;
+                return this.createConstantInput(Math.ceil(node.value.inputs.value));
+            case InputOpcode.OP_CONTAINS:
+                if (!this.isConstant(node.string, node.contains)) break;
+                return this.createConstantInput(node.string.inputs.value.toLowerCase().indexOf(node.contains.inputs.value.toLowerCase()) !== -1);
+            case InputOpcode.OP_COS:
+                if (!this.isConstant(node.value)) break;
+                return this.createConstantInput(Math.round(Math.cos(Math.PI * node.value.inputs.value) * 1e10) / 1e10);
+            case InputOpcode.OP_DIVIDE:
+                if (!this.isConstant(node.left, node.right)) break;
+                return this.createConstantInput(node.left.inputs.value / node.right.inputs.value);
+            case InputOpcode.OP_EQUALS:
+                if (!this.isConstant(node.left, node.right)) break;
+                return this.createConstantInput(this.runtime.equals(node.left.inputs.value, node.right.inputs.value));
+            case InputOpcode.OP_FLOOR:
+                if (!this.isConstant(node.value)) break;
+                return this.createConstantInput(Math.floor(node.value.inputs.value));
+            case InputOpcode.OP_GREATER:
+                if (!this.isConstant(node.left, node.right)) break;
+                return this.createConstantInput(Cast.compare(node.left.inputs.value, node.right.inputs.value) > 0);
+            case InputOpcode.OP_JOIN:
+                if (!this.isConstant(node.left, node.right)) break;
+                return this.createConstantInput(node.left.inputs.value + node.right.inputs.value);
+            case InputOpcode.OP_LESS:
+                if (!this.isConstant(node.left, node.right)) break;
+                return this.createConstantInput(Cast.compare(node.left.inputs.value, node.right.inputs.value) < 0);
+            case InputOpcode.OP_POW_E:
+                if (!this.isConstant(node.value)) break;
+                return this.createConstantInput(Math.exp(node.value.inputs.value));
         }
 
         // no folding needed

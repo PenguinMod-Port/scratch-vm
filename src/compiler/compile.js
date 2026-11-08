@@ -9,7 +9,7 @@ const compile = (/** @type {import("../engine/thread")} */ thread) => {
     const irGenerator = new IRGenerator(thread);
     const ir = irGenerator.generate();
 
-    const irFolder = new IRFolder(ir);
+    const irFolder = new IRFolder(ir, thread.target.runtime);
     irFolder.fold();
 
     const irOptimizer = new IROptimizer(ir);
