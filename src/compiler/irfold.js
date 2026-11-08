@@ -87,12 +87,59 @@ class IRFolder {
             case InputOpcode.OP_JOIN:
                 if (!this.isConstant(node.left, node.right)) break;
                 return this.createConstantInput(node.left.inputs.value + node.right.inputs.value);
+            case InputOpcode.OP_LENGTH:
+                if (!this.isConstant(node.value)) break;
+                return this.createConstantInput(node.value.inputs.value.length);
             case InputOpcode.OP_LESS:
                 if (!this.isConstant(node.left, node.right)) break;
                 return this.createConstantInput(Cast.compare(node.left.inputs.value, node.right.inputs.value) < 0);
+            case InputOpcode.OP_LETTER_OF:
+                if (!this.isConstant(node.string, node.letter)) break;
+                return this.createConstantInput(node.string.inputs.value[node.letter.inputs.value - 1] || "");
+            case InputOpcode.OP_LOG_E:
+                if (!this.isConstant(node.value)) break;
+                return this.createConstantInput(Math.log(node.value.inputs.value));
+            case InputOpcode.OP_LOG_10:
+                if (!this.isConstant(node.value)) break;
+                return this.createConstantInput(Math.log(node.value.inputs.value) / Math.LN10);
+            case InputOpcode.OP_MOD:
+                if (!this.isConstant(node.left, node.right)) break;
+                let result = node.left.inputs.value % node.right.inputs.value
+                if (result / node.right.inputs.value < 0) result += node.right.inputs.value;
+                return this.createConstantInput(result);
+            case InputOpcode.OP_MULTIPLY:
+                if (!this.isConstant(node.left, node.right)) break;
+                return this.createConstantInput(node.left.inputs.value * node.right.inputs.value);
+            case InputOpcode.OP_NOT:
+                if (!this.isConstant(node.value)) break;
+                return this.createConstantInput(!node.value.inputs.value);
+            case InputOpcode.OP_OR:
+                if (!this.isConstant(node.left, node.right)) break;
+                return this.createConstantInput(node.left.inputs.value || node.right.inputs.value);
+            case InputOpcode.OP_POW_10:
+                if (!this.isConstant(node.value)) break;
+                return this.createConstantInput(10 ** node.value.inputs.value);
             case InputOpcode.OP_POW_E:
                 if (!this.isConstant(node.value)) break;
                 return this.createConstantInput(Math.exp(node.value.inputs.value));
+            case InputOpcode.OP_RANDOM:
+                if (!this.isConstant(node.low, node.high)) break;
+                return this.createConstantInput(this.runtime.ext_scratch3_operators._random(node.low.inputs.value, node.high.inputs.value));
+            case InputOpcode.OP_ROUND:
+                if (!this.isConstant(node.value)) break;
+                return this.createConstantInput(Math.round(node.value.inputs.value));
+            case InputOpcode.OP_SIN:
+                if (!this.isConstant(node.value)) break;
+                return this.createConstantInput(Math.round(Math.sin(Math.PI * node.value.inputs.value) * 1e10) / 1e10);
+            case InputOpcode.OP_SQRT:
+                if (!this.isConstant(node.value)) break;
+                return this.createConstantInput(Math.sqrt(node.value.inputs.value));
+            case InputOpcode.OP_SUBTRACT:
+                if (!this.isConstant(node.left, node.right)) break;
+                return this.createConstantInput(node.left.inputs.value - node.right.inputs.value);
+            case InputOpcode.OP_TAN:
+                if (!this.isConstant(node.value)) break;
+                return this.createConstantInput(Math.round(Math.tan(Math.PI * node.value.inputs.value) * 1e10) / 1e10);
         }
 
         // no folding needed
