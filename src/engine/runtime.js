@@ -4205,7 +4205,7 @@ class Runtime extends EventEmitter {
 
     isNotActuallyZero (value) {
         if (typeof value !== 'string') return false;
-        for (let i = 0; i < val.length; i++) {
+        for (let i = 0; i < value.length; i++) {
             const code = value.charCodeAt(i);
             if (code === 48 || code === 9) {
                 return false;
