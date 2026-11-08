@@ -368,6 +368,10 @@ class IntermediateScript {
          */
         this.warpTimer = false;
 
+        this.folding = false;
+
+        this.strictEquality = false;
+
         /**
          * List of procedure IDs that this script needs.
          * @readonly

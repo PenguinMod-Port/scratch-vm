@@ -717,6 +717,7 @@ const serializeConfig = function (runtime) {
 
     if (runtime.interpolationEnabled) config.interpolation = true;
     if (runtime.renderer.useHighQualityRender) config.hqPen = true;
+    if (runtime.compilerOptions.folding) config.folding = true;
     if (runtime.compilerOptions.warpTimer) config.warpTimer = true;
     if (runtime.compilerOptions.strictEquality) config.strictEquality = true;
     if (runtime.runtimeOptions.miscLimits) config.miscLimits = true;
@@ -1625,6 +1626,7 @@ const deserializeConfig = function (config, runtime) {
     runtime.renderer.setUseHighQualityRender(!!config.hqPen);
 
     runtime.setCompilerOptions({
+        folding: !!config.folding,
         warpTimer: !!config.warpTimer,
         strictEquality: !!config.strictEquality
     })

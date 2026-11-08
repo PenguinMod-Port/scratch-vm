@@ -1,5 +1,6 @@
 // @ts-check
 
+const {IRFolder} = require('./irfold');
 const {IRGenerator} = require('./irgen');
 const {IROptimizer} = require('./iroptimizer');
 const JSGenerator = require('./jsgen');
@@ -7,6 +8,9 @@ const JSGenerator = require('./jsgen');
 const compile = (/** @type {import("../engine/thread")} */ thread) => {
     const irGenerator = new IRGenerator(thread);
     const ir = irGenerator.generate();
+
+    const irFolder = new IRFolder(ir);
+    irFolder.fold();
 
     const irOptimizer = new IROptimizer(ir);
     irOptimizer.optimize();

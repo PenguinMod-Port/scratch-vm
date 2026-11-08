@@ -76,6 +76,7 @@ class ScriptTreeGenerator {
          * This script's intermediate representation.
          */
         this.script = new IntermediateScript();
+        this.script.folding = this.target.runtime.compilerOptions.folding;
         this.script.warpTimer = this.target.runtime.compilerOptions.warpTimer;
         this.script.strictEquality = this.target.runtime.compilerOptions.strictEquality;
         this.script.stackClicked = thread.stackClick;
