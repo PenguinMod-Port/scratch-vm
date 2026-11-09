@@ -613,7 +613,7 @@ class Runtime extends EventEmitter {
         this.serializers = {};
 
         // pm version
-        this.pmVersion = new SemVer('0.5.1');
+        this.pmVersion = new SemVer('0.5.3');
 
         // deprecated camera states
         this.cameraStates = {};
@@ -4206,7 +4206,7 @@ class Runtime extends EventEmitter {
 
     isNotActuallyZero (value) {
         if (typeof value !== 'string') return false;
-        for (let i = 0; i < val.length; i++) {
+        for (let i = 0; i < value.length; i++) {
             const code = value.charCodeAt(i);
             if (code === 48 || code === 9) {
                 return false;
