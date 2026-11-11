@@ -102,6 +102,79 @@ class Extension {
                 },
                 "---",
                 {
+                    blockType: BlockType.XML,
+                    xml: `
+                    <block type="operator_nand_expandable">
+                        <field name="EXPANDABLE">2</field>
+                        <value name="EXPANDABLE.1.OPERAND">
+                            <shadow type="checkbox" />
+                        </value>
+                        <value name="EXPANDABLE.2.OPERAND">
+                            <shadow type="checkbox" />
+                        </value>
+                    </block>
+                    <block type="operator_nor_expandable">
+                        <field name="EXPANDABLE">2</field>
+                        <value name="EXPANDABLE.1.OPERAND">
+                            <shadow type="checkbox" />
+                        </value>
+                        <value name="EXPANDABLE.2.OPERAND">
+                            <shadow type="checkbox" />
+                        </value>
+                    </block>
+                    <block type="operator_xnor_expandable">
+                        <field name="EXPANDABLE">2</field>
+                        <value name="EXPANDABLE.1.OPERAND">
+                            <shadow type="checkbox" />
+                        </value>
+                        <value name="EXPANDABLE.2.OPERAND">
+                            <shadow type="checkbox" />
+                        </value>
+                    </block>
+                    `
+                },
+                "---",
+                {
+                    blockType: BlockType.XML,
+                    xml: `
+                    <block type="operator_expandableMath">
+                        <field name="EXPANDABLE">2</field>
+                        <value name="NUM1">
+                            <shadow type="math_number">
+                                <field name="NUM">1</field>
+                            </shadow>
+                        </value>
+                        <field name="OP2">+</field>
+                        <value name="NUM2">
+                            <shadow type="math_number">
+                                <field name="NUM">2</field>
+                            </shadow>
+                        </value>
+                    </block>
+                    <block type="operator_expandableBool">
+                        <field name="EXPANDABLE">2</field>
+                        <value name="BOOL1">
+                            <shadow type="checkbox" />
+                        </value>
+                        <field name="OP2">a</field>
+                        <value name="BOOL2">
+                            <shadow type="checkbox" />
+                        </value>
+                    </block>
+                    <block type="operator_expandableCompare">
+                        <field name="EXPANDABLE">2</field>
+                        <value name="INPUT1">
+                            <shadow type="text" />
+                        </value>
+                        <field name="OP2">e</field>
+                        <value name="INPUT2">
+                            <shadow type="text" />
+                        </value>
+                    </block>
+                    `
+                },
+                "---",
+                {
                     opcode: "binnaryAnd",
                     text: "[num1] and [num2]",
                     blockType: BlockType.REPORTER,
