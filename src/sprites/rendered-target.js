@@ -1286,8 +1286,16 @@ class RenderedTarget extends Target {
     }
 
     getCameraState() {
-        if (this.renderer) {
-            return this.renderer._allDrawables[this.drawableID].cameraState;
+        if (!this.renderer) return null;
+
+        const drawable = this.renderer._allDrawables[this.drawableID];
+        if (drawable) return drawable.cameraState;
+        else {
+            if (this.isOriginal) return null;
+
+            // This is a clone that was instantly deleted,
+            // use the parent state to avoid a crash.
+            return this.sprite.clones[0].getCameraState();
         }
     }
 
