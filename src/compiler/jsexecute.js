@@ -697,7 +697,8 @@ runtimeFunctions.tan = `const tan = (angle) => {
  * @param {VM.Target.id} sourceId The id of the global source target.
  */
 runtimeFunctions.setupGlobalProcState = `const setupGlobalProcState = function (target, sourceId) {
-    if (sourceId === target.id) return;
+    if (sourceId === target.id || sourceId === target.sprite.clones[0].id) return;
+
     const sourceTarget = target.runtime.getTargetById(sourceId);
     const sourceVariables = sourceTarget.variables;
     for (const varId in sourceTarget.variables) {

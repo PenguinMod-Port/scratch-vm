@@ -301,7 +301,7 @@ class Blocks {
             const definitionBlock = target.blocks.getBlock(definitionId);
             if (!definitionBlock) return null;
 
-            const prototypeId = target.blocks.getBlock(definitionBlock.inputs.custom_block.block);
+            const prototypeId = definitionBlock.inputs.custom_block.block;
             const prototypeBlock = target.blocks.getBlock(prototypeId);
 
             return {
