@@ -1219,7 +1219,7 @@ class Extension {
                             return new IntermediateStackBlock(opcodes.FOR_EACH, {
                                 object: this.descendInputOfBlock(block, 'OBJECT'),
                                 substack: this.descendSubstack(block, 'SUBSTACK'),
-                            });
+                            }, true);
                     }
                 }
             },
