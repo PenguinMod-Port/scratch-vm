@@ -1358,7 +1358,8 @@ class Runtime extends EventEmitter {
                     if (blockInfo.blockType === BlockType.EVENT || blockInfo.blockType === BlockType.HAT) {
                         this._hats[opcode] = {
                             edgeActivated: blockInfo.isEdgeActivated,
-                            restartExistingThreads: blockInfo.shouldRestartExistingThreads
+                            restartExistingThreads: blockInfo.shouldRestartExistingThreads,
+                            allowMultipleThreads: blockInfo.allowMultipleThreads
                         };
                     } else if (blockInfo.blockType === BlockType.CONDITIONAL) {
                         this._flowing[opcode] = {
@@ -2748,7 +2749,7 @@ class Runtime extends EventEmitter {
                     newThreads.push(this._restartThread(existingThread));
                     return;
                 }
-            } else {
+            } else if (!hatMeta.allowMultipleThreads) {
                 // If `restartExistingThreads` is false, we should
                 // give up if any threads with the top block are running.
                 for (let j = 0; j < startingThreadListLength; j++) {
