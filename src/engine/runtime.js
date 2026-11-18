@@ -1911,9 +1911,8 @@ class Runtime extends EventEmitter {
         return {
             type: 'field_image',
             src: argInfo.dataURI || '',
-            // TODO these probably shouldn't be hardcoded...?
-            width: 24,
-            height: 24,
+            width: argInfo.width || 24,
+            height: argInfo.height || 24,
             alt: argInfo.altText || '*',
             // Whether or not the inline image should be flipped horizontally
             // in RTL languages. Defaults to false, indicating that the
