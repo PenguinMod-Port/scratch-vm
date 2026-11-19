@@ -1431,16 +1431,15 @@ class Runtime extends EventEmitter {
             extensions: []
         };
 
-        if (!categoryInfo.colour) {
-            baseJson.extensions.push('default_extension_colors', 'colours_pen');
-        }
-
         switch (menuInfo.menuType) {
             case MenuType.STRICT:
                 baseJson.outputShape = ScratchBlocksConstants.OUTPUT_SHAPE_SQUARE;
                 break;
 
             case MenuType.ACCEPTING:
+                if (!categoryInfo.color) {
+                    baseJson.extensions.push('default_extension_colors', 'colours_pen');
+                }
                 break;
 
             case MenuType.TYPEABLE:
