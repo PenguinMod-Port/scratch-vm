@@ -598,6 +598,10 @@ class ScriptTreeGenerator {
             });
 
         //pm operators
+        case 'operator_add_expandable':
+            return new IntermediateInput(InputOpcode.PM_OP_ADD_EXPANDABLE, InputType.NUMBER_OR_NAN, {
+                numbers: this.descendExpandableValue(block, 'EXPANDABLE', 'NUM', InputType.NUMBER)
+            });
         case 'operator_advlog':
             return new IntermediateInput(InputOpcode.PM_OP_LOG, InputType.NUMBER_OR_NAN, {
                 left: this.descendInputOfBlock(block, 'NUM1').toType(InputType.NUMBER),
@@ -663,6 +667,10 @@ class ScriptTreeGenerator {
                 text: this.descendInputOfBlock(block, "TEXT").toType(InputType.STRING)
             });
         }
+        case 'operator_divide_expandable':
+            return new IntermediateInput(InputOpcode.PM_OP_DIVIDE_EXPANDABLE, InputType.NUMBER_OR_NAN, {
+                numbers: this.descendExpandableValue(block, 'EXPANDABLE', 'NUM', InputType.NUMBER)
+            });
         case 'operator_encode': {
             let encoding = null;
             switch (block.fields.ENCODING.value) {
@@ -774,6 +782,10 @@ class ScriptTreeGenerator {
                     right: this.descendInputOfBlock(block, 'OPERAND2')
                 })
             });
+        case 'operator_multiply_expandable':
+            return new IntermediateInput(InputOpcode.PM_OP_MULTIPLY_EXPANDABLE, InputType.NUMBER_OR_NAN, {
+                numbers: this.descendExpandableValue(block, 'EXPANDABLE', 'NUM', InputType.NUMBER)
+            });
         case 'operator_nand':
             return new IntermediateInput(InputOpcode.OP_NOT, InputType.BOOLEAN, {
                 operand: new IntermediateInput(InputOpcode.OP_AND, InputType.BOOLEAN, {
@@ -803,6 +815,10 @@ class ScriptTreeGenerator {
             return new IntermediateInput(InputOpcode.PM_OP_POWER, InputType.NUMBER_OR_NAN, {
                 left: this.descendInputOfBlock(block, 'NUM1').toType(InputType.NUMBER),
                 right: this.descendInputOfBlock(block, 'NUM2').toType(InputType.NUMBER)
+            });
+        case 'operator_power_expandable':
+            return new IntermediateInput(InputOpcode.PM_OP_POWER_EXPANDABLE, InputType.NUMBER_OR_NAN, {
+                numbers: this.descendExpandableValue(block, 'EXPANDABLE', 'NUM', InputType.NUMBER)
             });
         case 'operator_randomBoolean':
             return new IntermediateInput(InputOpcode.PM_OP_RANDOMBOOL, InputType.BOOLEAN);
@@ -851,6 +867,10 @@ class ScriptTreeGenerator {
             });
         case 'operator_stringify':
             return this.descendInputOfBlock(block, 'ONE').toType(InputType.STRING);
+        case 'operator_subtract_expandable':
+            return new IntermediateInput(InputOpcode.PM_OP_SUBTRACT_EXPANDABLE, InputType.NUMBER_OR_NAN, {
+                numbers: this.descendExpandableValue(block, 'EXPANDABLE', 'NUM', InputType.NUMBER)
+            });
         case 'operator_tabCharacter':
             return this.createConstantInput('\t');
         case 'operator_textIncludesLetterFrom':
