@@ -241,6 +241,10 @@ class Extension {
             createElement('span', {
                 innerHTML: '<i style="opacity: 0.75;">null</i>'
             }, log);
+        } else if (typeof DATA === 'object' && ![null, Object.prototype].includes(Object.getPrototypeOf(DATA)) && DATA.jwDebuggerHandler) {
+            createElement('span', {
+                className: 'jwDebugger-bubble'
+            }, log).appendChild(DATA.jwDebuggerHandler());
         } else if (typeof DATA === 'object' && ![null, Object.prototype].includes(Object.getPrototypeOf(DATA)) && DATA.toReporterContent) {
             createElement('span', {
                 className: 'jwDebugger-bubble'
