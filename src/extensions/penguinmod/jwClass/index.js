@@ -57,6 +57,11 @@ class ClassType {
     extend(...extensions) {
         return new ClassType(this.construct, this.name, extensions);
     }
+
+    instanceOf(c) {
+        if (this === c) return true;
+        return this.extensions.some(extension => extension.instanceOf(c));
+    }
     
     [pmSymbol.equals](other) {
         return this === other;
@@ -90,12 +95,9 @@ let jwClass = {
         return pointer.value.map.get(name);
     },
     instanceOf(pointer, otherClass) {
-        let __class__ = jwClass.getProp(classSymbol, pointer);
-        while (__class__) {
-            if (__class__ === otherClass) return true;
-            __class__ = __class__.extension;
-        }
-        return false;
+        const rootClass = jwClass.getProp(classSymbol, pointer);
+        if (!(rootClass instanceof jwClass.Type)) return false;
+        return rootClass.instanceOf(otherClass);
     }
 };
 
@@ -238,6 +240,15 @@ class Extension {
                         POINTER: jwPointer.Argument,
                         CLASS: jwClass.Argument
                     }
+                },
+                {
+                    opcode: "isExtension",
+                    text: "does [CLASS] extend [EXTENSION]?",
+                    blockType: BlockType.BOOLEAN,
+                    arguments: {
+                        CLASS: jwClass.Argument,
+                        EXTENSION: jwClass.Argument
+                    }
                 }
             ]
         };
@@ -256,7 +267,8 @@ class Extension {
             NEW: 'jwClass.new',
             NAME: 'jwClass.name',
 
-            INSTANCEOF: 'jwClass.instanceof'
+            INSTANCEOF: 'jwClass.instanceof',
+            ISEXTENSION: 'jwClass.isExtension'
         };
 
         return {
@@ -301,6 +313,11 @@ class Extension {
                                 pointer: this.descendInputOfBlock(block, 'POINTER'),
                                 class: this.descendInputOfBlock(block, 'CLASS')
                             });
+                        case 'jwClass_isExtension':
+                            return new IntermediateInput(opcodes.ISEXTENSION, InputType.BOOLEAN, {
+                                class: this.descendInputOfBlock(block, 'CLASS'),
+                                extension: this.descendInputOfBlock(block, 'EXTENSION')
+                            });
                     }
                 },
                 command(block) {
@@ -342,6 +359,8 @@ class Extension {
 
                         case opcodes.INSTANCEOF:
                             return `vm.jwClass.instanceOf(${this.descendInput(node.pointer)}, vm.jwClass.Type.toClass(${this.descendInput(node.class)}))`;
+                        case opcodes.ISEXTENSION:
+                            return `vm.jwClass.Type.toClass(${this.descendInput(node.class)}).instanceOf(vm.jwClass.Type.toClass(${this.descendInput(node.extension)}))`;
                     }
                 },
                 command(block) {
