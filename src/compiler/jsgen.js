@@ -1517,7 +1517,6 @@ class JSGenerator {
                 this.yieldNotWarp();
             }
             let outputVariable = this.localVariables.next();
-            this.source += `let ${outputVariable} = `;
             if (procedureData.yields) {
                 this.source += 'yield* ';
                 if (!this.script.yields) {
@@ -1544,7 +1543,6 @@ class JSGenerator {
             }
             this.source += args.join(',');
             this.source += `);\n`;
-            this.source += `if (${outputVariable} !== undefined) { return ${outputVariable}; };\n`;
             break;
         }
         case StackOpcode.PROCEDURE_RETURN:
