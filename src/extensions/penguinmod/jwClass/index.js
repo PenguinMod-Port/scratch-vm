@@ -16,11 +16,11 @@ const escapeHTML = unsafe => {
 const classSymbol = Symbol('class');
 
 class ClassType {
-    constructor(construct = function*(){}, name = '', extension = null, proc = null) {
+    constructor(construct = function*(){}, name = '', extensions = [], proc = null) {
         this.construct = construct;
         this.name = name;
         /** @type {ClassType?} */
-        this.extension = extension;
+        this.extensions = extensions;
         this.proc = proc ?? {};
     }
 
@@ -37,26 +37,30 @@ class ClassType {
         return new ClassType();
     }
 
-    createInstance = function* (thread, target) {
+    createInstance = function* (thread, target, pointer) {
         if (this.proc) thread.procedures = {...this.proc, ...thread.procedures}
-        if (!this.extension) {
-            let object = new dogeiscutObject.Type();
-            object.map.set(classSymbol, this);
-            let pointer = jwPointer.Type.create();
-            pointer.value = object;
-            yield* this.construct(pointer, thread, target);
-            return pointer;
-        } else {
-            let pointer = yield* this.extension.createInstance(thread, target);
-            let object = pointer.value;
-            if (object instanceof dogeiscutObject.Type) object.map.set(classSymbol, this);
-            yield* this.construct(pointer, thread, target);
-            return pointer;
+
+        for (let extension of this.extensions) {
+            pointer = yield* extension.createInstance(thread, target, pointer);
         }
+        if (!pointer) {
+            pointer = jwPointer.Type.create();
+            pointer.value = new dogeiscutObject.Type();
+        }
+        const object = pointer.value;
+        if (object instanceof dogeiscutObject.Type) object.map.set(classSymbol, this);
+        yield* this.construct(pointer, thread, target);
+        debugger;
+        return pointer;
     }
 
-    extend(extension) {
-        return new ClassType(this.construct, this.name, extension);
+    extend(...extensions) {
+        return new ClassType(this.construct, this.name, extensions);
+    }
+
+    instanceOf(c) {
+        if (this === c) return true;
+        return this.extensions.some(extension => extension.instanceOf(c));
     }
     
     [pmSymbol.equals](other) {
@@ -91,12 +95,9 @@ let jwClass = {
         return pointer.value.map.get(name);
     },
     instanceOf(pointer, otherClass) {
-        let __class__ = jwClass.getProp(classSymbol, pointer);
-        while (__class__) {
-            if (__class__ === otherClass) return true;
-            __class__ = __class__.extension;
-        }
-        return false;
+        const rootClass = jwClass.getProp(classSymbol, pointer);
+        if (!(rootClass instanceof jwClass.Type)) return false;
+        return rootClass.instanceOf(otherClass);
     }
 };
 
@@ -136,7 +137,7 @@ class Extension {
             blocks: [
                 {
                     opcode: "class",
-                    text: "class [NAME] [SELF]",
+                    text: "class [NAME] [SELF] extends [EXPANDABLE]",
                     arguments: {
                         NAME: {
                             type: ArgumentType.STRING,
@@ -144,6 +145,15 @@ class Extension {
                         },
                         SELF: {
                             fillIn: "self"
+                        },
+                        EXPANDABLE: {
+                            type: ArgumentType.EXPANDABLE,
+                            defaultValue: 0,
+                            minValue: 0,
+                            text: '[EXTENSION]',
+                            arguments: {
+                                EXTENSION: jwClass.Argument
+                            }
                         }
                     },
                     branches: [{}],
@@ -163,6 +173,7 @@ class Extension {
                         CLASS: jwClass.Argument,
                         EXTENSION: jwClass.Argument
                     },
+                    hideFromPalette: true,
                     ...jwClass.Block
                 },
                 "---",
@@ -229,6 +240,15 @@ class Extension {
                         POINTER: jwPointer.Argument,
                         CLASS: jwClass.Argument
                     }
+                },
+                {
+                    opcode: "isExtension",
+                    text: "does [CLASS] extend [EXTENSION]?",
+                    blockType: BlockType.BOOLEAN,
+                    arguments: {
+                        CLASS: jwClass.Argument,
+                        EXTENSION: jwClass.Argument
+                    }
                 }
             ]
         };
@@ -247,7 +267,8 @@ class Extension {
             NEW: 'jwClass.new',
             NAME: 'jwClass.name',
 
-            INSTANCEOF: 'jwClass.instanceof'
+            INSTANCEOF: 'jwClass.instanceof',
+            ISEXTENSION: 'jwClass.isExtension'
         };
 
         return {
@@ -257,7 +278,8 @@ class Extension {
                         case 'jwClass_class':
                             return new IntermediateInput(opcodes.CLASS, InputType.CUSTOM_TYPE, {
                                 name: this.descendInputOfBlock(block, 'NAME').toType(InputType.STRING),
-                                substack: this.descendSubstack(block, 'SUBSTACK')
+                                substack: this.descendSubstack(block, 'SUBSTACK'),
+                                extensions: this.descendExpandableValue(block, 'EXPANDABLE', 'EXTENSION')
                             }, true);
                         case 'jwClass_self':
                             return new IntermediateInput(opcodes.SELF, InputType.CUSTOM_TYPE);
@@ -291,6 +313,11 @@ class Extension {
                                 pointer: this.descendInputOfBlock(block, 'POINTER'),
                                 class: this.descendInputOfBlock(block, 'CLASS')
                             });
+                        case 'jwClass_isExtension':
+                            return new IntermediateInput(opcodes.ISEXTENSION, InputType.BOOLEAN, {
+                                class: this.descendInputOfBlock(block, 'CLASS'),
+                                extension: this.descendInputOfBlock(block, 'EXTENSION')
+                            });
                     }
                 },
                 command(block) {
@@ -313,7 +340,7 @@ class Extension {
                             let source = "";
                             source += `(new vm.jwClass.Type(function*(_jwClassSelf, thread, target) {\n`;
                             source += this.descendStackInline(node.substack, {allowReturns: true, inLoop: false});
-                            source += `}, ${this.descendInput(node.name)}, null, thread.procedures))`;
+                            source += `}, ${this.descendInput(node.name)}, [${node.extensions.map(v => `vm.jwClass.Type.toClass(${this.descendInput(v)})`).join(', ')}], thread.procedures))`;
                             return source;
                         case opcodes.SELF:
                             return `(typeof _jwClassSelf !== "undefined" ? _jwClassSelf : new vm.jwPointer.Type(0))`;
@@ -332,6 +359,8 @@ class Extension {
 
                         case opcodes.INSTANCEOF:
                             return `vm.jwClass.instanceOf(${this.descendInput(node.pointer)}, vm.jwClass.Type.toClass(${this.descendInput(node.class)}))`;
+                        case opcodes.ISEXTENSION:
+                            return `vm.jwClass.Type.toClass(${this.descendInput(node.class)}).instanceOf(vm.jwClass.Type.toClass(${this.descendInput(node.extension)}))`;
                     }
                 },
                 command(block) {
