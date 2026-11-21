@@ -18,7 +18,8 @@ const defaults = {
     videoSprites: 'https://extensions.turbowarp.org/lab/video-sprites.js',
 
     // pm pre-port unmodified extensions
-    xeltallivclipblend: 'https://extensions.turbowarp.org/Xeltalliv/clippingblending.js'
+    xeltallivclipblend: 'https://extensions.turbowarp.org/Xeltalliv/clippingblending.js',
+    lmsTempVars2: 'https://extensions.turbowarp.org/Lily/TempVariables2.js'
 };
 
 module.exports = defaults;
