@@ -125,10 +125,12 @@ const Pointer = {
     Type: PointerType,
     Block: {
         blockType: BlockType.REPORTER,
+        blockShape: BlockShape.ARROW,
         forceOutputType: "Pointer",
         disableMonitor: true,
     },
     Argument: {
+        shape: BlockShape.ARROW,
         check: ["Pointer"],
         exemptFromNormalization: true
     },
