@@ -473,6 +473,10 @@ class JSGenerator {
             return `(10 ** ${this.descendInput(node.value)})`;
 
         //pm operators
+        case InputOpcode.PM_OP_ADD_EXPANDABLE:
+            return `(${node.numbers.map(input => this.descendInput(input)).join(' + ')})`;
+        case InputOpcode.PM_OP_AND_EXPANDABLE:
+            return `(${node.operands.map(input => this.descendInput(input)).join(' && ')})`;
         case InputOpcode.PM_OP_AVERAGE: {
             let accumulator = this.localVariables.next();
             let value = this.localVariables.next();
@@ -571,6 +575,8 @@ class JSGenerator {
             return `runtime.ext_scratch3_sensing._getDirectionToFrom(${this.descendInput(node.x1)}, ${this.descendInput(node.x2)}, ${this.descendInput(node.y1)}, ${this.descendInput(node.y2)})`;
         case InputOpcode.PM_OP_DISTANCE_COORDINATES:
             return `Math.hypot(${this.descendInput(node.x2)} - ${this.descendInput(node.x1)}, ${this.descendInput(node.y2)} - ${this.descendInput(node.y1)})`;
+        case InputOpcode.PM_OP_DIVIDE_EXPANDABLE:
+            return `(${node.numbers.map(input => this.descendInput(input)).join(' / ')})`;
         case InputOpcode.PM_OP_ENCODE_B16:
             return `(new TextEncoder().encode(${this.descendInput(node.text)})).toHex()`;
         case InputOpcode.PM_OP_ENCODE_B64:
@@ -629,8 +635,14 @@ class JSGenerator {
             return `Math.max(${node.inputs.map(input => this.descendInput(input)).join(', ')})`;
         case InputOpcode.PM_OP_MINIMUM:
             return `Math.min(${node.inputs.map(input => this.descendInput(input)).join(', ')})`;
+        case InputOpcode.PM_OP_MULTIPLY_EXPANDABLE:
+            return `(${node.numbers.map(input => this.descendInput(input)).join(' * ')})`;
+        case InputOpcode.PM_OP_OR_EXPANDABLE:
+            return `(${node.operands.map(input => this.descendInput(input)).join(' || ')})`;
         case InputOpcode.PM_OP_POWER:
             return `(${this.descendInput(node.left)} ** ${this.descendInput(node.right)})`;
+        case InputOpcode.PM_OP_POWER_EXPANDABLE:
+            return `(${node.numbers.map(input => this.descendInput(input)).join(' ** ')})`;
         case InputOpcode.PM_OP_RANDOMBOOL:
             return `(Math.random() < 0.5)`;
         case InputOpcode.PM_OP_RANGE:
@@ -655,10 +667,14 @@ class JSGenerator {
             return `String.prototype.trim.call(${this.descendInput(node.text)})`;
         case InputOpcode.PM_OP_STARTS_WITH:
             return `String.prototype.startsWith.call(${this.descendInput(node.text)}, ${this.descendInput(node.term)})`;
+        case InputOpcode.PM_OP_SUBTRACT_EXPANDABLE:
+            return `(${node.numbers.map(input => this.descendInput(input)).join(' - ')})`;
         case InputOpcode.PM_OP_UPPER_CASE:
             return `String.prototype.toUpperCase.call(${this.descendInput(node.text)})`;
         case InputOpcode.PM_OP_XOR:
             return `(${this.descendInput(node.left)} !== ${this.descendInput(node.right)})`;
+        case InputOpcode.PM_OP_XOR_EXPANDABLE:
+            return `(${node.operands.map(input => this.descendInput(input)).join(' !== ')})`;
 
         case InputOpcode.SENSING_ANSWER:
             return `runtime.ext_scratch3_sensing._answer`;
