@@ -127,6 +127,14 @@ class Extension {
           if (hasRefreshReason) vm.runtime.requestBlocksUpdate();
         });
 
+        vm.runtime.on('targetWasRemoved', (target) => {
+            if (target.isOriginal) return;
+            const threads = vm.runtime.startHats('jwTargets_whenDeleted', {}, vm.runtime.getSpriteTargetByName(target.sprite.name));
+            console.log(threads);
+            const targetInstance = new Target.Type(target.id);
+            threads.forEach(thread => thread._jwTargetsWhenDeleted = targetInstance);
+        });
+
         vm.jwTargets = Target
         vm.runtime.registerSerializer(
             "jwTargets", 
@@ -234,7 +242,7 @@ class Extension {
                 '---',
                 {
                     opcode: 'isClone',
-                    text: 'is [TARGET] a clone',
+                    text: 'is [TARGET] a clone?',
                     blockType: BlockType.BOOLEAN,
                     arguments: {
                         TARGET: Target.Argument
@@ -242,7 +250,7 @@ class Extension {
                 },
                 {
                     opcode: 'isTouching',
-                    text: 'is [A] touching [B]',
+                    text: 'is [A] touching [B]?',
                     blockType: BlockType.BOOLEAN,
                     arguments: {
                         A: Target.Argument,
@@ -251,13 +259,21 @@ class Extension {
                 },
                 {
                     opcode: 'isTouchingObject',
-                    text: 'is [A] touching [B]',
+                    text: 'is [A] touching [B]?',
                     blockType: BlockType.BOOLEAN,
                     arguments: {
                         A: Target.Argument,
                         B: {
                             menu: "touchingObject"
                         },
+                    }
+                },
+                {
+                    opcode: 'isExisting',
+                    text: 'does [TARGET] exist?',
+                    blockType: BlockType.BOOLEAN,
+                    arguments: {
+                        TARGET: Target.Argument
                     }
                 },
                 '---',
@@ -314,6 +330,26 @@ class Extension {
                     arguments: {
                         TARGET: Target.Argument
                     }
+                },
+                '---',
+                {
+                    opcode: 'whenDeleted',
+                    text: 'when clone deleted [UPVAR]',
+                    blockType: BlockType.EVENT,
+                    isEdgeActivated: false,
+                    allowMultipleThreads: true,
+                    arguments: {
+                        UPVAR: {
+                            fillIn: 'whenDeletedTarget'
+                        }
+                    }
+                },
+                {
+                    opcode: 'whenDeletedTarget',
+                    text: 'deleted clone',
+                    hideFromPalette: true,
+                    canDragDuplicate: true,
+                    ...Target.Block
                 },
                 '---',
                 {
@@ -438,14 +474,14 @@ class Extension {
     }
 
     get({TARGET, MENU}) {
-        TARGET = Target.Type.toTarget(TARGET)
-        MENU = Cast.toString(MENU)
+        TARGET = Target.Type.toTarget(TARGET);
+        MENU = Cast.toString(MENU).toLowerCase();
 
+        if (MENU === "id") return TARGET.targetId;
         if (!TARGET.target) return null;
 
         switch(MENU) {
             case "name": return TARGET.target.sprite.name
-            case "id": return TARGET.target.id
             case "x": return TARGET.target.x
             case "y": return TARGET.target.y
             case "direction": return TARGET.target.direction
@@ -561,6 +597,12 @@ class Extension {
         return A.target.isTouchingObject(B)
     }
 
+    isExisting({TARGET}) {
+        TARGET = Target.Type.toTarget(TARGET);
+
+        return !!TARGET.target;
+    }
+
     getVar({TARGET, NAME}) {
         TARGET = Target.Type.toTarget(TARGET)
         NAME = Cast.toString(NAME)
@@ -607,8 +649,11 @@ class Extension {
         if (!TARGET.target) return
         if (TARGET.target.isOriginal) return
 
-        vm.runtime.stopForTarget(TARGET.target)
-        vm.runtime.disposeTarget(TARGET.target)
+        TARGET.target.sprite.removeClone(TARGET.target);
+    }
+
+    whenDeletedTarget({}, util) {
+        return util.thread._jwTargetsWhenDeleted ?? new Target.Type();
     }
 
     all() {
