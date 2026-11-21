@@ -3168,7 +3168,10 @@ class Runtime extends EventEmitter {
             // tw: do not draw if document is hidden or a rAF loop is running
             // Checking for the animation frame loop is more reliable than using
             // interpolationEnabled in some edge cases
-            if (!document.hidden && !this.frameLoop._interpolationAnimation) {
+            // pm: use the document referenced by the canvas, since the visible
+            // stage may not be inside the same document that we are
+            const doc = this.renderer.canvas.ownerDocument;
+            if (!doc.hidden && !this.frameLoop._interpolationAnimation) {
                 if (this.sampler.enableBasic) this.sampler.pc[0] = Sampler.RENDERER;
                 this.renderer.draw();
                 if (this.sampler.enableBasic) this.sampler.pc[0] = Sampler.RUNTIME;
