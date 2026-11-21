@@ -151,16 +151,6 @@ class Extension {
                             </shadow>
                         </value>
                     </block>
-                    <block type="operator_expandableBool">
-                        <field name="EXPANDABLE">2</field>
-                        <value name="BOOL1">
-                            <shadow type="checkbox" />
-                        </value>
-                        <field name="OP2">a</field>
-                        <value name="BOOL2">
-                            <shadow type="checkbox" />
-                        </value>
-                    </block>
                     <block type="operator_expandableCompare">
                         <field name="EXPANDABLE">2</field>
                         <value name="INPUT1">
@@ -169,6 +159,16 @@ class Extension {
                         <field name="OP2">e</field>
                         <value name="INPUT2">
                             <shadow type="text" />
+                        </value>
+                    </block>
+                    <block type="operator_expandableBool">
+                        <field name="EXPANDABLE">2</field>
+                        <value name="BOOL1">
+                            <shadow type="checkbox" />
+                        </value>
+                        <field name="OP2">a</field>
+                        <value name="BOOL2">
+                            <shadow type="checkbox" />
                         </value>
                     </block>
                     `

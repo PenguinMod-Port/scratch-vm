@@ -353,6 +353,7 @@ const InputOpcode = {
     OP_SUBTRACT: 'op.subtract',
 
     PM_OP_ADD_EXPANDABLE: 'op.add.expandable',
+    PM_OP_AND_EXPANDABLE: 'op.and.expandable',
     PM_OP_AVERAGE: 'op.average',
     PM_OP_BOOL_EXPANDABLE: 'op.boolExpandable',
     PM_OP_COMPARE_EXPANDABLE: 'op.compareExpandable',
@@ -385,6 +386,7 @@ const InputOpcode = {
     PM_OP_MAXIMUM: 'op.maximum',
     PM_OP_MINIMUM: 'op.minimum',
     PM_OP_MULTIPLY_EXPANDABLE: 'op.multiply.expandable',
+    PM_OP_OR_EXPANDABLE: 'op.or.expandable',
     PM_OP_POWER: 'op.power',
     PM_OP_POWER_EXPANDABLE: 'op.power.expandable',
     PM_OP_RANDOMBOOL: 'op.randomBool',
@@ -402,6 +404,7 @@ const InputOpcode = {
     PM_OP_TRIM: 'op.trim',
     PM_OP_UPPER_CASE: 'op.upperCase',
     PM_OP_XOR: 'op.xor',
+    PM_OP_XOR_EXPANDABLE: 'op.xor.expandable',
 
     SENSING_ANSWER: 'sensing.answer',
     SENSING_COLOR_TOUCHING_COLOR: 'sensing.colorTouchingColor',

@@ -475,6 +475,8 @@ class JSGenerator {
         //pm operators
         case InputOpcode.PM_OP_ADD_EXPANDABLE:
             return `(${node.numbers.map(input => this.descendInput(input)).join(' + ')})`;
+        case InputOpcode.PM_OP_AND_EXPANDABLE:
+            return `(${node.operands.map(input => this.descendInput(input)).join(' && ')})`;
         case InputOpcode.PM_OP_AVERAGE: {
             let accumulator = this.localVariables.next();
             let value = this.localVariables.next();
@@ -635,6 +637,8 @@ class JSGenerator {
             return `Math.min(${node.inputs.map(input => this.descendInput(input)).join(', ')})`;
         case InputOpcode.PM_OP_MULTIPLY_EXPANDABLE:
             return `(${node.numbers.map(input => this.descendInput(input)).join(' * ')})`;
+        case InputOpcode.PM_OP_OR_EXPANDABLE:
+            return `(${node.operands.map(input => this.descendInput(input)).join(' || ')})`;
         case InputOpcode.PM_OP_POWER:
             return `(${this.descendInput(node.left)} ** ${this.descendInput(node.right)})`;
         case InputOpcode.PM_OP_POWER_EXPANDABLE:
@@ -669,6 +673,8 @@ class JSGenerator {
             return `String.prototype.toUpperCase.call(${this.descendInput(node.text)})`;
         case InputOpcode.PM_OP_XOR:
             return `(${this.descendInput(node.left)} !== ${this.descendInput(node.right)})`;
+        case InputOpcode.PM_OP_XOR_EXPANDABLE:
+            return `(${node.operands.map(input => this.descendInput(input)).join(' !== ')})`;
 
         case InputOpcode.SENSING_ANSWER:
             return `runtime.ext_scratch3_sensing._answer`;
