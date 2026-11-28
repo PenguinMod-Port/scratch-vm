@@ -1696,8 +1696,10 @@ class JSGenerator {
         Object.entries(properties).forEach(([key, value]) => this[key] = value);
         const oldIsLastBlock = this.isLastBlock;
 
+        const reverseExtensionIds = [];
         for (let extensionId in JSGenerator.compilerExtensions) {
-            let extension = JSGenerator.compilerExtensions[extensionId]
+            reverseExtensionIds.unshift(extensionId);
+            let extension = JSGenerator.compilerExtensions[extensionId];
             if (extension.stackStart) {
                 extension.stackStart.call(this, stack, properties, frame);
             }
@@ -1720,8 +1722,8 @@ class JSGenerator {
         }
         this.currentSamplerLocation = parentSamplerLocation;
 
-        for (let extensionId in JSGenerator.compilerExtensions) {
-            let extension = JSGenerator.compilerExtensions[extensionId]
+        for (let extensionId of reverseExtensionIds) {
+            let extension = JSGenerator.compilerExtensions[extensionId];
             if (extension.stackEnd) {
                 extension.stackEnd.call(this, stack, properties, frame);
             }
